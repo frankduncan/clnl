@@ -46,8 +46,8 @@ sbcl --no-sysinit --no-userinit \
   --eval "(asdf:initialize-source-registry '(:source-registry (:tree \"${escaped_cur_dir}\\\\tmp\\\\deps\") (:directory \"${escaped_cur_dir}\\\\src\\\\main\") :IGNORE-INHERITED-CONFIGURATION))" \
   --eval "(asdf:load-system :clnl)" \
   --eval "(asdf:clear-output-translations)" \
-  --eval '(sb-ext:save-lisp-and-die "windowssbcl.exe" :executable t :toplevel (function clnl:run))'
+  --eval '(sb-ext:save-lisp-and-die "clnl.exe" :executable t :toplevel (function clnl:run))'
 
 rm -rf tmp
 
-echo "Executable is windowssbcl.exe"
+echo "Executable is clnl.exe"
