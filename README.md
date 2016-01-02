@@ -1,5 +1,7 @@
 # clnl
 
+[![Join the chat at https://gitter.im/frankduncan/clnl](https://badges.gitter.im/frankduncan/clnl.svg)](https://gitter.im/frankduncan/clnl?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 This is an experiment at creating an alternate implementation of NetLogo mainly as an exercise for me so that I come to understand NetLogo better.  It is true for me that I only truly understand something when I can explain it to someone else without repetition.  In code, this manifests as expressing a program in another language.
 
 See the [wiki](https://github.com/frankduncan/clnl/wiki) for more information at this time.
