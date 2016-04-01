@@ -9,7 +9,7 @@
 
 (asdf:defsystem clnl
   :name "Experiment"
-  :version "0.0"
+  :version "0.0.0"
   :maintainer "Frank Duncan (frank@kank.com)"
   :author "Frank Duncan (frank@kank.com)"
   :depends-on (:cl-ppcre :mt19937 :cl-opengl :cl-glut :cl-charms :clnl.internal))
