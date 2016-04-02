@@ -25,22 +25,25 @@ DESCRIPTION:
 
   RUN starts up the CLNL system."
 
+ (boot)
  (sb-thread:make-thread #'clnl-cli:run)
  (clnl-interface:run))
 
-(defun boot ()
- "BOOT => RESULT
+(defun boot (&optional file)
+ "BOOT &optional FILE => RESULT
 
 ARGUMENTS AND VALUES:
 
+  FILE: nlogo file with which to initialize state
   RESULT: undefined
 
 DESCRIPTION:
 
   BOOT does exactly that, boots the clnl system in a clean state.  The seed
-  is set so that multiple runs will evaluate to the same."
- (clnl-random:set-seed 15)
- (clnl-nvm:create-world))
+  is set so that multiple runs will evaluate to the same.
+
+  When FILE is not provided, a default model is used."
+ (eval (model->lisp (if file (with-open-file (str file) (clnl-model:read-from-nlogo str)) (clnl-model:default-model)))))
 
 (defun run-commands (cmds)
  "RUN-COMMANDS CMDS => RESULT
@@ -69,3 +72,12 @@ DESCRIPTION:
   RUN-REPORTER will take a NetLogo REPORTER, put it through the various
   stages need to turn them into Common Lisp code, run it, and return the RESULT."
  (eval (clnl-transpiler:transpile-reporter (car (clnl-parser:parse (clnl-lexer:lex reporter))))))
+
+; Everything gets tied together here
+; The intention of this method is to generate the common lisp equivalent of a model file,
+; such that if you decided to no longer use nlogo, you could use the engine without it.
+(defun model->lisp (model)
+ `(progn
+   (clnl-random:set-seed 15) ; should the seed always be 15?
+   (clnl-nvm:create-world ,model)
+   (clnl-interface:initialize ,model)))

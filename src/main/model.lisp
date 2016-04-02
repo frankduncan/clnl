@@ -16,6 +16,20 @@
  model-settings
  delta-tick)
 
+(defun default-model ()
+ "DEFAULT-MODEL => MODEL
+
+ARGUMENTS AND VALUES:
+
+  MODEL: an object representing the model
+
+DESCRIPTION:
+
+  Returns the default startup model."
+ (make-model
+  :interface (list
+              (make-view :min-pxcor -5 :max-pxcor 5 :min-pycor -5 :max-pycor 5))))
+
 (defun read-from-nlogo (str)
  "READ-FROM-NLOGO STR => MODEL
 
@@ -148,3 +162,30 @@ DESCRIPTION:
       ((parser (find-if (lambda (validator) (funcall validator widget-as-strings)) *widget-parsers* :key #'car)))
       (when parser (funcall (cadr parser) widget-as-strings))))
     widgets-as-strings))))
+
+;; INFORMATION ABOUT MODEL
+
+(defun world-dimensions (model)
+ "WORLD-DIMENSIONS MODEL => DIMS
+
+  DIMS: (:xmin XMIN :xmax XMAX :ymin YMIN :ymax YMAX)
+
+ARGUMENTS AND VALUES:
+
+  MODEL: A valid model containing a view
+  XMIN: An integer representing the minimum patch coord in X
+  XMAX: An integer representing the maximum patch coord in X
+  YMIN: An integer representing the minimum patch coord in Y
+  YMAX: An integer representing the maximum patch coord in Y
+
+DESCRIPTION:
+
+  Returns the dimensions of MODEL.  MODEL must be a valid model
+  as parsed by CLNL, and have a valid view in it."
+ (let
+  ((view (find-if #'view-p (model-interface model))))
+  (list
+   :xmin (view-min-pxcor view)
+   :xmax (view-max-pxcor view)
+   :ymin (view-min-pycor view)
+   :ymax (view-max-pycor view))))

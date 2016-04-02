@@ -72,7 +72,7 @@ The primary code responsible for tokenizing NetLogo code."))
 
 (defpackage #:clnl-interface
  (:use :common-lisp)
- (:export #:run #:export-view)
+ (:export #:run #:export-view #:initialize)
  (:documentation
   "CLNL Interface
 
@@ -92,7 +92,7 @@ is where all the features that the traditional NetLogo UI lives."))
 
 (defpackage #:clnl-model
  (:use :common-lisp :cl-charms/low-level)
- (:export #:read-from-nlogo)
+ (:export #:default-model #:read-from-nlogo #:world-dimensions)
  (:documentation
   "CLNL Model
 

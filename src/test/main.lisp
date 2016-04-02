@@ -53,11 +53,11 @@
  `(defsimpletest
    (format nil "Simple Command - ~A" ,name)
    (lambda ()
-    (clnl:boot)
+    (clnl:boot "resources/empty.nlogo")
     (clnl:run-commands ,commands)
     (checksum= ,checksum (checksum-world)))
    (lambda ()
-    (clnl:boot)
+    (clnl:boot "resources/empty.nlogo")
     (clnl:run-commands ,commands)
     (format nil "~A~A"
      (clnl-nvm:export-world)
@@ -69,12 +69,12 @@
  `(defsimpletest
    (format nil "Simple Reporter - ~A" ,name)
    (lambda ()
-    (clnl:boot)
+    (clnl:boot "resources/empty.nlogo")
     (and
      (string= (funcall (intern "DUMP-OBJECT" :clnl-nvm) (clnl:run-reporter ,reporter)) ,value)
      (checksum= ,checksum (checksum-world))))
    (lambda ()
-    (clnl:boot)
+    (clnl:boot "resources/empty.nlogo")
     (format nil "~A~%~A~A"
      (funcall (intern "DUMP-OBJECT" :clnl-nvm) (clnl:run-reporter ,reporter))
      (clnl-nvm:export-world)
@@ -86,7 +86,7 @@
  `(defsimpletest
    (format nil "Simple View - ~A" ,name)
    (lambda ()
-    (clnl:boot)
+    (clnl:boot "resources/empty.nlogo")
     (clnl:run-commands ,commands)
     (let
      ((viewsum (checksum-view)))
@@ -94,7 +94,7 @@
       (format t "~c[1;35m-- For ~A, got ~A but expected ~A~c[0m~%" #\Esc ,name viewsum ,checksum #\Esc))
      (checksum= ,checksum (checksum-view))))
    (lambda ()
-    (clnl:boot)
+    (clnl:boot "resources/empty.nlogo")
     (clnl:run-commands ,commands)
     (save-view-to-ppm)
     (format nil "~A" (checksum-view)))

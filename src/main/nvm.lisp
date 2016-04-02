@@ -6,6 +6,7 @@
 (defvar *turtles* nil)
 (defvar *myself* nil)
 (defvar *self* nil)
+(defvar *model* nil)
 
 (defun show (value)
  "SHOW VALUE => RESULT
@@ -21,9 +22,6 @@ DESCRIPTION:
 
   See http://ccl.northwestern.edu/netlogo/docs/dictionary.html#show"
  (format t "Showing: ~A~%" (dump-object value)))
-
-(defun world-dimensions ()
- (list :xmin -10 :xmax 10 :ymin -10 :ymax 10))
 
 (defun create-turtle ()
  (setf
@@ -165,11 +163,12 @@ DESCRIPTION:
   See http://ccl.northwestern.edu/netlogo/docs/dictionary.html#create-turtles"
  (loop :for i :from 1 :to n :do (create-turtle)))
 
-(defun create-world ()
- "CREATE-WORLD => RESULT
+(defun create-world (model)
+ "CREATE-WORLD MODEL => RESULT
 
 ARGUMENTS AND VALUES:
 
+  MODEL: A clnl-model:model to use to initialize the vm
   RESULT: undefined
 
 DESCRIPTION:
@@ -178,6 +177,7 @@ DESCRIPTION:
 
   This should be called before using the engine in any real capacity.  If
   called when an engine is already running, it may do somethign weird."
+ (setf *model* model)
  (setf *turtles* nil)
  (setf *current-id* 0))
 
@@ -259,7 +259,10 @@ DESCRIPTION:
    (format nil "~A~A"
     "\"min-pxcor\",\"max-pxcor\",\"min-pycor\",\"max-pycor\",\"perspective\",\"subject\","
     "\"nextIndex\",\"directed-links\",\"ticks\",")
-   (format nil "\"-1\",\"1\",\"-1\",\"1\",\"0\",\"nobody\",\"~A\",\"\"\"NEITHER\"\"\",\"-1\"" *current-id*)
+   (format nil "\"~A\",\"~A\",\"~A\",\"~A\",\"0\",\"nobody\",\"~A\",\"\"\"NEITHER\"\"\",\"-1\""
+    (getf (clnl-model:world-dimensions *model*) :xmin) (getf (clnl-model:world-dimensions *model*) :xmax)
+    (getf (clnl-model:world-dimensions *model*) :ymin) (getf (clnl-model:world-dimensions *model*) :ymax)
+    *current-id*)
    ""
    (format nil "~S" "TURTLES")
    (format nil "~A~A"
