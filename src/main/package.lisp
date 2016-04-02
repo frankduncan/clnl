@@ -1,5 +1,5 @@
 (defpackage #:clnl (:use :common-lisp)
- (:export :run :boot :run-commands :run-reporter)
+ (:export #:run #:boot #:run-commands #:run-reporter)
  (:documentation
   "Main CLNL package
 
@@ -8,7 +8,7 @@ the place that ties all the parts together into a cohesive whole."))
 
 (defpackage #:clnl-parser
  (:use :common-lisp)
- (:export :parse)
+ (:export #:parse)
  (:documentation
   "CLNL Parser
 
@@ -28,7 +28,7 @@ to match how java.util.Random works.  Turtles, all the way down."))
 
 (defpackage #:clnl-transpiler
  (:use :common-lisp)
- (:export :transpile-commands :transpile-reporter)
+ (:export #:transpile-commands #:transpile-reporter)
  (:documentation
   "CLNL Transpiler
 
@@ -49,7 +49,7 @@ into an ast that can be transpiled later."))
 
 (defpackage #:clnl-nvm
  (:use :common-lisp)
- (:export :export-world :create-world :current-state
+ (:export #:export-world #:create-world #:current-state
   ; API as used by transpiled NetLogo programs
   #:ask
   #:create-turtles
@@ -64,7 +64,7 @@ NetLogo Virtual Machine: the simulation engine."))
 
 (defpackage #:clnl-lexer
  (:use :common-lisp)
- (:export :lex)
+ (:export #:lex)
  (:documentation
   "CLNL Lexer
 
@@ -72,7 +72,7 @@ The primary code responsible for tokenizing NetLogo code."))
 
 (defpackage #:clnl-interface
  (:use :common-lisp)
- (:export :run :export-view)
+ (:export #:run #:export-view)
  (:documentation
   "CLNL Interface
 
@@ -82,7 +82,7 @@ components."))
 
 (defpackage #:clnl-cli
  (:use :common-lisp :cl-charms/low-level)
- (:export :run)
+ (:export #:run)
  (:documentation
   "CLNL CLI
 
@@ -92,7 +92,7 @@ is where all the features that the traditional NetLogo UI lives."))
 
 (defpackage #:clnl-model
  (:use :common-lisp :cl-charms/low-level)
- (:export :read-from-nlogo)
+ (:export #:read-from-nlogo)
  (:documentation
   "CLNL Model
 
