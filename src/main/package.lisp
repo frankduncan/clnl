@@ -89,3 +89,14 @@ components."))
 The main NetLogo interface for interacting with the program.  Since CLNL is
 a command line interface program with a view for display purposes only, this
 is where all the features that the traditional NetLogo UI lives."))
+
+(defpackage #:clnl-model
+ (:use :common-lisp :cl-charms/low-level)
+ (:export :read-from-nlogo)
+ (:documentation
+  "CLNL Model
+
+The representation, parsing, and serializing of NetLogo model files, including
+all of the sections, and subsections held within.  This package houses not only
+the code to read and write .nlogo files, but also the living state of the model
+as clnl runs."))

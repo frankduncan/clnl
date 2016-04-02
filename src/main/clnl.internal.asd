@@ -10,6 +10,7 @@
 (asdf:defsystem clnl.internal
   :serial t
   :components ((:file "package")
+               (:file "model")
                (:file "lex")
                (:file "parse")
                (:file "nvm")
