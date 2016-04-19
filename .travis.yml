@@ -6,7 +6,7 @@ addons:
 before_install:
   - export DISPLAY=:99.0
   - /sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -ac -screen 0 1280x1024x24
-  - wget http://frank.kank.net/travissbcl/clnl/076c72b/$(git rev-parse HEAD)/travissbcl
+  - wget http://frank.kank.net/travissbcl/clnl/213ed30/$(git rev-parse HEAD)/travissbcl
   - chmod +x travissbcl
 script:
-  - ./travissbcl --script bin/travis.lisp
+  - ./travissbcl --script bin/all.lisp

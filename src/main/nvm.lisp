@@ -141,8 +141,12 @@ DESCRIPTION:
 
   See http://ccl.northwestern.edu/netlogo/docs/dictionary.html#forward"
  (when (not (turtle-p *self*)) (error "Gotta call fd in turtle scope, dude (~A)" *self*))
- (setf (turtle-xcor *self*) (+ (turtle-xcor *self*) (* n (sin (* pi (/ (turtle-heading *self*) 180))))))
- (setf (turtle-ycor *self*) (+ (turtle-ycor *self*) (* n (cos (* pi (/ (turtle-heading *self*) 180)))))))
+ (setf
+  (turtle-xcor *self*)
+  (+ (turtle-xcor *self*) (* n (strictmath:sin (strictmath:to-radians (turtle-heading *self*))))))
+ (setf
+  (turtle-ycor *self*)
+  (+ (turtle-ycor *self*) (* n (strictmath:cos (strictmath:to-radians (turtle-heading *self*)))))))
 
 (defun create-turtles (n)
  "CREATE-TURTLES N => RESULT

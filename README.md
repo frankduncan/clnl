@@ -21,6 +21,8 @@ If you'd like to run it from source, you're going to need a few things:
   * mt19937
   * nibbles
   * trivial-features
+  * strictmath
+  * ieee-floats
 
 [bin/nl](bin/nl) and [bin/run.lisp](bin/run.lisp) have been added for convenience to run the netlogo instance.  It boots up the ncurses command line with an opengl view.  Not very many commands are implemented, but it should alert you to that.  A good test is
 

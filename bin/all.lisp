@@ -1,5 +1,10 @@
-(when (not (find-package :clnl)) (asdf:load-system :clnl))
-(when (not (find-package :clnl-test)) (asdf:load-system :clnl-test))
+(setf *compile-print* nil)
+(require 'asdf)
+(asdf:initialize-source-registry `(:source-registry (:tree ,(car (directory "src"))) :INHERIT-CONFIGURATION))
+(asdf:load-system :clnl)
+(asdf:load-system :clnl-test)
+#-travis(asdf:load-system :style-checker)
+#-travis(asdf:load-system :docgen)
 
 (format t "~%~c[1;33mRunning Tests~c[0m~%" #\Esc #\Esc)
 (when (not (clnl-test:run-all-tests))

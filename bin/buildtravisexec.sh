@@ -26,7 +26,9 @@ mkdir -p tmp/deps/
   tar zxf ../../deps/common-lisp/trivial-features_0.8.tar.gz &&
   tar zxf ../../deps/common-lisp/cl-charms-9bb94ef.tar.gz &&
   tar zxf ../../deps/common-lisp/style-checker_0.1.tar.gz &&
-  tar zxf ../../deps/common-lisp/docgen_0.1.tar.gz
+  tar zxf ../../deps/common-lisp/docgen_0.1.tar.gz &&
+  tar zxf ../../deps/common-lisp/ieee-floats-92e481a.tar.gz &&
+  tar zxf ../../deps/common-lisp/strictmath_0.1.tar.gz
 )
 
 SBCL_HOME="" tmp/sbcl/bin/sbcl --core tmp/sbcl/lib/sbcl/sbcl.core \
@@ -41,14 +43,16 @@ SBCL_HOME="" tmp/sbcl/bin/sbcl --core tmp/sbcl/lib/sbcl/sbcl.core \
   --eval "(asdf:load-system :cl-charms)" \
   --eval "(asdf:load-system :style-checker)" \
   --eval "(asdf:load-system :docgen)" \
+  --eval "(asdf:load-system :strictmath)" \
   --eval "(asdf:clear-output-translations)" \
+  --eval "(push :travis *features*)" \
   --eval '(sb-ext:save-lisp-and-die "travissbcl" :executable t)' \
 
 chmod +x travissbcl
 travisname=travissbcl-$(git rev-parse --short HEAD)
 mv travissbcl $travisname
 
-echo "You should upload via the command: scp $travisname nami:/opt/travis/sbcls/clnl/"
+echo "You should upload via the command: scp $travisname nami:/var/travis/sbcls/clnl/"
 echo "You should also set travisname in .travis.yml to $travisname"
 
 rm -rf tmp

@@ -35,7 +35,9 @@ mkdir -p tmp/deps/
   tar zxf ../../deps/common-lisp/mt19937-latest.tar.gz &&
   tar zxf ../../deps/common-lisp/nibbles-v0.12.tar.gz &&
   tar zxf ../../deps/common-lisp/trivial-features_0.8.tar.gz &&
-  tar zxf ../../deps/common-lisp/cl-charms-9bb94ef.tar.gz
+  tar zxf ../../deps/common-lisp/cl-charms-9bb94ef.tar.gz &&
+  tar zxf ../../deps/common-lisp/ieee-floats-92e481a.tar.gz &&
+  tar zxf ../../deps/common-lisp/strictmath_0.1.tar.gz
 )
 
 cur_dir=$(cygpath -d $PWD)
