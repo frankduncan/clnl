@@ -104,7 +104,7 @@ DESCRIPTION:
      (let
       ((*readtable* (copy-readtable nil))
        (*read-eval* nil))
-      (read-from-string text))))
+      (read-from-string (format nil "~Ad0" text)))))
    (if (numberp num?) num? (error "Invalid number")))))
 
 (deflex :initial (format nil "~A*" *identifier-char*) #'as-symbol)

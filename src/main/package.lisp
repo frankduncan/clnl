@@ -91,7 +91,7 @@ a command line interface program with a view for display purposes only, this
 is where all the features that the traditional NetLogo UI lives."))
 
 (defpackage #:clnl-model
- (:use :common-lisp :cl-charms/low-level)
+ (:use :common-lisp)
  (:export #:default-model #:read-from-nlogo #:world-dimensions)
  (:documentation
   "CLNL Model

@@ -1,12 +1,6 @@
 (in-package #:clnl-nvm)
 
-(defvar *current-id* 0)
-
-(defstruct turtle who color heading xcor ycor)
-(defvar *turtles* nil)
-(defvar *myself* nil)
-(defvar *self* nil)
-(defvar *model* nil)
+; Implementations of all the things the nvm can do.
 
 (defun show (value)
  "SHOW VALUE => RESULT
@@ -121,6 +115,17 @@ DESCRIPTION:
   See http://ccl.northwestern.edu/netlogo/docs/dictionary.html#random-float"
  (clnl-random:next-double n))
 
+(defun jump (n)
+ (when (not (turtle-p *self*)) (error "Gotta call fd in turtle scope, dude (~A)" *self*))
+ (setf
+  (turtle-xcor *self*)
+  (wrap-x *topology*
+   (+ (turtle-xcor *self*) (* n (strictmath:sin (strictmath:to-radians (turtle-heading *self*)))))))
+ (setf
+  (turtle-ycor *self*)
+  (wrap-y *topology*
+   (+ (turtle-ycor *self*) (* n (strictmath:cos (strictmath:to-radians (turtle-heading *self*))))))))
+
 (defun forward (n)
  "FORWARD N => RESULT
 
@@ -141,12 +146,13 @@ DESCRIPTION:
 
   See http://ccl.northwestern.edu/netlogo/docs/dictionary.html#forward"
  (when (not (turtle-p *self*)) (error "Gotta call fd in turtle scope, dude (~A)" *self*))
- (setf
-  (turtle-xcor *self*)
-  (+ (turtle-xcor *self*) (* n (strictmath:sin (strictmath:to-radians (turtle-heading *self*))))))
- (setf
-  (turtle-ycor *self*)
-  (+ (turtle-ycor *self*) (* n (strictmath:cos (strictmath:to-radians (turtle-heading *self*)))))))
+ (labels
+  ((internal (i)
+    (cond
+     ((< (abs i) 3.2e-15) nil)
+     ((< (abs i) 1d0) (jump i))
+     (t (jump (if (> i 0d0) 1d0 -1d0)) (internal (- i (if (> i 0d0) 1d0 -1d0)))))))
+  (internal n)))
 
 (defun create-turtles (n)
  "CREATE-TURTLES N => RESULT
@@ -264,9 +270,7 @@ DESCRIPTION:
     "\"min-pxcor\",\"max-pxcor\",\"min-pycor\",\"max-pycor\",\"perspective\",\"subject\","
     "\"nextIndex\",\"directed-links\",\"ticks\",")
    (format nil "\"~A\",\"~A\",\"~A\",\"~A\",\"0\",\"nobody\",\"~A\",\"\"\"NEITHER\"\"\",\"-1\""
-    (getf (clnl-model:world-dimensions *model*) :xmin) (getf (clnl-model:world-dimensions *model*) :xmax)
-    (getf (clnl-model:world-dimensions *model*) :ymin) (getf (clnl-model:world-dimensions *model*) :ymax)
-    *current-id*)
+    (min-pxcor) (max-pxcor) (min-pycor) (max-pycor) *current-id*)
    ""
    (format nil "~S" "TURTLES")
    (format nil "~A~A"
