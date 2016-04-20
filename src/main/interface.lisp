@@ -6,7 +6,7 @@
 
 ; It may be useful to keep windows around
 (defvar *glut-window-opened* nil)
-(defvar *model* nil)
+(defvar *dimensions* nil)
 
 (defvar *colors*
  '((140 140 140) ; gray       (5)
@@ -84,13 +84,18 @@
   (gl:vertex 260 250 0)
   (gl:end)))
 
-(defun initialize (model)
- "INITIALIZE MODEL => RESULT
+(defun initialize (&key dims)
+ "INITIALIZE &key DIMS => RESULT
+
+  DIMS: (:xmin XMIN :xmax XMAX :ymin YMIN :ymax YMAX)
 
 ARGUMENTS AND VALUES:
 
-  MODEL: A clnl-model:model to use to initialize the interface
   RESULT: undefined
+  XMIN: An integer representing the minimum patch coord in X
+  XMAX: An integer representing the maximum patch coord in X
+  YMIN: An integer representing the minimum patch coord in Y
+  YMAX: An integer representing the maximum patch coord in Y
 
 DESCRIPTION:
 
@@ -98,7 +103,7 @@ DESCRIPTION:
   the interface lives.  From here, one can go into headless or running
   mode, but for certain things this interface will still need to act,
   and also allows for bringing up and taking down of visual elements."
- (setf *model* model))
+ (setf *dimensions* dims))
 
 (defun run ()
  "RUN => RESULT
@@ -119,12 +124,8 @@ DESCRIPTION:
  (sb-int:with-float-traps-masked (:invalid)
   (cl-glut:init)
   (cl-glut:init-window-size
-   (floor
-    (* *patch-size*
-     (1+ (- (getf (clnl-model:world-dimensions *model*) :xmax) (getf (clnl-model:world-dimensions *model*) :xmin)))))
-   (floor
-    (* *patch-size*
-     (1+ (- (getf (clnl-model:world-dimensions *model*) :ymax) (getf (clnl-model:world-dimensions *model*) :ymin))))))
+   (floor (* *patch-size* (1+ (- (getf *dimensions* :xmax) (getf *dimensions* :xmin)))))
+   (floor (* *patch-size* (1+ (- (getf *dimensions* :ymax) (getf *dimensions* :ymin))))))
   (cl-glut:init-display-mode :double :rgba)
   (cl-glut:create-window "CLNL Test Window")
   (setf *glut-window-opened* t)
@@ -166,13 +167,13 @@ DESCRIPTION:
     (render-buf (first (gl:gen-renderbuffers 1)))
    ;(width
    ; (floor (* *patch-size* (1+ (-
-   ;                             (getf (clnl-model:world-dimensions *model*) :ymax)
-   ;                             (getf (clnl-model:world-dimensions *model*) :ymin))))))
+   ;                             (getf *dimensions* :ymax)
+   ;                             (getf *dimensions* :ymin))))))
    ;(height
    ; (floor (* *patch-size* (1+ (- (getf *world-dims* :xmax) (getf *world-dims* :xmin))))))
    ; (floor (* *patch-size* (1+ (-
-   ;                            (getf (clnl-model:world-dimensions *model*) :xmax)
-   ;                            (getf (clnl-model:world-dimensions *model*) :xmin)))))
+   ;                            (getf *dimensions* :xmax)
+   ;                            (getf *dimensions* :xmin)))))
     (width 143)  ; Hard coded for now, yay v1 (if you see this comment in a year, please cry for me)
     (height 143))
    (gl:bind-framebuffer :framebuffer fbo)

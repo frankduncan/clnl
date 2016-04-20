@@ -43,7 +43,12 @@ DESCRIPTION:
   is set so that multiple runs will evaluate to the same.
 
   When FILE is not provided, a default model is used."
- (eval (model->lisp (if file (with-open-file (str file) (clnl-model:read-from-nlogo str)) (clnl-model:default-model)))))
+ (let
+  ((netlogoed-lisp
+    (model->lisp
+     (if file (with-open-file (str file) (clnl-model:read-from-nlogo str)) (clnl-model:default-model))))
+   (*package* (find-package :cl)))
+  (eval netlogoed-lisp)))
 
 (defun run-commands (cmds)
  "RUN-COMMANDS CMDS => RESULT
@@ -79,5 +84,5 @@ DESCRIPTION:
 (defun model->lisp (model)
  `(progn
    (clnl-random:set-seed 15) ; should the seed always be 15?
-   (clnl-nvm:create-world ,model)
-   (clnl-interface:initialize ,model)))
+   (clnl-nvm:create-world :dims ',(clnl-model:world-dimensions model))
+   (clnl-interface:initialize :dims ',(clnl-model:world-dimensions model))))

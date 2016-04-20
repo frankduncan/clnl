@@ -1,6 +1,6 @@
 (in-package #:clnl-nvm)
 
-(defun min-pxcor () (getf (clnl-model:world-dimensions *model*) :xmin))
-(defun max-pxcor () (getf (clnl-model:world-dimensions *model*) :xmax))
-(defun min-pycor () (getf (clnl-model:world-dimensions *model*) :ymin))
-(defun max-pycor () (getf (clnl-model:world-dimensions *model*) :ymax))
+(defun min-pxcor () (getf *dimensions* :xmin))
+(defun max-pxcor () (getf *dimensions* :xmax))
+(defun min-pycor () (getf *dimensions* :ymin))
+(defun max-pycor () (getf *dimensions* :ymax))

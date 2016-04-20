@@ -78,7 +78,7 @@ DESCRIPTION:
     (defstruct ,type
      ,@(remove nil
         (mapcar
-         (lambda (def) (when (find (car def) (list :int :double :boolean :choice :string)) (second def)))
+         (lambda (def) (when (find (car def) (list :int :double :boolean :choice :string :option)) (second def)))
          definitions)))
     (push
      (list
@@ -110,6 +110,7 @@ DESCRIPTION:
                  (:double `(coerce (read-from-string ,line) 'double-float))
                  (:boolean `(string= "1" ,line))
                  (:choice `(cadr (find ,line ',(third def) :key #'car :test #'string=)))
+                 (:option `(when (string/= ,line ,(third def)) ,line))
                  (:string line))))
               (when val-getter (list (intern (symbol-name (cadr def)) :keyword) val-getter))))
             definitions
@@ -143,6 +144,22 @@ DESCRIPTION:
  (:boolean show-tick-counter)
  (:string tick-counter-label)
  (:double frame-rate 30))
+
+(defwidget-definition slider
+ (:specified "SLIDER")
+ (:int left)
+ (:int top)
+ (:int right)
+ (:int bottom)
+ (:string display)
+ (:string varname)
+ (:string min)
+ (:string max)
+ (:double default)
+ (:string step)
+ (:reserved)
+ (:option units "NIL")
+ (:choice direction (("HORIZONTAL" :horizontal) ("VERTICAL" :vertical))))
 
 (defun parse-interface (interface-as-strings)
  (let

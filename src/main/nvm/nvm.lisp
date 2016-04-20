@@ -173,13 +173,18 @@ DESCRIPTION:
   See http://ccl.northwestern.edu/netlogo/docs/dictionary.html#create-turtles"
  (loop :for i :from 1 :to n :do (create-turtle)))
 
-(defun create-world (model)
- "CREATE-WORLD MODEL => RESULT
+(defun create-world (&key dims)
+ "CREATE-WORLD &key DIMS => RESULT
+
+  DIMS: (:xmin XMIN :xmax XMAX :ymin YMIN :ymax YMAX)
 
 ARGUMENTS AND VALUES:
 
-  MODEL: A clnl-model:model to use to initialize the vm
   RESULT: undefined
+  XMIN: An integer representing the minimum patch coord in X
+  XMAX: An integer representing the maximum patch coord in X
+  YMIN: An integer representing the minimum patch coord in Y
+  YMAX: An integer representing the maximum patch coord in Y
 
 DESCRIPTION:
 
@@ -187,7 +192,7 @@ DESCRIPTION:
 
   This should be called before using the engine in any real capacity.  If
   called when an engine is already running, it may do somethign weird."
- (setf *model* model)
+ (setf *dimensions* dims)
  (setf *turtles* nil)
  (setf *current-id* 0))
 
