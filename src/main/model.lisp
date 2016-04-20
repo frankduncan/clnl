@@ -78,7 +78,8 @@ DESCRIPTION:
     (defstruct ,type
      ,@(remove nil
         (mapcar
-         (lambda (def) (when (find (car def) (list :int :double :boolean :choice :string :option)) (second def)))
+         (lambda (def)
+          (when (find (car def) (list :int :double :inverted-boolean :boolean :choice :string :option)) (second def)))
          definitions)))
     (push
      (list
@@ -94,6 +95,7 @@ DESCRIPTION:
                (:int `(parse-integer ,line :junk-allowed t))
                (:double `(ignore-errors (coerce (read-from-string ,line) 'double-float)))
                (:boolean `(or (string= "1" ,line) (string= "0" ,line)))
+               (:inverted-boolean `(or (string= "0" ,line) (string= "1" ,line)))
                (:choice `(find ,line ',(mapcar #'car (third def)) :test #'string=)))))
             definitions
             (loop for i to (length definitions) collect i)))))
@@ -109,6 +111,7 @@ DESCRIPTION:
                  (:int `(parse-integer ,line))
                  (:double `(coerce (read-from-string ,line) 'double-float))
                  (:boolean `(string= "1" ,line))
+                 (:inverted-boolean `(string= "0" ,line))
                  (:choice `(cadr (find ,line ',(third def) :key #'car :test #'string=)))
                  (:option `(when (string/= ,line ,(third def)) ,line))
                  (:string line))))
@@ -160,6 +163,18 @@ DESCRIPTION:
  (:reserved)
  (:option units "NIL")
  (:choice direction (("HORIZONTAL" :horizontal) ("VERTICAL" :vertical))))
+
+(defwidget-definition switch
+ (:specified "SWITCH")
+ (:int left)
+ (:int top)
+ (:int right)
+ (:int bottom)
+ (:string display)
+ (:string varname)
+ (:inverted-boolean on)
+ (:reserved)
+ (:reserved))
 
 (defun parse-interface (interface-as-strings)
  (let
