@@ -221,3 +221,31 @@ DESCRIPTION:
    :xmax (view-max-pxcor view)
    :ymin (view-min-pycor view)
    :ymax (view-max-pycor view))))
+
+(defun globals (model)
+ "GLOBALS MODEL => GLOBALS
+
+  GLOBALS: GLOBAL*
+
+ARGUMENTS AND VALUES:
+
+  MODEL: A valid model
+  GLOBAL: A symbol interned in clnl:*model-package*
+
+DESCRIPTION:
+
+  Returns the globals that get declared in the model, from widgets or
+  from code.  They are interned in the package set for clnl, so
+  that they can later be used by functions in that package."
+ (mapcar
+  (lambda (pair)
+   (list
+    (intern (string-upcase (car pair)) clnl:*model-package*)
+    (cadr pair)))
+  (remove nil
+   (mapcar
+    (lambda (widget)
+     (typecase widget
+      (slider (list (slider-varname widget) (slider-default widget)))
+      (switch (list (switch-varname widget) (switch-on widget)))))
+    (model-interface model)))))

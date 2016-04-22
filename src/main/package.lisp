@@ -1,5 +1,5 @@
 (defpackage #:clnl (:use :common-lisp)
- (:export #:run #:boot #:run-commands #:run-reporter)
+ (:export #:run #:boot #:run-commands #:run-reporter #:*model-package*)
  (:documentation
   "Main CLNL package
 
@@ -92,7 +92,7 @@ is where all the features that the traditional NetLogo UI lives."))
 
 (defpackage #:clnl-model
  (:use :common-lisp)
- (:export #:default-model #:read-from-nlogo #:world-dimensions)
+ (:export #:default-model #:read-from-nlogo #:world-dimensions #:globals)
  (:documentation
   "CLNL Model
 

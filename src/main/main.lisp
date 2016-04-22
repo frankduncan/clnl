@@ -1,5 +1,26 @@
 (in-package #:clnl)
 
+(defvar *model-package* (find-package :cl-user)
+ "*MODEL-PACKAGE*
+
+VALUE TYPE:
+
+  a package
+
+INITIAL VALUE:
+
+  The common-lisp-user package
+
+DESCRIPTION:
+
+  *MODEL-PACKAGE* is used for interning symbols as a NetLogo code
+  gets compiled.
+
+  Any local symbols are interned in this package, for use either
+  by other code, or in order to have all symbols interned in the
+  same placakge.  This is also the package in which a model should
+  be run, whether by clnl code or independently.")
+
 (defun e (ast) ast)
 
 (defun r (str)
@@ -47,7 +68,7 @@ DESCRIPTION:
   ((netlogoed-lisp
     (model->lisp
      (if file (with-open-file (str file) (clnl-model:read-from-nlogo str)) (clnl-model:default-model))))
-   (*package* (find-package :cl)))
+   (*package* *model-package*))
   (eval netlogoed-lisp)))
 
 (defun run-commands (cmds)
@@ -82,7 +103,8 @@ DESCRIPTION:
 ; The intention of this method is to generate the common lisp equivalent of a model file,
 ; such that if you decided to no longer use nlogo, you could use the engine without it.
 (defun model->lisp (model)
- `(progn
+ `(let
+   ,(clnl-model:globals model)
    (clnl-random:set-seed 15) ; should the seed always be 15?
    (clnl-nvm:create-world :dims ',(clnl-model:world-dimensions model))
    (clnl-interface:initialize :dims ',(clnl-model:world-dimensions model))))
