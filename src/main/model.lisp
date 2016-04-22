@@ -54,7 +54,7 @@ DESCRIPTION:
           (read-sections (append section (list line))))))))
      (read-sections))))
   (make-model
-   :code (nth 0 sections)
+   :code (format nil "~{~A~^~%~}" (nth 0 sections))
    :interface (parse-interface (nth 1 sections))
    :info (nth 2 sections)
    :turtle-shapes (nth 3 sections)
@@ -222,6 +222,10 @@ DESCRIPTION:
    :ymin (view-min-pycor view)
    :ymax (view-max-pycor view))))
 
+(defun parse-code (model)
+ (clnl-code-parser:parse (clnl-lexer:lex (model-code model))))
+
+; For now, we keep the code hidden in this package
 (defun globals (model)
  "GLOBALS MODEL => GLOBALS
 
@@ -242,10 +246,12 @@ DESCRIPTION:
    (list
     (intern (string-upcase (car pair)) clnl:*model-package*)
     (cadr pair)))
-  (remove nil
-   (mapcar
-    (lambda (widget)
-     (typecase widget
-      (slider (list (slider-varname widget) (slider-default widget)))
-      (switch (list (switch-varname widget) (switch-on widget)))))
-    (model-interface model)))))
+  (append
+   (clnl-code-parser:globals (parse-code model))
+   (remove nil
+    (mapcar
+     (lambda (widget)
+      (typecase widget
+       (slider (list (slider-varname widget) (slider-default widget)))
+       (switch (list (switch-varname widget) (switch-on widget)))))
+     (model-interface model))))))

@@ -24,32 +24,34 @@
 ; prims that are created when compiling the netlogo file
 ; usually via procedures or top level things like breed declarations
 (defparameter *dynamic-prims* nil)
-(defvar *in-structure* nil)
 
 (defun prim-name (prim) (getf prim :name))
 (defun prim-num-args (prim) (length (getf prim :args)))
 (defun prim-args (prim) (getf prim :args))
-(defun prim-in-structure (prim) (getf prim :in-structure))
+(defun prim-structure-prim (prim) (getf prim :structure-prim))
 
 (defun find-prim (symb) (find symb *prims* :key #'prim-name))
 
 ; Make this only as complicated as it needs to be, letting it grow
 ; as we take on more and more of the language
-(defun parse (lexed-ast &optional structure)
- "PARSE LEXED-AST &optional STRUCTURE => AST
+(defun parse (lexed-ast &optional dynamic-prims)
+ "PARSE LEXED-AST &optional DYNAMIC-PRIMS => AST
+
+  DYNAMIC-PRIMS: DYNAMIC-PRIM*
 
 ARGUMENTS AND VALUES:
 
   LEXED-AST: An ambigious ast
-  STRUCTURE: A boolean
   AST: An unambigious ast that can be transpiled
+  DYNAMIC-PRIM: A prim not statically defined
 
 DESCRIPTION:
 
   PARSE takes a ambigious LEXED-AST and converts it to an unambigious one.
 
-  When STRUCTURE is true, parse is done with the expanded indentifier set used
-  in NetLogo files, as well as pulling out procedure definitions.
+  DYNAMIC-PRIMS that are passed in are used to avoid compilation errors on
+  things not statically defined by the NetLogo language, be they user defined
+  procedures or generated primitives from breed declarations.
 
   The need for a parser between the lexer and the transpiler is because NetLogo
   needs two passes to turn into something that can be used.  This is the only entry
@@ -63,7 +65,7 @@ DESCRIPTION:
  (let
   ; could have defined this using the special variable, but didn't to make the
   ; function definition simpler, as well as the documentation.
-  ((*in-structure* structure))
+  ((*dynamic-prims* dynamic-prims))
   (parse-internal lexed-ast)))
 
 (defun parse-internal (lexed-ast)
@@ -71,29 +73,15 @@ DESCRIPTION:
   ((not lexed-ast) nil)
   ((numberp (car lexed-ast)) (cons (coerce (car lexed-ast) 'double-float) (parse-internal (cdr lexed-ast))))
   ((eql :[ (car lexed-ast)) (parse-block (cdr lexed-ast)))
-  ((eql :to (car lexed-ast)) (parse-procedure lexed-ast))
   ((and (symbolp (car lexed-ast)) (find-prim (car lexed-ast)))
    (let
     ((prim (find-prim (car lexed-ast))))
-    (when (and (not *in-structure*) (prim-in-structure prim))
+    (when (prim-structure-prim prim)
      (error "This doesn't make sense here"))
-    (if
-     (and (= (prim-num-args prim) 1) (eql :unevaluated-list (car (prim-args prim))))
-     (parse-prim-with-unevaluated-list prim lexed-ast)
-     (parse-prim-normally prim lexed-ast))))
+    (parse-prim prim lexed-ast)))
   (t (error "Couldn't parse ~S" lexed-ast))))
 
-; This is a special case but left with a little wiggle room for future
-; enhancements, like code blocks
-(defun parse-prim-with-unevaluated-list (prim lexed-ast)
- (when (not (eql :[ (cadr lexed-ast)))
-  (error "Expected list literal here"))
- (multiple-value-bind (in-list after-list) (find-closing-bracket (cddr lexed-ast))
-  (cons
-   (list (prim-name prim) (cons :list-literal in-list))
-   (parse-internal after-list))))
-
-(defun parse-prim-normally (prim lexed-ast)
+(defun parse-prim (prim lexed-ast)
  (let
   ((num-args (prim-num-args prim))
    (parsed-remainder (parse-internal (cdr lexed-ast))))
@@ -135,36 +123,14 @@ DESCRIPTION:
       (find-closing-bracket (cdr tokens) (case (car tokens) (:[ (1+ depth)) (:] (1- depth)) (t depth)))
       (values (cons (car tokens) in-block) after-block)))))
 
-; Due to the non expression style syntax of procedures, this must be special cased
-(defun parse-procedure (tokens)
- (when (not *in-structure*) (error "This doesn't make sense here"))
- (multiple-value-bind (in-block after-block) (find-end tokens)
-  (declare (ignore in-block))
-  (cons
-   (cons
-    (car tokens)
-    nil) ; Update this to parsing the internal of the inblock)
-   (parse-internal after-block))))
-
-(defun find-end (tokens)
- (cond
-  ((not tokens) (error "Failed to find end"))
-  ((eql :end (car tokens)) (values nil (cdr tokens)))
-  (t (multiple-value-bind (in-block after-block) (find-end (cdr tokens))
-      (values (cons (car tokens) in-block) after-block)))))
-
-; Used to populate dynamic-prims
-(defun determine-procedure-definition (tokens)
- (declare (ignore tokens)))
-
 (defmacro defprim (name args)
  `(push
    (list :name ,name :args ',args)
    *prims*))
 
-(defmacro defstructureprim (name args)
+(defmacro defstructureprim (name)
  `(push
-   (list :name ,name :args ',args :in-structure t)
+   (list :name ,name :structure-prim t)
    *prims*))
 
 ; This list of prims will get combined with the mapping to actual code later
@@ -180,7 +146,9 @@ DESCRIPTION:
 (defprim :show (t))
 (defprim :turtles ())
 
-(defstructureprim :globals (:unevaluated-list))
-(defstructureprim :breed (:unevaluated-list))
-(defstructureprim :turtles-own (:unevaluated-list))
-(defstructureprim :patches-own (:unevaluated-list))
+(defstructureprim :globals)
+(defstructureprim :breed)
+(defstructureprim :turtles-own)
+(defstructureprim :patches-own)
+(defstructureprim :to)
+(defstructureprim :to-report)

@@ -7,6 +7,7 @@
               (:file "model")
               (:file "lex")
               (:file "parse")
+              (:file "code-parse")
               (:file "nvm/base")
               (:file "nvm/utils")
               (:file "nvm/nvm")

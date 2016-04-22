@@ -15,6 +15,21 @@ the place that ties all the parts together into a cohesive whole."))
 All the code to convert the list of tokens coming from the lexer
 into an ast that can be transpiled later."))
 
+(defpackage #:clnl-code-parser
+ (:use :common-lisp)
+ (:export #:parse #:globals)
+ (:documentation
+  "CLNL Code Parser
+
+A parser specifically for code from NetLogo models, that turns the lexed
+ast from an entire structured file into something more defined.
+
+This is different from the general parser (in clnl-parser) in that
+it's made for parsing the code section of nlogo files, and so works
+outside of the constraints.  In NetLogo, I believe this is analagous
+to the StructureParser, but I'm guessing there's weird overlap with
+other things."))
+
 (defpackage #:clnl-random
  (:use :common-lisp)
  (:shadow #:export)
