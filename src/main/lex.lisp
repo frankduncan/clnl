@@ -64,12 +64,11 @@ DESCRIPTION:
 
 ; This part is the actual netlogo spec
 
-(defvar *string-text* "(\\\"|\\r|\\n|\\t|\\\\|\\[^\"]|[^\r\n\"\\])*")
+(defvar *string-text* "(\\\\\"|\\\\n|\\\\r|\\\\t|\\\\|[^\\r\\n\\\"])")
 (defvar *nonnewline_white_space_char* "[ \\t\\b\\012]")
 (defvar *letter* "\\w")
 (defvar *digit* "\\d")
-;(defparameter *identifier-char* "[\\w\\d_\\.?=\*!<>:#\+/%\$\^\'&-]")
-(defvar *identifier-char* "[\\w\\d-.]")
+(defvar *identifier-char* "[\\w\\d_.?=\*!<>:#\+/%$\^'&-]")
 
 ;(defvar *extension-literal-depth* 0)
 ;(defstruct extension-literal text)
@@ -96,8 +95,8 @@ DESCRIPTION:
 (deflex :initial "[,\\{\\}\\[\\]\\(\\)]" #'as-symbol)
 (deflex :initial *nonnewline_white_space_char* (constantly nil))
 (deflex :initial "\\n|\\r" (constantly nil))
-;(deflex :initial ";.*[\n\r]?" nil)
-(deflex :initial (format nil "-?\.?[0-9]~A*" *identifier-char*)
+(deflex :initial ";.*[\n\r]?" (constantly nil))
+(deflex :initial (format nil "-?\\.?[0-9]~A*" *identifier-char*)
  (lambda (text)
   (let
    ((num?
@@ -108,6 +107,7 @@ DESCRIPTION:
    (if (numberp num?) num? (error "Invalid number")))))
 
 (deflex :initial (format nil "~A*" *identifier-char*) #'as-symbol)
-;(deflex :initial (format nil "\"~A*\"" *string-text*))
-;(deflex :initial (format nil "\"~A*" *string-text*) (lambda (text) (error "Closing double quote is missing")))
+(deflex :initial (format nil "\"~A*\"" *string-text*) #'identity)
+(deflex :initial (format nil "\"~A*" *string-text*)
+ (lambda (text) (declare (ignore text)) (error "Closing double quote is missing")))
 ;(deflex :initial "." (lambda (text) (error "Non standard character is not allowed")))
