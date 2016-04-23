@@ -54,7 +54,15 @@ DESCRIPTION:
           (read-sections (append section (list line))))))))
      (read-sections))))
   (make-model
-   :code (clnl-code-parser:parse (clnl-lexer:lex (format nil "~{~A~^~%~}" (nth 0 sections))))
+   :code (clnl-code-parser:parse
+          (clnl-lexer:lex (format nil "~{~A~^~%~}" (nth 0 sections)))
+          (remove nil
+           (mapcar
+            (lambda (widget)
+             (typecase widget
+              (slider (intern (string-upcase (slider-varname widget)) (find-package :keyword)))
+              (switch (intern (string-upcase (switch-varname widget)) (find-package :keyword)))))
+            (parse-interface (nth 1 sections)))))
    :interface (parse-interface (nth 1 sections))
    :info (nth 2 sections)
    :turtle-shapes (nth 3 sections)

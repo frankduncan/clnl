@@ -6,28 +6,42 @@
 ; to the StructureParser, but I'm guessing there's weird overlap with
 ; other things
 
-(defun parse (lexed-ast)
- "PARSE LEXED-AST => AST
+(defvar *dynamic-prims* nil)
+(defun global->prim (global) (list :name global))
+
+(defun parse (lexed-ast &optional external-globals)
+ "PARSE LEXED-AST &optional EXTERNAL-GLOBALS => AST
 
 ARGUMENTS AND VALUES:
 
   LEXED-AST: An ambigious ast
+  EXTERNAL-GLOBALS: A list of symbols in keyword package
   AST: An unambigious ast that represents the code block of a model
 
 DESCRIPTION:
 
   PARSE takes a ambigious LEXED-AST and converts it to an unambigious one.
 
+  EXTERNAL-GLOBALS is a list of symbols representing global variables that
+  are not defined within the code.  Normally these come from widgets defined
+  in the model file, but could arguably come from elsewhere.
+
   This parser, unlike CLNL-PARSE:PARSE, should not be fed into the transpiler.
 
   Rather, the ast that's returned can be queried with other functions included
   in the CLNL-CODE-PARSER package to tease out necessary information.  Some of
   those things will involve code blocks that can then be transpiled."
+ (let
+  ((*dynamic-prims* (mapcar #'global->prim external-globals)))
+  (parse-internal lexed-ast)))
+
+(defun parse-internal (lexed-ast)
  (cond
   ((not lexed-ast) nil)
   ((eql :to (car lexed-ast)) (parse-procedure lexed-ast))
-  ((find (car lexed-ast) '(:breed :globals :turtles-own :patches-own))
-   (parse-with-unevaluated-list lexed-ast))))
+  ((find (car lexed-ast) '(:globals :turtles-own :patches-own))
+   (parse-with-unevaluated-list lexed-ast))
+  ((eql (car lexed-ast) :breed) (parse-breed lexed-ast))))
 
 ; Due to the non expression style syntax of procedures, this must be special cased
 (defun parse-procedure (tokens)
@@ -36,8 +50,8 @@ DESCRIPTION:
    (list
     (first in-block)
     (second in-block)
-    (clnl-parser:parse (cddr in-block)))
-   (parse after-block))))
+    (clnl-parser:parse (cddr in-block) *dynamic-prims*))
+   (parse-internal after-block))))
 
 (defun find-end (tokens)
  (cond
@@ -49,12 +63,20 @@ DESCRIPTION:
 ; This is a special case but left with a little wiggle room for future
 ; enhancements, like code blocks
 (defun parse-with-unevaluated-list (lexed-ast)
- (when (not (eql :[ (cadr lexed-ast)))
-  (error "Expected list literal here"))
+ (when (not (eql :[ (cadr lexed-ast))) (error "Expected list literal here"))
  (multiple-value-bind (in-list after-list) (find-closing-bracket (cddr lexed-ast))
   (cons
    (list (car lexed-ast) (cons :list-literal in-list))
-   (parse after-list))))
+   (let
+    ((*dynamic-prims* (append (mapcar #'global->prim in-list) *dynamic-prims*)))
+    (parse-internal after-list)))))
+
+(defun parse-breed (lexed-ast)
+ (when (not (eql :[ (cadr lexed-ast))) (error "Expected list literal here"))
+ (multiple-value-bind (in-list after-list) (find-closing-bracket (cddr lexed-ast))
+  (cons
+   (list (car lexed-ast) (cons :list-literal in-list))
+   (parse-internal after-list))))
 
 (defun find-closing-bracket (tokens)
  (cond
