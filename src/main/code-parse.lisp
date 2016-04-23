@@ -32,8 +32,18 @@ DESCRIPTION:
   in the CLNL-CODE-PARSER package to tease out necessary information.  Some of
   those things will involve code blocks that can then be transpiled."
  (let
-  ((*dynamic-prims* (mapcar #'global->prim external-globals)))
+  ((*dynamic-prims*
+    (append
+     (mapcar #'global->prim external-globals)
+     (procedures->prims lexed-ast))))
   (parse-internal lexed-ast)))
+
+(defun procedures->prims (lexed-ast)
+ (cond
+  ((not lexed-ast) nil)
+  ; We'll need argument handling here sometime :)
+  ((eql :to (car lexed-ast)) (cons (list :name (cadr lexed-ast)) (procedures-to-prims (cdr lexed-ast))))
+  (t (procedures-to-prims (cdr lexed-ast)))))
 
 (defun parse-internal (lexed-ast)
  (cond
