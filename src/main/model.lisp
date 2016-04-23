@@ -60,8 +60,8 @@ DESCRIPTION:
            (mapcar
             (lambda (widget)
              (typecase widget
-              (slider (intern (string-upcase (slider-varname widget)) (find-package :keyword)))
-              (switch (intern (string-upcase (switch-varname widget)) (find-package :keyword)))))
+              (slider (intern (string-upcase (slider-varname widget)) :keyword))
+              (switch (intern (string-upcase (switch-varname widget)) :keyword))))
             (parse-interface (nth 1 sections)))))
    :interface (parse-interface (nth 1 sections))
    :info (nth 2 sections)

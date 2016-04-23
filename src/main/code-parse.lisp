@@ -8,6 +8,13 @@
 
 (defvar *dynamic-prims* nil)
 (defun global->prim (global) (list :name global))
+(defun breed->prims (breed-list)
+ (let
+  ((plural-name (symbol-name (car breed-list))))
+  (list
+   (list :name (car breed-list))
+   (list :name (intern (format nil "~A-HERE" plural-name) :keyword))
+   (list :name (intern (format nil "CREATE-~A" plural-name) :keyword) :args '(:number :command-block)))))
 
 (defun parse (lexed-ast &optional external-globals)
  "PARSE LEXED-AST &optional EXTERNAL-GLOBALS => AST
@@ -86,7 +93,9 @@ DESCRIPTION:
  (multiple-value-bind (in-list after-list) (find-closing-bracket (cddr lexed-ast))
   (cons
    (list (car lexed-ast) (cons :list-literal in-list))
-   (parse-internal after-list))))
+   (let
+    ((*dynamic-prims* (append (breed->prims in-list) *dynamic-prims*)))
+    (parse-internal after-list)))))
 
 (defun find-closing-bracket (tokens)
  (cond
