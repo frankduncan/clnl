@@ -74,6 +74,7 @@ DESCRIPTION:
    *prims*))
 
 ; We count on the parser to handle arguemnts for us, when collating things.
+(defprim := :reporter cl:equalp)
 (defprim :ask :command clnl-nvm:ask)
 (defprim :crt :command clnl-nvm:create-turtles)
 (defprim :fd :command clnl-nvm:forward)

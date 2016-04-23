@@ -210,6 +210,9 @@ DESCRIPTION:
 
 (defmethod dump-object ((o string)) o)
 
+(defmethod dump-object ((o (eql t))) "true")
+(defmethod dump-object ((o (eql nil))) "false")
+
 (defun current-state ()
  "CURRENT-STATE => WORLD-STATE
 

@@ -29,3 +29,9 @@
 
 (defsimplereportertest "Random 1" "random-float 5" "4.244088516651127"
  "17D1BF7FF7BF2C7F3F5F7DD7CF67CFF2772CFFFC")
+
+(defsimplereportertest "= 1" "5 = 5" "true"
+ "E1DE30F072D785E0D0B59F28B0F7853E3D3E0D8B")
+
+(defsimplereportertest "= 2" "5 = 4" "false"
+ "E1DE30F072D785E0D0B59F28B0F7853E3D3E0D8B")
