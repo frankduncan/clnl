@@ -33,7 +33,10 @@ DESCRIPTION:
 (defun parse-procedure (tokens)
  (multiple-value-bind (in-block after-block) (find-end tokens)
   (cons
-   in-block
+   (list
+    (first in-block)
+    (second in-block)
+    (clnl-parser:parse (cddr in-block)))
    (parse after-block))))
 
 (defun find-end (tokens)

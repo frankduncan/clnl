@@ -29,6 +29,7 @@
 (defun prim-num-args (prim) (length (getf prim :args)))
 (defun prim-args (prim) (getf prim :args))
 (defun prim-structure-prim (prim) (getf prim :structure-prim))
+(defun prim-is-infix (prim) (getf prim :infix))
 
 (defun find-prim (symb) (find symb *prims* :key #'prim-name))
 
@@ -68,31 +69,51 @@ DESCRIPTION:
   ((*dynamic-prims* dynamic-prims))
   (parse-internal lexed-ast)))
 
-(defun parse-internal (lexed-ast)
- (cond
-  ((not lexed-ast) nil)
-  ((numberp (car lexed-ast)) (cons (coerce (car lexed-ast) 'double-float) (parse-internal (cdr lexed-ast))))
-  ((eql :[ (car lexed-ast)) (parse-block (cdr lexed-ast)))
-  ((and (symbolp (car lexed-ast)) (find-prim (car lexed-ast)))
-   (let
-    ((prim (find-prim (car lexed-ast))))
-    (when (prim-structure-prim prim)
-     (error "This doesn't make sense here"))
-    (parse-prim prim lexed-ast)))
-  (t (error "Couldn't parse ~S" lexed-ast))))
-
-(defun parse-prim (prim lexed-ast)
+(defun parse-internal (lexed-ast &key prev-item arg-countdown)
  (let
-  ((num-args (prim-num-args prim))
-   (parsed-remainder (parse-internal (cdr lexed-ast))))
-  (cons
+  ((prim (and lexed-ast (symbolp (car lexed-ast)) (find-prim (car lexed-ast)))))
+  (cond
+   ((and arg-countdown (zerop arg-countdown)) (append (when prev-item (list prev-item)) lexed-ast))
+   ((and prim (prim-is-infix prim))
+    (parse-prim prim lexed-ast prev-item arg-countdown)) ; Special casing infix prims is cleaner
+   (t
+    (append
+     (when prev-item (list prev-item))
+     (cond
+      ((not lexed-ast) nil)
+      ((stringp (car lexed-ast))
+       (parse-internal (cdr lexed-ast)
+        :prev-item (car lexed-ast)
+        :arg-countdown (when arg-countdown (1- arg-countdown))))
+      ((numberp (car lexed-ast))
+       (parse-internal (cdr lexed-ast)
+        :prev-item (coerce (car lexed-ast) 'double-float)
+        :arg-countdown (when arg-countdown (1- arg-countdown))))
+      ((eql (intern "(" (find-package :keyword)) (car lexed-ast)) (parse-parened-expr (cdr lexed-ast) arg-countdown))
+      ((eql (intern ")" (find-package :keyword)) (car lexed-ast)) (error "Closing parens has no opening parens"))
+      ((eql :[ (car lexed-ast)) (parse-block (cdr lexed-ast) arg-countdown))
+      (prim
+       (when (prim-structure-prim prim)
+        (error "This doesn't make sense here"))
+       (parse-prim prim lexed-ast nil arg-countdown))
+      (t (error "Couldn't parse ~S" lexed-ast))))))))
+
+(defun parse-prim (prim lexed-ast prev-item arg-countdown)
+ (let*
+  ((num-args (- (prim-num-args prim) (if (prim-is-infix prim) 1 0)))
+   (half-parsed-remainder (parse-internal (cdr lexed-ast) :arg-countdown num-args)))
+  (parse-internal
+   (nthcdr num-args half-parsed-remainder)
+   :arg-countdown (when arg-countdown (if (prim-is-infix prim) arg-countdown (1- arg-countdown)))
+   :prev-item
    (cons
     (prim-name prim)
     (mapcar
      #'help-arg
      (prim-args prim)
-     (butlast parsed-remainder (- (length parsed-remainder) num-args))))
-   (nthcdr num-args parsed-remainder))))
+     (append
+      (when (prim-is-infix prim) (list prev-item))
+      (butlast half-parsed-remainder (- (length half-parsed-remainder) num-args))))))))
 
 (defun help-arg (arg-type arg)
  (case arg-type
@@ -100,19 +121,21 @@ DESCRIPTION:
    (if (not (and (consp arg) (eql 'block (car arg))))
     (error "Required a block, but found a ~A" arg)
     (cons :command-block (cdr arg))))
+  (:reporter-block
+   (if (not (and (consp arg) (eql 'block (car arg))))
+    (error "Required a block, but found a ~A" arg)
+    (cons :reporter-block (cdr arg))))
   (:list
    (if (and (consp arg) (eql 'block (car arg)))
     (cons :list-literal (cdr arg))
     arg))
   (t arg)))
 
-(defun parse-block (tokens)
+(defun parse-block (tokens arg-countdown)
  (multiple-value-bind (in-block after-block) (find-closing-bracket tokens)
-  (cons
-   (cons
-    'block
-    (parse-internal in-block))
-   (parse-internal after-block))))
+  (parse-internal after-block
+   :prev-item (cons 'block (parse-internal in-block))
+   :arg-countdown (when arg-countdown (1- arg-countdown)))))
 
 (defun find-closing-bracket (tokens &optional (depth 0))
  (cond
@@ -123,9 +146,32 @@ DESCRIPTION:
       (find-closing-bracket (cdr tokens) (case (car tokens) (:[ (1+ depth)) (:] (1- depth)) (t depth)))
       (values (cons (car tokens) in-block) after-block)))))
 
-(defmacro defprim (name args)
+(defun parse-parened-expr (tokens arg-countdown)
+ (multiple-value-bind (in-block after-block) (find-closing-paren tokens)
+  (parse-internal after-block
+   :prev-item
+   (let
+    ((parsed-in-block (parse-internal in-block)))
+    (when (/= 1 (length parsed-in-block)) (error "Expected ) here"))
+    (car parsed-in-block))
+   :arg-countdown (when arg-countdown (1- arg-countdown)))))
+
+(defun find-closing-paren (tokens &optional (depth 0))
+ (cond
+  ((not tokens) (error "Failed to find a matching closing bracket"))
+  ((and (eql (intern ")" (find-package :keyword)) (car tokens)) (= depth 0)) (values nil (cdr tokens)))
+  (t (multiple-value-bind
+      (in-block after-block)
+      (find-closing-paren
+       (cdr tokens)
+       (cond
+        ((eql (intern "(" (find-package :keyword)) (car tokens)) (1+ depth))
+        ((eql (intern ")" (find-package :keyword)) (car tokens)) (1- depth)) (t depth)))
+      (values (cons (car tokens) in-block) after-block)))))
+
+(defmacro defprim (name args &optional infix)
  `(push
-   (list :name ,name :args ',args)
+   (list :name ,name :args ',args :infix ,infix)
    *prims*))
 
 (defmacro defstructureprim (name)
@@ -138,13 +184,63 @@ DESCRIPTION:
 ; - :number
 ; - :agentset
 ; - :command-block
+; - :boolean
 ; - t - any type
+;
+; After the arguments, :infix denotes that it's an :infix operator
+;  - Note: Later we should move it to have a list of optional attributes of the primitive
+(defprim := (t t) :infix)
+(defprim :!= (t t) :infix)
+(defprim :- (:number :number) :infix)
+(defprim :* (:number :number) :infix)
+(defprim :+ (:number :number) :infix)
+(defprim :/ (:number :number) :infix)
+(defprim :< (:number :number) :infix)
+(defprim :<= (:number :number) :infix)
+(defprim :any? (:agentset))
 (defprim :ask (:agentset :command-block))
+(defprim :clear-all ())
 (defprim :crt (:number))
+(defprim :color ())
+(defprim :count ())
+(defprim :die ())
+(defprim :display ())
+(defprim :with (:reporter-block))
 (defprim :fd (:number))
+(defprim :hatch (:number :command-block))
+(defprim :let (t t))
+(defprim :if (:boolean :command-block))
+(defprim :ifelse (:boolean :command-block :command-block))
+(defprim :label ())
+(defprim :label-color ())
+(defprim :not (:boolean))
+(defprim :nobody ())
+(defprim :one-of (t))
+(defprim :patches ())
+(defprim :pcolor ())
+(defprim :random (:number))
 (defprim :random-float (:number))
+(defprim :random-xcor ())
+(defprim :random-ycor ())
+(defprim :round ())
+(defprim :reset-ticks ())
+(defprim :lt (:number))
+(defprim :rt (:number))
+(defprim :set (t t))
+(defprim :set-default-shape (t t))
+(defprim :setxy (:number :number))
 (defprim :show (t))
+(defprim :size ())
+(defprim :stop ())
+(defprim :tick ())
 (defprim :turtles ())
+
+; colors
+(defprim :black ())
+(defprim :blue ())
+(defprim :brown ())
+(defprim :green ())
+(defprim :white ())
 
 (defstructureprim :globals)
 (defstructureprim :breed)
@@ -152,3 +248,41 @@ DESCRIPTION:
 (defstructureprim :patches-own)
 (defstructureprim :to)
 (defstructureprim :to-report)
+
+; Placeholder prims that should be populated in dynamic prims
+
+; Generated by globals/widgets
+(defprim :grass ())
+(defprim :initial-number-sheep ())
+(defprim :initial-number-wolves ())
+(defprim :sheep-gain-from-food ())
+(defprim :wolf-gain-from-food ())
+(defprim :sheep-reproduce ())
+(defprim :wolf-reproduce ())
+(defprim :grass? ())
+(defprim :grass-regrowth-time ())
+(defprim :show-energy? ())
+
+; Generated by procedures
+(defprim :move ())
+(defprim :eat-grass ())
+(defprim :reproduce-sheep ())
+(defprim :reproduce-wolves ())
+(defprim :catch-sheep ())
+(defprim :death ())
+(defprim :grow-grass ())
+(defprim :display-labels ())
+
+; Generated by *-own
+(defprim :countdown ())
+(defprim :energy ())
+
+; Generated by a let
+(defprim :prey ())
+
+; Generated by breeds
+(defprim :sheep ())
+(defprim :wolves ())
+(defprim :create-sheep (:number :command-block))   ; look at me not have to do optionals yet
+(defprim :sheep-here ())
+(defprim :create-wolves (:number :command-block))
