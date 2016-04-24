@@ -70,6 +70,7 @@ into an ast that can be transpiled later."))
   #:create-turtles
   #:die
   #:forward
+  #:lookup-color
   #:random-float
   #:show
   #:turtles

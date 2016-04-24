@@ -131,3 +131,9 @@
 
 (defsimplecommandtest "ifelse 2" "ifelse 5 = 4 [ crt 10 ] [ crt 5 ] if-else 5 = 4 [ crt 10 ] [ crt 5 ]"
  "A925E39EC022967568D238D31F70F0A375024A89")
+
+(defsimplereportertest "colors 1" "green" "55"
+ "E1DE30F072D785E0D0B59F28B0F7853E3D3E0D8B")
+
+(defsimplereportertest "colors 2" "black" "0"
+ "E1DE30F072D785E0D0B59F28B0F7853E3D3E0D8B")

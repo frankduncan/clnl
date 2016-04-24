@@ -17,6 +17,37 @@ DESCRIPTION:
   See http://ccl.northwestern.edu/netlogo/docs/dictionary.html#show"
  (format t "Showing: ~A~%" (dump-object value)))
 
+(defun lookup-color (color)
+ "LOOKUP-COLOR COLOR => COLOR-NUMBER
+
+ARGUMENTS AND VALUES:
+
+  COLOR: a symbol representing a color
+  COLOR-NUMBER: the NetLogo color integer
+
+DESCRIPTION:
+
+  Returns the number used to represent colors in NetLogo.
+
+  See http://ccl.northwestern.edu/netlogo/docs/dictionary.html#Constants"
+ (case color
+  (:black 0d0)
+  (:gray 5d0)
+  (:white 9.9d0)
+  (:red 15d0)
+  (:orange 25d0)
+  (:brown 35d0)
+  (:yellow 45d0)
+  (:green 55d0)
+  (:lime 65d0)
+  (:turquoise 75d0)
+  (:cyan 85d0)
+  (:sky 95d0)
+  (:blue 105d0)
+  (:violet 115d0)
+  (:magenta 125d0)
+  (:pink 135d0)))
+
 (defun create-turtle ()
  (setf
   *turtles*

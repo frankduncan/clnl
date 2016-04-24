@@ -10,9 +10,10 @@
 (defun is-command (prim) (eql :command (getf prim :type)))
 
 (defun find-prim (symb)
- (or
-  (find symb *prims* :key #'prim-name)
-  (find-prim (getf (find symb *prim-aliases* :key #'prim-name) :real-symb))))
+ (when symb
+  (or
+   (find symb *prims* :key #'prim-name)
+   (find-prim (getf (find symb *prim-aliases* :key #'prim-name) :real-symb)))))
 
 ; Let this grow, slowly but surely, eventually taking on calling context, etc.
 ; For now, it's just a
@@ -82,6 +83,9 @@ DESCRIPTION:
 (defmacro defsimpleprim (name type simple-func)
  `(defprim ,name ,type (lambda (&rest args) `(,',simple-func ,@args))))
 
+(defmacro defkeywordprim (name)
+ `(defprim ,name :reporter (lambda () ',name)))
+
 (defmacro defprim-alias (name real-symb)
  `(push (list :name ,name :real-symb ,real-symb) *prim-aliases*))
 
@@ -108,7 +112,16 @@ DESCRIPTION:
 
 (defprim-alias :if-else :ifelse)
 (defsimpleprim :lt :command clnl-nvm:turn-left)
+(defkeywordprim :nobody)
 (defsimpleprim :random-float :reporter clnl-nvm:random-float)
 (defsimpleprim :rt :command clnl-nvm:turn-right)
 (defsimpleprim :show :command clnl-nvm:show)
 (defsimpleprim :turtles :reporter clnl-nvm:turtles)
+
+; Colors
+(defmacro defcolorprim (color) `(defprim ,color :reporter (lambda () `(clnl-nvm:lookup-color ,,color))))
+(defcolorprim :black)
+(defcolorprim :blue)
+(defcolorprim :brown)
+(defcolorprim :green)
+(defcolorprim :white)
