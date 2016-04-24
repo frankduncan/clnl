@@ -77,3 +77,21 @@
 
 (defsimplereportertest "/ 3" "random-float 4 / random-float 7" "2.7112896835726876"
  "811837B74F63D10ABBC01DD59C1E7556706D9F7A")
+
+(defsimplereportertest "< 1" "5 < 5" "false"
+ "E1DE30F072D785E0D0B59F28B0F7853E3D3E0D8B")
+
+(defsimplereportertest "< 2" "5 < 6" "true"
+ "E1DE30F072D785E0D0B59F28B0F7853E3D3E0D8B")
+
+(defsimplereportertest "< 3" "random-float 4 < random-float 7" "false"
+ "811837B74F63D10ABBC01DD59C1E7556706D9F7A")
+
+(defsimplereportertest "<= 1" "5 <= 5" "true"
+ "E1DE30F072D785E0D0B59F28B0F7853E3D3E0D8B")
+
+(defsimplereportertest "<= 2" "5 <= 6" "true"
+ "E1DE30F072D785E0D0B59F28B0F7853E3D3E0D8B")
+
+(defsimplereportertest "<= 3" "random-float 4 <= random-float 7" "false"
+ "811837B74F63D10ABBC01DD59C1E7556706D9F7A")

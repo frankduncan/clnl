@@ -78,6 +78,8 @@ DESCRIPTION:
 
 (defsimpleprim := :reporter cl:equalp)
 (defprim :!= :reporter (lambda (a b) `(not (equalp ,a ,b))))
+(defsimpleprim :<= :reporter cl:<=)
+(defsimpleprim :< :reporter cl:<)
 (defsimpleprim :- :reporter cl:-)
 (defsimpleprim :+ :reporter cl:+)
 (defsimpleprim :* :reporter cl:*)
