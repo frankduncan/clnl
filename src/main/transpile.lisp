@@ -36,7 +36,7 @@ DESCRIPTION:
   ((not (listp command)) (error "Expected a statement of some sort"))
   ((not (find-prim (car command))) (error "Couldn't find the command for ~S" (car command)))
   ((not (is-command (find-prim (car command)))) (error "Expected command, got ~S" (car command)))
-  (t `(,(prim-func (find-prim (car command))) ,@(mapcar #'transpile-reporter (cdr command))))))
+  (t (apply (prim-func (find-prim (car command))) (mapcar #'transpile-reporter (cdr command))))))
 
 (defun transpile-reporter (reporter)
  "TRANSPILE-REPORTER REPORTER => AST
@@ -63,21 +63,24 @@ DESCRIPTION:
   ((eql :command-block (car reporter)) (transpile-command-block reporter))
   ((not (find-prim (car reporter))) (error "Couldn't find the reporter for ~S" (car reporter)))
   ((not (is-reporter (find-prim (car reporter)))) (error "Expected reporter, got ~S" (car reporter)))
-  (t `(,(prim-func (find-prim (car reporter))) ,@(mapcar #'transpile-reporter (cdr reporter))))))
+  (t (apply (prim-func (find-prim (car reporter))) (mapcar #'transpile-reporter (cdr reporter))))))
 
 (defun transpile-command-block (block)
  `(lambda () ,@(mapcar #'transpile-command (cdr block))))
 
-(defmacro defprim (name type nvm-func)
- `(push
-   (list :name ,name :type ,type :func ',nvm-func)
-   *prims*))
+(defmacro defprim (name type func)
+ `(push (list :name ,name :type ,type :func ,func) *prims*))
+
+(defmacro defsimpleprim (name type simple-func)
+ `(defprim ,name ,type (lambda (&rest args) `(,',simple-func ,@args))))
 
 ; We count on the parser to handle arguemnts for us, when collating things.
-(defprim := :reporter cl:equalp)
-(defprim :ask :command clnl-nvm:ask)
-(defprim :crt :command clnl-nvm:create-turtles)
-(defprim :fd :command clnl-nvm:forward)
-(defprim :random-float :reporter clnl-nvm:random-float)
-(defprim :show :command clnl-nvm:show)
-(defprim :turtles :reporter clnl-nvm:turtles)
+
+(defsimpleprim := :reporter cl:equalp)
+(defprim :!= :reporter (lambda (a b) `(not (equalp ,a ,b))))
+(defsimpleprim :ask :command clnl-nvm:ask)
+(defsimpleprim :crt :command clnl-nvm:create-turtles)
+(defsimpleprim :fd :command clnl-nvm:forward)
+(defsimpleprim :random-float :reporter clnl-nvm:random-float)
+(defsimpleprim :show :command clnl-nvm:show)
+(defsimpleprim :turtles :reporter clnl-nvm:turtles)

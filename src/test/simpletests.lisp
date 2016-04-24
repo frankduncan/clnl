@@ -35,3 +35,9 @@
 
 (defsimplereportertest "= 2" "5 = 4" "false"
  "E1DE30F072D785E0D0B59F28B0F7853E3D3E0D8B")
+
+(defsimplereportertest "!= 1" "5 != 5" "false"
+ "E1DE30F072D785E0D0B59F28B0F7853E3D3E0D8B")
+
+(defsimplereportertest "!= 2" "5 != 4" "true"
+ "E1DE30F072D785E0D0B59F28B0F7853E3D3E0D8B")
