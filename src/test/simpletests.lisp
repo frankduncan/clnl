@@ -41,3 +41,39 @@
 
 (defsimplereportertest "!= 2" "5 != 4" "true"
  "E1DE30F072D785E0D0B59F28B0F7853E3D3E0D8B")
+
+(defsimplereportertest "- 1" "5 - 5" "0"
+ "E1DE30F072D785E0D0B59F28B0F7853E3D3E0D8B")
+
+(defsimplereportertest "- 2" "5 - 6" "-1"
+ "E1DE30F072D785E0D0B59F28B0F7853E3D3E0D8B")
+
+(defsimplereportertest "- 3" "random-float 5 - random-float 5" "3.349608870016444"
+ "811837B74F63D10ABBC01DD59C1E7556706D9F7A")
+
+(defsimplereportertest "+ 1" "5 + 5" "10"
+ "E1DE30F072D785E0D0B59F28B0F7853E3D3E0D8B")
+
+(defsimplereportertest "+ 2" "5 + -6" "-1"
+ "E1DE30F072D785E0D0B59F28B0F7853E3D3E0D8B")
+
+(defsimplereportertest "+ 3" "random-float 6 + random-float 6" "6.166281795942972"
+ "811837B74F63D10ABBC01DD59C1E7556706D9F7A")
+
+(defsimplereportertest "* 1" "5 * 5" "25"
+ "E1DE30F072D785E0D0B59F28B0F7853E3D3E0D8B")
+
+(defsimplereportertest "* 2" "5 * -6" "-30"
+ "E1DE30F072D785E0D0B59F28B0F7853E3D3E0D8B")
+
+(defsimplereportertest "* 3" "random-float 4 * random-float 7" "4.251800892259665"
+ "811837B74F63D10ABBC01DD59C1E7556706D9F7A")
+
+(defsimplereportertest "/ 1" "5 / 5" "1"
+ "E1DE30F072D785E0D0B59F28B0F7853E3D3E0D8B")
+
+(defsimplereportertest "/ 2" "5 / -6" "-0.8333333333333334"
+ "E1DE30F072D785E0D0B59F28B0F7853E3D3E0D8B")
+
+(defsimplereportertest "/ 3" "random-float 4 / random-float 7" "2.7112896835726876"
+ "811837B74F63D10ABBC01DD59C1E7556706D9F7A")
