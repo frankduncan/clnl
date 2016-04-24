@@ -44,10 +44,13 @@ scalafiledisplaypid=$!
 display $clfile &
 clfiledisplaypid=$!
 
-echo -n "... and hit enter to finish"
+echo -n "... and hit enter to close scala image"
 read
 
 kill $scalafiledisplaypid
+
+echo -n "... and hit enter to finish"
+read
 kill $clfiledisplaypid
 
 rm $scalafile

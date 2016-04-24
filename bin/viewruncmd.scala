@@ -26,11 +26,9 @@ import collection.JavaConversions._
 System.out.println("----")
 val workspace = HeadlessWorkspace.newInstance
 workspace.silent = true
-workspace.openFromSource(url2String("file:resources/empty.nlogo"))
+workspace.openFromSource(url2String("file:resources/empty55.nlogo"))
 
 val commands = io.Source.stdin.getLines.mkString("\n")
-
-workspace.runCompiledCommands(new api.SimpleJobOwner("test", workspace.world.mainRNG, api.AgentKind.Observer), workspace.compileCommands("resize-world -5 5 -5 5", api.AgentKind.Observer))
 
 workspace.mainRNG.setSeed(15)
 workspace.runCompiledCommands(new api.SimpleJobOwner("test", workspace.world.mainRNG, api.AgentKind.Observer), workspace.compileCommands(commands, api.AgentKind.Observer))

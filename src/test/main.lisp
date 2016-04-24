@@ -105,7 +105,7 @@
  `(defsimpletest
    (format nil "Simple View - ~A" ,name)
    (lambda ()
-    (clnl:boot "resources/empty.nlogo")
+    (clnl:boot "resources/empty55.nlogo")
     (clnl:run-commands ,commands)
     (let
      ((viewsum (checksum-view)))
@@ -113,7 +113,7 @@
       (format t "~c[1;35m-- For ~A, got ~A but expected ~A~c[0m~%" #\Esc ,name viewsum ,checksum #\Esc))
      (checksum= ,checksum (checksum-view))))
    (lambda ()
-    (clnl:boot "resources/empty.nlogo")
+    (clnl:boot "resources/empty55.nlogo")
     (clnl:run-commands ,commands)
     (save-view-to-ppm)
     (format nil "~A" (checksum-view)))

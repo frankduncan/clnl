@@ -35,7 +35,7 @@ workspace.mainRNG.setSeed(15)
 if(commands.length > 0) {
   workspace.runCompiledCommands(new api.SimpleJobOwner("test", workspace.world.mainRNG, api.AgentKind.Observer), workspace.compileCommands(commands, api.AgentKind.Observer))
 }
-if(input.length > 0) {
+if(input.length > 1) {
   val reporter = input(1)
   System.out.println(org.nlogo.api.Dump.logoObject(workspace.runCompiledReporter(new api.SimpleJobOwner("test", workspace.world.mainRNG, api.AgentKind.Observer), workspace.compileReporter(reporter))))
 }

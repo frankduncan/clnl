@@ -31,6 +31,29 @@ DESCRIPTION:
      :ycor 0d0))))
  (incf *current-id*))
 
+(defun die ()
+ "DIE => RESULT
+
+ARGUMENTS AND VALUES:
+
+  RESULT: undefined, commands don't return
+
+DESCRIPTION:
+
+  The turtle or link dies
+
+  A dead agent ceases to exist. The effects of this include:
+  - The agent will not execute any further code.
+  - The agent will disappear from any agentsets it was in, reducing the size of those agentsets by one.
+  - Any variable that was storing the agent will now instead have nobody in it.
+  - If the dead agent was a turtle, every link connected to it also dies.
+  - If the observer was watching or following the agent, the observer's perspective resets.
+
+  See http://ccl.northwestern.edu/netlogo/docs/dictionary.html#die"
+ (when (not (turtle-p *self*)) (error "Gotta call die in turtle scope, dude (~A)" *self*))
+ (setf (turtle-who *self*) -1)
+ (setf *turtles* (remove *self* *turtles*)))
+
 (defun turtles ()
  "TURTLES => ALL-TURTLES
 

@@ -87,6 +87,7 @@ DESCRIPTION:
 (defprim :any? :reporter (lambda (agentset) `(> (length ,agentset) 0)))
 (defsimpleprim :ask :command clnl-nvm:ask)
 (defsimpleprim :crt :command clnl-nvm:create-turtles)
+(defsimpleprim :die :command clnl-nvm:die)
 (defsimpleprim :fd :command clnl-nvm:forward)
 (defsimpleprim :random-float :reporter clnl-nvm:random-float)
 (defsimpleprim :show :command clnl-nvm:show)

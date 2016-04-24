@@ -45,10 +45,15 @@
    (let
     ((color (nl-color->rgb (getf turtle :color))))
     (gl:color (car color) (cadr color) (caddr color)))
-   (gl:with-pushed-matrix
-    (gl:translate (* (getf turtle :xcor) *patch-size*) (* (getf turtle :ycor) *patch-size*) 0)
-    (gl:rotate (getf turtle :heading) 0 0 -1)
-    (gl:call-list *turtle-list*)))
+   (mapcar
+    (lambda (x-modification y-modification)
+     (gl:with-pushed-matrix
+      (gl:translate (* (getf turtle :xcor) *patch-size*) (* (getf turtle :ycor) *patch-size*) 0)
+      (gl:translate x-modification y-modification 0)
+      (gl:rotate (getf turtle :heading) 0 0 -1)
+      (gl:call-list *turtle-list*)))
+    (list 0 (1- (world-width-in-pixels)) (- (1- (world-width-in-pixels))) 0 0)
+    (list 0 0 0 (1- (world-height-in-pixels)) (- (1- (world-height-in-pixels))))))
   (clnl-nvm:current-state))
  (gl:flush))
 
@@ -124,8 +129,8 @@ DESCRIPTION:
  (sb-int:with-float-traps-masked (:invalid)
   (cl-glut:init)
   (cl-glut:init-window-size
-   (floor (* *patch-size* (1+ (- (getf *dimensions* :xmax) (getf *dimensions* :xmin)))))
-   (floor (* *patch-size* (1+ (- (getf *dimensions* :ymax) (getf *dimensions* :ymin))))))
+   (world-width-in-pixels)
+   (world-height-in-pixels))
   (cl-glut:init-display-mode :double :rgba)
   (cl-glut:create-window "CLNL Test Window")
   (setf *glut-window-opened* t)
@@ -136,6 +141,12 @@ DESCRIPTION:
   (cl-glut:close-func (cffi:get-callback 'close-func))
   (set-turtle-list)
   (cl-glut:main-loop)))
+
+(defun world-width-in-pixels ()
+ (floor (* *patch-size* (1+ (- (getf *dimensions* :xmax) (getf *dimensions* :xmin))))))
+
+(defun world-height-in-pixels ()
+ (floor (* *patch-size* (1+ (- (getf *dimensions* :ymax) (getf *dimensions* :ymin))))))
 
 (defun export-view ()
  "EXPORT-VIEW => IMAGE-DATA
@@ -174,8 +185,8 @@ DESCRIPTION:
    ; (floor (* *patch-size* (1+ (-
    ;                            (getf *dimensions* :xmax)
    ;                            (getf *dimensions* :xmin)))))
-    (width 143)  ; Hard coded for now, yay v1 (if you see this comment in a year, please cry for me)
-    (height 143))
+    (width (world-width-in-pixels))  ; Hard coded for now, yay v1 (if you see this comment in a year, please cry for me)
+    (height (world-height-in-pixels)))
    (gl:bind-framebuffer :framebuffer fbo)
    (gl:bind-renderbuffer :renderbuffer render-buf)
    (gl:renderbuffer-storage :renderbuffer :rgba8 width height)

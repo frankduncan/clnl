@@ -1,7 +1,16 @@
 (in-package #:clnl-test)
 
+(defviewtest "Nothing" ""
+ "1AF55686BD9B18D1CCE6AAF6BF18E81E6957F466")
+
 (defviewtest "Basic 1" "crt 1"
  "A41D8146DD81EF27AF2B97955C66E982CFA0A465")
 
 (defviewtest "Basic 2" "crt 10 ask turtles [ fd 1 ]"
  '("DEC2ED793C08A1680DD601BD3E9B81927994C123" "788EAE5B41CE031672672C372EDBCDFD9B309E64"))
+
+(defviewtest "Wrapping" "crt 10 ask turtles [ fd 6 ]"
+ '("DCDA6106352BBB6B52878B7AA443BCD5B7D124FC" "36922B55C2307FF4C7F2240B0A84C6D7B52427F9"))
+
+(defviewtest "Die" "crt 10 ask turtles [ fd 1 ] ask turtles [ die ]"
+ "1AF55686BD9B18D1CCE6AAF6BF18E81E6957F466")

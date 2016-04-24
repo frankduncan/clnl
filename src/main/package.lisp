@@ -68,6 +68,7 @@ into an ast that can be transpiled later."))
   ; API as used by transpiled NetLogo programs
   #:ask
   #:create-turtles
+  #:die
   #:forward
   #:random-float
   #:show
