@@ -79,8 +79,27 @@
      (funcall (intern "DUMP-OBJECT" :clnl-nvm) (clnl:run-reporter ,reporter))
      (clnl-nvm:export-world)
      (checksum-world)))
-   "bin/runreporter.scala"
-   (format nil "~A~%" ,reporter)))
+   "bin/runcmd.scala"
+   (format nil "~%@#$#@#$#@~A~%" ,reporter)))
+
+(defmacro defreportertestwithsetup (name setup reporter value checksum)
+ `(defsimpletest
+   (format nil "Reporter With Setup - ~A" ,name)
+   (lambda ()
+    (clnl:boot "resources/empty.nlogo")
+    (clnl:run-commands ,setup)
+    (and
+     (string= (funcall (intern "DUMP-OBJECT" :clnl-nvm) (clnl:run-reporter ,reporter)) ,value)
+     (checksum= ,checksum (checksum-world))))
+   (lambda ()
+    (clnl:boot "resources/empty.nlogo")
+    (clnl:run-commands ,setup)
+    (format nil "~A~%~A~A"
+     (funcall (intern "DUMP-OBJECT" :clnl-nvm) (clnl:run-reporter ,reporter))
+     (clnl-nvm:export-world)
+     (checksum-world)))
+   "bin/runcmd.scala"
+   (format nil "~A~%@#$#@#$#@~A" ,setup ,reporter)))
 
 (defmacro defviewtest (name commands checksum)
  `(defsimpletest

@@ -28,10 +28,17 @@ val workspace = HeadlessWorkspace.newInstance
 workspace.silent = true
 workspace.openFromSource(url2String("file:resources/empty.nlogo"))
 
-val commands = io.Source.stdin.getLines.mkString("\n")
+val input = io.Source.stdin.getLines.mkString("\n").split("\\@\\#\\$\\#\\@\\#\\$\\#\\@")
+val commands = input(0)
 
 workspace.mainRNG.setSeed(15)
-workspace.runCompiledCommands(new api.SimpleJobOwner("test", workspace.world.mainRNG, api.AgentKind.Observer), workspace.compileCommands(commands, api.AgentKind.Observer))
+if(commands.length > 0) {
+  workspace.runCompiledCommands(new api.SimpleJobOwner("test", workspace.world.mainRNG, api.AgentKind.Observer), workspace.compileCommands(commands, api.AgentKind.Observer))
+}
+if(input.length > 0) {
+  val reporter = input(1)
+  System.out.println(org.nlogo.api.Dump.logoObject(workspace.runCompiledReporter(new api.SimpleJobOwner("test", workspace.world.mainRNG, api.AgentKind.Observer), workspace.compileReporter(reporter))))
+}
 
 workspace.world.exportWorld(new java.io.PrintWriter(System.out, true), true)
 System.out.println(org.nlogo.headless.Checksummer.calculateChecksum(workspace.world.exportWorld(_, true)))

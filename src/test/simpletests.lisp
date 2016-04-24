@@ -95,3 +95,9 @@
 
 (defsimplereportertest "<= 3" "random-float 4 <= random-float 7" "false"
  "811837B74F63D10ABBC01DD59C1E7556706D9F7A")
+
+(defsimplereportertest "any? 1" "any? turtles" "false"
+ "E1DE30F072D785E0D0B59F28B0F7853E3D3E0D8B")
+
+(defreportertestwithsetup "any? 2" "crt 10" "any? turtles" "true"
+ "A925E39EC022967568D238D31F70F0A375024A89")

@@ -84,6 +84,7 @@ DESCRIPTION:
 (defsimpleprim :+ :reporter cl:+)
 (defsimpleprim :* :reporter cl:*)
 (defsimpleprim :/ :reporter cl:/)
+(defprim :any? :reporter (lambda (agentset) `(> (length ,agentset) 0)))
 (defsimpleprim :ask :command clnl-nvm:ask)
 (defsimpleprim :crt :command clnl-nvm:create-turtles)
 (defsimpleprim :fd :command clnl-nvm:forward)
