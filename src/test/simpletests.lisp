@@ -107,3 +107,15 @@
 
 (defreportertestwithsetup "any? 3" "crt 10 ask turtles [ die ]" "any? turtles" "false"
  "A665C1BF95E1F9CAAE9B9F8B2FBE3DAA45453136")
+
+(defsimplecommandtest "rt 1" "crt 100 ask turtles [ fd random-float 5 rt random-float 180 fd random-float 4 ]"
+ "186B05DEFF6771BE791D54AB36A36874EC6E04FE")
+
+(defsimplecommandtest "rt 2" "crt 100 ask turtles [ fd random-float 5 rt random-float 1080 fd random-float 4 ]"
+ "154C05DF7810C0FF5D7DDE51B76E1012FFB2C0E1")
+
+(defsimplecommandtest "lt 1" "crt 100 ask turtles [ fd random-float 5 lt random-float 180 fd random-float 4 ]"
+ "D4B3844FE453C05E57537D6BA94C4B42C84655C6")
+
+(defsimplecommandtest "lt 2" "crt 100 ask turtles [ fd random-float 5 lt random-float 1080 fd random-float 4 ]"
+ "07DEB6F4F007DB86CD8F2C2E10BD4E35CAD2B0CE")

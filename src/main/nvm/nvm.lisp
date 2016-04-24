@@ -143,11 +143,11 @@ DESCRIPTION:
  (setf
   (turtle-xcor *self*)
   (wrap-x *topology*
-   (+ (turtle-xcor *self*) (* n (strictmath:sin (strictmath:to-radians (turtle-heading *self*)))))))
+   (+ (turtle-xcor *self*) (* n (using-cached-sin (turtle-heading *self*))))))
  (setf
   (turtle-ycor *self*)
   (wrap-y *topology*
-   (+ (turtle-ycor *self*) (* n (strictmath:cos (strictmath:to-radians (turtle-heading *self*))))))))
+   (+ (turtle-ycor *self*) (* n (using-cached-cos (turtle-heading *self*)))))))
 
 (defun forward (n)
  "FORWARD N => RESULT
@@ -176,6 +176,43 @@ DESCRIPTION:
      ((< (abs i) 1d0) (jump i))
      (t (jump (if (> i 0d0) 1d0 -1d0)) (internal (- i (if (> i 0d0) 1d0 -1d0)))))))
   (internal n)))
+
+(defun turn-right (n)
+ "TURN-RIGHT N => RESULT
+
+ARGUMENTS AND VALUES:
+
+  N: a double, the amount the turtle turns
+  RESULT: undefined
+
+DESCRIPTION:
+
+  The turtle turns right by number degrees. (If number is negative, it turns left.)
+
+  See http://ccl.northwestern.edu/netlogo/docs/dictionary.html#right"
+ (when (not (turtle-p *self*)) (error "Gotta call fd in turtle scope, dude (~A)" *self*))
+ (let
+  ((new-heading (+ (turtle-heading *self*) n)))
+  (setf (turtle-heading *self*)
+   (cond
+    ((< new-heading 0) (+ (mod new-heading -360) 360))
+    ((>= new-heading 360) (mod new-heading 360))
+    (t new-heading)))))
+
+(defun turn-left (n)
+ "TURN-LEFT N => RESULT
+
+ARGUMENTS AND VALUES:
+
+  N: a double, the amount the turtle turns
+  RESULT: undefined
+
+DESCRIPTION:
+
+  The turtle turns left by number degrees. (If number is negative, it turns right.)
+
+  See http://ccl.northwestern.edu/netlogo/docs/dictionary.html#right"
+ (turn-right (- n)))
 
 (defun create-turtles (n)
  "CREATE-TURTLES N => RESULT

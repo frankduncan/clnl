@@ -72,7 +72,8 @@ into an ast that can be transpiled later."))
   #:forward
   #:random-float
   #:show
-  #:turtles)
+  #:turtles
+  #:turn-right #:turn-left)
  (:documentation
   "CLNL NVM
 

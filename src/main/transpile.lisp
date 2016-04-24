@@ -89,6 +89,8 @@ DESCRIPTION:
 (defsimpleprim :crt :command clnl-nvm:create-turtles)
 (defsimpleprim :die :command clnl-nvm:die)
 (defsimpleprim :fd :command clnl-nvm:forward)
+(defsimpleprim :lt :command clnl-nvm:turn-left)
 (defsimpleprim :random-float :reporter clnl-nvm:random-float)
+(defsimpleprim :rt :command clnl-nvm:turn-right)
 (defsimpleprim :show :command clnl-nvm:show)
 (defsimpleprim :turtles :reporter clnl-nvm:turtles)
