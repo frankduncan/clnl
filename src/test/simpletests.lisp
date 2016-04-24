@@ -119,3 +119,15 @@
 
 (defsimplecommandtest "lt 2" "crt 100 ask turtles [ fd random-float 5 lt random-float 1080 fd random-float 4 ]"
  "07DEB6F4F007DB86CD8F2C2E10BD4E35CAD2B0CE")
+
+(defsimplecommandtest "if 1" "if 5 = 5 [ crt 10 ]"
+ "A925E39EC022967568D238D31F70F0A375024A89")
+
+(defsimplecommandtest "if 2" "if 5 = 4 [ crt 10 ]"
+ "E1DE30F072D785E0D0B59F28B0F7853E3D3E0D8B")
+
+(defsimplecommandtest "ifelse 1" "ifelse 5 = 5 [ crt 10 ] [crt 5 ] if-else 5 = 5 [ crt 10 ] [ crt 5 ]"
+ "2CF70DC9135754E77B64422C10E947E776E731E6")
+
+(defsimplecommandtest "ifelse 2" "ifelse 5 = 4 [ crt 10 ] [ crt 5 ] if-else 5 = 4 [ crt 10 ] [ crt 5 ]"
+ "A925E39EC022967568D238D31F70F0A375024A89")

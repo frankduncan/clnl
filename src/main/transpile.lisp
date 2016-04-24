@@ -1,6 +1,7 @@
 (in-package #:clnl-transpiler)
 
 (defparameter *prims* nil)
+(defparameter *prim-aliases* nil)
 
 (defun prim-name (prim) (getf prim :name))
 (defun prim-type (prim) (getf prim :type))
@@ -8,7 +9,10 @@
 (defun is-reporter (prim) (eql :reporter (getf prim :type)))
 (defun is-command (prim) (eql :command (getf prim :type)))
 
-(defun find-prim (symb) (find symb *prims* :key #'prim-name))
+(defun find-prim (symb)
+ (or
+  (find symb *prims* :key #'prim-name)
+  (find-prim (getf (find symb *prim-aliases* :key #'prim-name) :real-symb))))
 
 ; Let this grow, slowly but surely, eventually taking on calling context, etc.
 ; For now, it's just a
@@ -68,11 +72,18 @@ DESCRIPTION:
 (defun transpile-command-block (block)
  `(lambda () ,@(mapcar #'transpile-command (cdr block))))
 
+; Undoes the previous function :)
+(defun make-command-block-inline (block)
+ (cddr block))
+
 (defmacro defprim (name type func)
  `(push (list :name ,name :type ,type :func ,func) *prims*))
 
 (defmacro defsimpleprim (name type simple-func)
  `(defprim ,name ,type (lambda (&rest args) `(,',simple-func ,@args))))
+
+(defmacro defprim-alias (name real-symb)
+ `(push (list :name ,name :real-symb ,real-symb) *prim-aliases*))
 
 ; We count on the parser to handle arguemnts for us, when collating things.
 
@@ -89,6 +100,13 @@ DESCRIPTION:
 (defsimpleprim :crt :command clnl-nvm:create-turtles)
 (defsimpleprim :die :command clnl-nvm:die)
 (defsimpleprim :fd :command clnl-nvm:forward)
+(defprim :if :command (lambda (pred a) `(when ,pred ,@(make-command-block-inline a))))
+(defprim :ifelse :command (lambda (pred a b)
+                           `(if ,pred
+                             ,@(make-command-block-inline a)
+                             ,@(make-command-block-inline b))))
+
+(defprim-alias :if-else :ifelse)
 (defsimpleprim :lt :command clnl-nvm:turn-left)
 (defsimpleprim :random-float :reporter clnl-nvm:random-float)
 (defsimpleprim :rt :command clnl-nvm:turn-right)
