@@ -284,6 +284,16 @@ DESCRIPTION:
   This should be called before using the engine in any real capacity.  If
   called when an engine is already running, it may do somethign weird."
  (setf *dimensions* dims)
+ (setf
+  *patches*
+  (loop
+   :for y :from (max-pycor) :downto (min-pycor)
+   :append (loop
+            :for x :from (min-pxcor) :to (max-pxcor)
+            :collect (make-patch
+                      :xcor (coerce x 'double-float)
+                      :ycor (coerce y 'double-float)
+                      :color 0d0))))
  (setf *turtles* nil)
  (setf *current-id* 0))
 
@@ -319,31 +329,59 @@ DESCRIPTION:
   data structure for easy usage in a common lisp instance.  It's preferable
   to use this when working with the nvm than the output done by export-world.
 
-  Currently this only dumps out turtle information.
+  Currently this only dumps out turtle and patch information.
 
   This is called CURRENT-STATE because export-world is an actual primitive
   used by NetLogo."
- (mapcar
-  (lambda (turtle)
-   (list
-    :color (turtle-color turtle)
-    :xcor (turtle-xcor turtle)
-    :ycor (turtle-ycor turtle)
-    :heading (turtle-heading turtle)))
-  *turtles*))
+ (list
+  (mapcar
+   (lambda (turtle)
+    (list
+     :color (turtle-color turtle)
+     :xcor (turtle-xcor turtle)
+     :ycor (turtle-ycor turtle)
+     :heading (turtle-heading turtle)))
+   *turtles*)
+  (mapcar
+   (lambda (patch)
+    (list
+     :color (patch-color patch)
+     :xcor (patch-xcor patch)
+     :ycor (patch-ycor patch)))
+   *patches*)))
+
+(defun export-turtles ()
+ (append
+  (list
+   "\"TURTLES\""
+   (format nil "~A~A"
+    "\"who\",\"color\",\"heading\",\"xcor\",\"ycor\",\"shape\",\"label\",\"label-color\","
+    "\"breed\",\"hidden?\",\"size\",\"pen-size\",\"pen-mode\""))
+  (mapcar
+   (lambda (turtle)
+    (format nil
+     "\"~A\",\"~A\",\"~A\",\"~A\",\"~A\",~A"
+     (turtle-who turtle)
+     (dump-object (turtle-color turtle))
+     (dump-object (turtle-heading turtle))
+     (dump-object (turtle-xcor turtle))
+     (dump-object (turtle-ycor turtle))
+     "\"\"\"default\"\"\",\"\"\"\"\"\",\"9.9\",\"{all-turtles}\",\"false\",\"1\",\"1\",\"\"\"up\"\"\""))
+   *turtles*)))
 
 (defun export-patches ()
- (list
-  "\"pxcor\",\"pycor\",\"pcolor\",\"plabel\",\"plabel-color\""
-  "\"-1\",\"1\",\"0\",\"\"\"\"\"\",\"9.9\""
-  "\"0\",\"1\",\"0\",\"\"\"\"\"\",\"9.9\""
-  "\"1\",\"1\",\"0\",\"\"\"\"\"\",\"9.9\""
-  "\"-1\",\"0\",\"0\",\"\"\"\"\"\",\"9.9\""
-  "\"0\",\"0\",\"0\",\"\"\"\"\"\",\"9.9\""
-  "\"1\",\"0\",\"0\",\"\"\"\"\"\",\"9.9\""
-  "\"-1\",\"-1\",\"0\",\"\"\"\"\"\",\"9.9\""
-  "\"0\",\"-1\",\"0\",\"\"\"\"\"\",\"9.9\""
-  "\"1\",\"-1\",\"0\",\"\"\"\"\"\",\"9.9\""))
+ (append
+  (list
+   "\"PATCHES\""
+   "\"pxcor\",\"pycor\",\"pcolor\",\"plabel\",\"plabel-color\"")
+  (mapcar
+   (lambda (patch)
+    (format nil
+     "\"~A\",\"~A\",\"~A\",\"\"\"\"\"\",\"9.9\""
+     (dump-object (patch-xcor patch))
+     (dump-object (patch-ycor patch))
+     (dump-object (patch-color patch))))
+   *patches*)))
 
 (defun export-world ()
  "EXPORT-WORLD => WORLD-CSV
@@ -371,23 +409,8 @@ DESCRIPTION:
    (format nil "\"~A\",\"~A\",\"~A\",\"~A\",\"0\",\"nobody\",\"~A\",\"\"\"NEITHER\"\"\",\"-1\""
     (min-pxcor) (max-pxcor) (min-pycor) (max-pycor) *current-id*)
    ""
-   (format nil "~S" "TURTLES")
-   (format nil "~A~A"
-    "\"who\",\"color\",\"heading\",\"xcor\",\"ycor\",\"shape\",\"label\",\"label-color\","
-    "\"breed\",\"hidden?\",\"size\",\"pen-size\",\"pen-mode\"")
-   (format nil "~{~A~%~}"
-    (mapcar
-     (lambda (turtle)
-      (format nil
-       "\"~A\",\"~A\",\"~A\",\"~A\",\"~A\",~A"
-       (turtle-who turtle)
-       (dump-object (turtle-color turtle))
-       (dump-object (turtle-heading turtle))
-       (dump-object (turtle-xcor turtle))
-       (dump-object (turtle-ycor turtle))
-       "\"\"\"default\"\"\",\"\"\"\"\"\",\"9.9\",\"{all-turtles}\",\"false\",\"1\",\"1\",\"\"\"up\"\"\""))
-     *turtles*))
-   (format nil "~S" "PATCHES")
+   (format nil "~{~A~^~%~}" (export-turtles))
+   ""
    (format nil "~{~A~^~%~}" (export-patches))
    ""
    (format nil "~S" "LINKS")

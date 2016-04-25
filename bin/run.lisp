@@ -1,4 +1,5 @@
 (setf *compile-print* nil)
 (require 'asdf)
+(asdf:initialize-source-registry `(:source-registry (:tree ,(car (directory "src"))) :INHERIT-CONFIGURATION))
 (asdf:load-system :clnl)
 (clnl:run)

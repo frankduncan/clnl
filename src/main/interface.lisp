@@ -3,6 +3,7 @@
 (defvar *patch-size* 13d0)
 
 (defvar *turtle-list* nil)
+(defvar *patch-list* nil)
 
 ; It may be useful to keep windows around
 (defvar *glut-window-opened* nil)
@@ -40,21 +41,34 @@
  (gl:ortho -71 71 -71 71 1 5000)
  (gl:matrix-mode :modelview)
  (gl:load-identity)
- (mapcar
-  (lambda (turtle)
-   (let
-    ((color (nl-color->rgb (getf turtle :color))))
-    (gl:color (car color) (cadr color) (caddr color)))
-   (mapcar
-    (lambda (x-modification y-modification)
-     (gl:with-pushed-matrix
-      (gl:translate (* (getf turtle :xcor) *patch-size*) (* (getf turtle :ycor) *patch-size*) 0)
-      (gl:translate x-modification y-modification 0)
-      (gl:rotate (getf turtle :heading) 0 0 -1)
-      (gl:call-list *turtle-list*)))
-    (list 0 (1- (world-width-in-pixels)) (- (1- (world-width-in-pixels))) 0 0)
-    (list 0 0 0 (1- (world-height-in-pixels)) (- (1- (world-height-in-pixels))))))
-  (clnl-nvm:current-state))
+ (destructuring-bind (turtles patches) (clnl-nvm:current-state)
+  (mapcar
+   (lambda (patch)
+    (let
+     ((color (nl-color->rgb (getf patch :color))))
+     (gl:color (car color) (cadr color) (caddr color)))
+    (gl:with-pushed-matrix
+     (gl:translate (* (getf patch :xcor) *patch-size*) (* (getf patch :ycor) *patch-size*) 0)
+     (gl:translate (floor (* -.5d0 *patch-size*)) (floor (* -.5d0 *patch-size*)) 0)
+     (gl:scale *patch-size* *patch-size* 1)
+     (gl:call-list *patch-list*)))
+   patches)
+  (mapcar
+   (lambda (turtle)
+    (let
+     ((color (nl-color->rgb (getf turtle :color))))
+     (gl:color (car color) (cadr color) (caddr color)))
+    (mapcar
+     (lambda (x-modification y-modification)
+      (gl:with-pushed-matrix
+       (gl:translate (* (getf turtle :xcor) *patch-size*) (* (getf turtle :ycor) *patch-size*) 0)
+       (gl:translate x-modification y-modification 0)
+       (gl:rotate (getf turtle :heading) 0 0 -1)
+       (gl:scale *patch-size* *patch-size* 1)
+       (gl:call-list *turtle-list*)))
+     (list 0 (1- (world-width-in-pixels)) (- (1- (world-width-in-pixels))) 0 0)
+     (list 0 0 0 (1- (world-height-in-pixels)) (- (1- (world-height-in-pixels))))))
+   turtles))
  (gl:flush))
 
 (defun display ()
@@ -80,13 +94,24 @@
  (setf *turtle-list* (gl:gen-lists 1))
  (gl:with-new-list (*turtle-list* :compile)
   (gl:rotate 180 0 0 -1)
-  (gl:scale (* (/ 1d0 300d0) 13) (* (/ 1d0 300d0) 13) 1)
+  (gl:scale (/ 1d0 300d0) (/ 1d0 300d0) 1)
   (gl:translate -150 -150 -4.0)
   (gl:begin :polygon)
   (gl:vertex 150 5 0)
   (gl:vertex 40 250 0)
   (gl:vertex 150 205 0)
   (gl:vertex 260 250 0)
+  (gl:end)))
+
+(defun set-patch-list ()
+ (setf *patch-list* (gl:gen-lists 1))
+ (gl:with-new-list (*patch-list* :compile)
+  (gl:translate 0d0 0d0 -4.0)
+  (gl:begin :polygon)
+  (gl:vertex 0 0 0)
+  (gl:vertex 0 1 0)
+  (gl:vertex 1 1 0)
+  (gl:vertex 1 0 0)
   (gl:end)))
 
 (defun initialize (&key dims)
@@ -140,6 +165,7 @@ DESCRIPTION:
   (cl-glut:idle-func (cffi:get-callback 'idle))
   (cl-glut:close-func (cffi:get-callback 'close-func))
   (set-turtle-list)
+  (set-patch-list)
   (cl-glut:main-loop)))
 
 (defun world-width-in-pixels ()
@@ -172,6 +198,7 @@ DESCRIPTION:
    (cl-glut:create-window "CLNL Test Window")
    (gl:clear-color 0 0 0 1)
    (set-turtle-list)
+   (set-patch-list)
    (setf *glut-window-opened* t))
   (let
    ((fbo (first (gl:gen-framebuffers 1)))
