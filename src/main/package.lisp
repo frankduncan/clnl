@@ -71,9 +71,12 @@ into an ast that can be transpiled later."))
   #:die
   #:forward
   #:lookup-color
+  #:reset-ticks
   #:random-float
   #:show
   #:turtles
+  #:tick
+  #:ticks
   #:turn-right #:turn-left)
  (:documentation
   "CLNL NVM

@@ -264,6 +264,55 @@ DESCRIPTION:
   See http://ccl.northwestern.edu/netlogo/docs/dictionary.html#create-turtles"
  (loop :for i :from 1 :to n :do (create-turtle)))
 
+(defun reset-ticks ()
+ "RESET-TICKS => RESULT
+
+ARGUMENTS AND VALUES:
+
+  RESULT: undefined
+
+DESCRIPTION:
+
+  Resets the tick counter to zero, sets up all plots, then updates all plots.
+
+  See http://ccl.northwestern.edu/netlogo/docs/dictionary.html#reset-ticks"
+ (setf *ticks* 0d0))
+
+(defun tick ()
+ "RESET-TICKS => RESULT
+
+ARGUMENTS AND VALUES:
+
+  RESULT: undefined
+
+DESCRIPTION:
+
+  Advances the tick counter by one and updates all plots.
+
+  If the tick counter has not been started yet with reset-ticks, an error results.
+
+  See http://ccl.northwestern.edu/netlogo/docs/dictionary.html#tick"
+
+ (when (not *ticks*) (error "reset-ticks must be called"))
+ (incf *ticks*))
+
+(defun ticks ()
+ "TICKS => CURRENT-TICKS
+
+ARGUMENTS AND VALUES:
+
+  CURRENT-TICKS: A positiv double, representing the current number of ticks
+
+DESCRIPTION:
+
+  Reports the current value of the tick counter. The result is always a number and never negative.
+
+  If the tick counter has not been started yet with reset-ticks, an error results.
+
+  See http://ccl.northwestern.edu/netlogo/docs/dictionary.html#ticks"
+ (when (not *ticks*) (error "reset-ticks must be called"))
+ *ticks*)
+
 (defun create-world (&key dims)
  "CREATE-WORLD &key DIMS => RESULT
 

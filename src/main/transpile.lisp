@@ -143,9 +143,12 @@ DESCRIPTION:
 (defprim-alias :if-else :ifelse)
 (defsimpleprim :lt :command clnl-nvm:turn-left)
 (defkeywordprim :nobody)
+(defsimpleprim :reset-ticks :command clnl-nvm:reset-ticks)
 (defsimpleprim :random-float :reporter clnl-nvm:random-float)
 (defsimpleprim :rt :command clnl-nvm:turn-right)
 (defsimpleprim :show :command clnl-nvm:show)
+(defsimpleprim :tick :command clnl-nvm:tick)
+(defsimpleprim :ticks :reporter clnl-nvm:ticks)
 (defsimpleprim :turtles :reporter clnl-nvm:turtles)
 
 ; Colors

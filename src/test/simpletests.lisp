@@ -143,3 +143,9 @@
 
 (defsimplecommandtest "let 2" "let a 5 let b 6 crt (a + b)"
  "4ABB6822402929878AB9E5A1084B9E4AE1F01D5B")
+
+(defsimplecommandtest "ticks 1" "reset-ticks tick"
+ "E1DE30F072D785E0D0B59F28B0F7853E3D3E0D8B")
+
+(defreportertestwithsetup "ticks 1" "reset-ticks tick tick" "ticks" "2"
+ "E1DE30F072D785E0D0B59F28B0F7853E3D3E0D8B")

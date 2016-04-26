@@ -256,6 +256,7 @@ DESCRIPTION:
 (defprim :size ())
 (defprim :stop ())
 (defprim :tick ())
+(defprim :ticks ())
 (defprim :turtles ())
 
 ; colors
