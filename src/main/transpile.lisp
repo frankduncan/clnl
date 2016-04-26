@@ -3,6 +3,8 @@
 (defparameter *prims* nil)
 (defparameter *prim-aliases* nil)
 
+(defvar *local-variables* nil)
+
 (defun prim-name (prim) (getf prim :name))
 (defun prim-type (prim) (getf prim :type))
 (defun prim-func (prim) (getf prim :func))
@@ -34,7 +36,32 @@ DESCRIPTION:
   running engine.  This is the entry point for commands, so it does
   extra checking to ensure that commands are actually in the PARSED-AST."
  `(progn
-   ,@(mapcar #'transpile-command parsed-ast)))
+   ,@(transpile-commands-inner parsed-ast)))
+
+(defun transpile-commands-inner (parsed-ast)
+ (cond
+  ((not parsed-ast) nil)
+  ((and (listp (car parsed-ast)) (eql :let (caar parsed-ast))) (list (handle-let parsed-ast)))
+  (t
+   (cons
+    (transpile-command (car parsed-ast))
+    (transpile-commands-inner (cdr parsed-ast))))))
+
+(defun handle-let (parsed-ast &optional vars)
+ (if
+  (and (listp (car parsed-ast)) (eql :let (caar parsed-ast)))
+  (let
+   ((*local-variables* (cons (second (car parsed-ast)) *local-variables*)))
+   (handle-let
+    (cdr parsed-ast)
+    (cons
+     (list
+      (transpile-reporter (second (car parsed-ast)))
+      (transpile-reporter (third (car parsed-ast))))
+     vars)))
+  `(let*
+    ,vars
+    ,@(transpile-commands-inner parsed-ast))))
 
 (defun transpile-command (command)
  (cond
@@ -63,15 +90,18 @@ DESCRIPTION:
   The Common lisp code that is returned, when run, will return some value."
  (cond
   ((numberp reporter) reporter) ; The parser converts to double for us
-  ((symbolp reporter) reporter) ; The parser should have checked that having a symbol here is ok
+  ; The parser should have checked that having a symbol here is ok
+  ((symbolp reporter) (intern (symbol-name reporter) clnl:*model-package*))
   ((not (listp reporter)) (error "Expected a statement of some sort"))
   ((eql :command-block (car reporter)) (transpile-command-block reporter))
+  ((and (symbolp (car reporter)) (find (car reporter) *local-variables*))
+   (intern (symbol-name (car reporter)) clnl:*model-package*))
   ((not (find-prim (car reporter))) (error "Couldn't find the reporter for ~S" (car reporter)))
   ((not (is-reporter (find-prim (car reporter)))) (error "Expected reporter, got ~S" (car reporter)))
   (t (apply (prim-func (find-prim (car reporter))) (mapcar #'transpile-reporter (cdr reporter))))))
 
 (defun transpile-command-block (block)
- `(lambda () ,@(mapcar #'transpile-command (cdr block))))
+ `(lambda () ,@(transpile-commands-inner (cdr block))))
 
 ; Undoes the previous function :)
 (defun make-command-block-inline (block)

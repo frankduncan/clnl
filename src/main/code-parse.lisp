@@ -119,5 +119,5 @@ DESCRIPTION:
 
   Returns the globals that get declared in the code."
  (mapcar
-  (lambda (global) (list (symbol-name global) 0d0))
+  (lambda (global) (list (intern (symbol-name global) clnl:*model-package*) 0d0))
   (cdr (second (find :globals code-parsed-ast :key #'car)))))

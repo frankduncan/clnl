@@ -137,3 +137,9 @@
 
 (defsimplereportertest "colors 2" "black" "0"
  "E1DE30F072D785E0D0B59F28B0F7853E3D3E0D8B")
+
+(defsimplecommandtest "let 1" "let a 5 crt a"
+ "9FE588C2749CD9CE66CB0EA451EFB80476E881FB")
+
+(defsimplecommandtest "let 2" "let a 5 let b 6 crt (a + b)"
+ "4ABB6822402929878AB9E5A1084B9E4AE1F01D5B")
