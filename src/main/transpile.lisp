@@ -152,6 +152,7 @@ DESCRIPTION:
 (defprim-alias :if-else :ifelse)
 (defsimpleprim :lt :command clnl-nvm:turn-left)
 (defkeywordprim :nobody)
+(defsimpleprim :one-of :reporter clnl-nvm:one-of)
 (defsimpleprim :of :reporter clnl-nvm:of)
 (defsimpleprim :patches :reporter clnl-nvm:patches)
 (defagentvalueprim :pcolor)

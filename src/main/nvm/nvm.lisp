@@ -138,7 +138,7 @@ DESCRIPTION:
 
   See http://ccl.northwestern.edu/netlogo/docs/dictionary.html#ask"
  (let
-  ((iter (shufflerator agent-set)))
+  ((iter (shufflerator (agent-set-list agent-set))))
   (loop
    :for agent := (funcall iter)
    :while agent
@@ -164,15 +164,15 @@ DESCRIPTION:
 
   See http://ccl.northwestern.edu/netlogo/docs/dictionary.html#of"
  (let
-  ((iter (shufflerator agent-set)))
+  ((iter (shufflerator (agent-set-list agent-set))))
   (loop
    :for agent := (funcall iter)
    :while agent
    :collect (let ((*myself* *self*) (*self* agent)) (funcall fn)))))
 
-(defun shufflerator (agent-set)
+(defun shufflerator (agent-set-list)
  (let
-  ((copy (copy-list agent-set))
+  ((copy (copy-list agent-set-list))
    (i 0)
    (agent nil))
   (flet
@@ -211,6 +211,26 @@ DESCRIPTION:
 
   See http://ccl.northwestern.edu/netlogo/docs/dictionary.html#random-float"
  (clnl-random:next-double n))
+
+(defun one-of (agent-set)
+ "ONE-OF AGENT-SET => RESULT
+
+  RESULT: RANDOM-AGENT | :nobody
+
+ARGUMENTS AND VALUES:
+
+  AGENT-SET: An agent set
+  RANDOM-AGENT: an agent if AGENT-SET is non empty
+
+DESCRIPTION:
+
+  From an agentset, returns a random agent. If the agentset is empty, returns nobody.
+
+  See http://ccl.northwestern.edu/netlogo/docs/dictionary.html#one-of"
+ (let*
+  ((agent-set-list (agent-set-list agent-set))
+   (length (length agent-set-list)))
+  (if (zerop length) :nobody (nth (clnl-random:next-int length) agent-set-list))))
 
 (defun jump (n)
  (when (not (turtle-p *self*)) (error "Gotta call fd in turtle scope, dude (~A)" *self*))
@@ -407,6 +427,12 @@ DESCRIPTION:
 (defmethod dump-object ((o (eql nil))) "false")
 
 (defmethod dump-object ((o list)) (format nil "[~{~A~^ ~}]" (mapcar #'dump-object o)))
+
+(defmethod dump-object ((o patch))
+ (format nil "(patch ~A ~A)" (dump-object (patch-xcor o)) (dump-object (patch-ycor o))))
+
+(defmethod dump-object ((o turtle)) (format nil "(turtle ~A)" (dump-object (turtle-who o))))
+(defmethod dump-object ((o (eql :nobody))) (format nil "nobody"))
 
 (defun current-state ()
  "CURRENT-STATE => WORLD-STATE

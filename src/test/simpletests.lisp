@@ -156,3 +156,12 @@
 (defreportertestwithsetup "set / pcolor" "ask patches [ set pcolor green ]" "[ pcolor ] of patches"
  "[55 55 55 55 55 55 55 55 55]"
  "3E246C518581E004BC65EFB074A09BA2EEBB2910")
+
+(defsimplereportertest "one-of 1" "one-of patches" "(patch -1 -1)"
+ "0BDACB8E9D2BB768C01826E993B47D83D39FBD0C")
+
+(defsimplereportertest "one-of 2" "one-of turtles" "nobody"
+ "E1DE30F072D785E0D0B59F28B0F7853E3D3E0D8B")
+
+(defreportertestwithsetup "one-of 3" "crt 10" "one-of turtles" "(turtle 5)"
+ "A056ED8BF26A69FB4437E79F263E362C27F8820E")

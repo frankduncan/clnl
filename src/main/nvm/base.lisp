@@ -12,3 +12,6 @@
 
 (defstruct turtle who color heading xcor ycor)
 (defstruct patch color xcor ycor)
+
+(defun agent-set-list (agent-set)
+ agent-set)
