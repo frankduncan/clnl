@@ -85,6 +85,23 @@ DESCRIPTION:
  (setf (turtle-who *self*) -1)
  (setf *turtles* (remove *self* *turtles*)))
 
+(defun patches ()
+ "PATCHES => ALL-PATCHES
+
+ARGUMENTS AND VALUES:
+
+  ALL-PATCHES: a NetLogo agentset, all patches
+
+DESCRIPTION:
+
+  Reports the agentset consisting of all the patches.
+
+  This agentset is special in that it represents the living patches
+  each time it's used, so changes depending on the state of the engine.
+
+  See http://ccl.northwestern.edu/netlogo/docs/dictionary.html#patches"
+ *patches*)
+
 (defun turtles ()
  "TURTLES => ALL-TURTLES
 

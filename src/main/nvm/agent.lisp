@@ -19,6 +19,22 @@ DESCRIPTION:
   See http://ccl.northwestern.edu/netlogo/docs/dictionary.html for builtins"
  (agent-value-inner agent (intern (string-upcase var) :keyword)))
 
+(defsetf agent-value (var &optional (agent '*self*)) (new-value)
+ `(set-agent-value-inner ,agent ,var ,new-value))
+
+(defgeneric set-agent-value-inner (agent var new-value))
 (defgeneric agent-value-inner (agent var))
 
-(defmethod agent-value-inner ((agent turtle) (var (eql :who))) (turtle-who agent))
+(defmacro defagent-value (type symb &optional accessor)
+ (let
+  ((accessor (or accessor (intern (format nil "~A-~A" type symb))))
+   (agent (gensym))
+   (var (gensym))
+   (new-val (gensym)))
+  `(progn
+    (defmethod agent-value-inner ((,agent ,type) (,var (eql ,symb))) (,accessor ,agent))
+    (defmethod set-agent-value-inner ((,agent ,type) (,var (eql ,symb)) ,new-val) (setf (,accessor ,agent) ,new-val)))))
+
+(defagent-value turtle :who)
+
+(defagent-value patch :pcolor patch-color)

@@ -105,9 +105,9 @@ DESCRIPTION:
  `(lambda () ,@(transpile-commands-inner (cdr block))))
 
 (defun transpile-reporter-block (block)
- ;(when (/= (length block) 1) (error "Reporter block invalid ~S" block))
+ (when (/= (length block) 2) (error "Reporter block invalid ~S" block))
  `(lambda ()
-   ,@(transpile-reporter (cadr block))))
+   ,(transpile-reporter (cadr block))))
 
 ; Undoes the previous function :)
 (defun make-command-block-inline (block)
@@ -126,7 +126,7 @@ DESCRIPTION:
  `(push (list :name ,name :real-symb ,real-symb) *prim-aliases*))
 
 (defmacro defagentvalueprim (name)
- `(defsimpleprim ,name :reporter (clnl-nvm:agent-value ,name)))
+ `(defprim ,name :reporter (lambda () `(clnl-nvm:agent-value ,,name))))
 
 ; We count on the parser to handle arguemnts for us, when collating things.
 
@@ -153,10 +153,13 @@ DESCRIPTION:
 (defsimpleprim :lt :command clnl-nvm:turn-left)
 (defkeywordprim :nobody)
 (defsimpleprim :of :reporter clnl-nvm:of)
+(defsimpleprim :patches :reporter clnl-nvm:patches)
+(defagentvalueprim :pcolor)
 (defsimpleprim :reset-ticks :command clnl-nvm:reset-ticks)
 (defsimpleprim :random-float :reporter clnl-nvm:random-float)
 (defsimpleprim :rt :command clnl-nvm:turn-right)
 (defsimpleprim :show :command clnl-nvm:show)
+(defsimpleprim :set :command cl:setf)
 (defsimpleprim :tick :command clnl-nvm:tick)
 (defsimpleprim :ticks :reporter clnl-nvm:ticks)
 (defsimpleprim :turtles :reporter clnl-nvm:turtles)

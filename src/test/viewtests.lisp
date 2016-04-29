@@ -20,3 +20,6 @@
 
 (defviewtest "lt" "crt 20 ask turtles [ fd 2 lt 100 fd 2 ]"
  '("BF49775097BBFAE12E42D6F13FAFC93090B7ACAC" "ABAEAF8DDD68E7F0FED6CB243F27DB312588A1E8"))
+
+(defviewtest "pcolor green" "ask patches [ set pcolor green ]"
+ "90F5F4870955B9FF02224F00E3C9814B8A6F766E")

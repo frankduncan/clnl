@@ -73,6 +73,7 @@ into an ast that can be transpiled later."))
   #:of
   #:forward
   #:lookup-color
+  #:patches
   #:reset-ticks
   #:random-float
   #:show

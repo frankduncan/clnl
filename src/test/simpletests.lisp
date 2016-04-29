@@ -152,3 +152,7 @@
 
 (defreportertestwithsetup "of / who 1" "crt 10" "[ who ] of turtles" "[5 9 4 3 7 0 1 2 6 8]"
  "3F39BD2D8D5A1B2333E6C0DB665DBE3DCD5A75CE")
+
+(defreportertestwithsetup "set / pcolor" "ask patches [ set pcolor green ]" "[ pcolor ] of patches"
+ "[55 55 55 55 55 55 55 55 55]"
+ "3E246C518581E004BC65EFB074A09BA2EEBB2910")
