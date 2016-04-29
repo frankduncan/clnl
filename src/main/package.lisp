@@ -66,9 +66,11 @@ into an ast that can be transpiled later."))
  (:use :common-lisp)
  (:export #:export-world #:create-world #:current-state
   ; API as used by transpiled NetLogo programs
+  #:agent-value
   #:ask
   #:create-turtles
   #:die
+  #:of
   #:forward
   #:lookup-color
   #:reset-ticks

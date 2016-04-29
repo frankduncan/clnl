@@ -9,6 +9,7 @@
               (:file "parse")
               (:file "code-parse")
               (:file "nvm/base")
+              (:file "nvm/agent")
               (:file "nvm/utils")
               (:file "nvm/nvm")
               (:file "nvm/topology")

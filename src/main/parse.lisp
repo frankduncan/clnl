@@ -239,6 +239,7 @@ DESCRIPTION:
 (defprim :not (:boolean))
 (defprim :nobody ())
 (defprim :one-of (t))
+(defprim :of (:reporter-block :agentset) :infix)
 (defprim :patches ())
 (defprim :pcolor ())
 (defprim :random (:number))
@@ -258,6 +259,7 @@ DESCRIPTION:
 (defprim :tick ())
 (defprim :ticks ())
 (defprim :turtles ())
+(defprim :who ())
 
 ; colors
 (defprim :black ())

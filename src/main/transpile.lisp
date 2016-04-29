@@ -94,6 +94,7 @@ DESCRIPTION:
   ((symbolp reporter) (intern (symbol-name reporter) clnl:*model-package*))
   ((not (listp reporter)) (error "Expected a statement of some sort"))
   ((eql :command-block (car reporter)) (transpile-command-block reporter))
+  ((eql :reporter-block (car reporter)) (transpile-reporter-block reporter))
   ((and (symbolp (car reporter)) (find (car reporter) *local-variables*))
    (intern (symbol-name (car reporter)) clnl:*model-package*))
   ((not (find-prim (car reporter))) (error "Couldn't find the reporter for ~S" (car reporter)))
@@ -102,6 +103,11 @@ DESCRIPTION:
 
 (defun transpile-command-block (block)
  `(lambda () ,@(transpile-commands-inner (cdr block))))
+
+(defun transpile-reporter-block (block)
+ ;(when (/= (length block) 1) (error "Reporter block invalid ~S" block))
+ `(lambda ()
+   ,@(transpile-reporter (cadr block))))
 
 ; Undoes the previous function :)
 (defun make-command-block-inline (block)
@@ -118,6 +124,9 @@ DESCRIPTION:
 
 (defmacro defprim-alias (name real-symb)
  `(push (list :name ,name :real-symb ,real-symb) *prim-aliases*))
+
+(defmacro defagentvalueprim (name)
+ `(defsimpleprim ,name :reporter (clnl-nvm:agent-value ,name)))
 
 ; We count on the parser to handle arguemnts for us, when collating things.
 
@@ -143,6 +152,7 @@ DESCRIPTION:
 (defprim-alias :if-else :ifelse)
 (defsimpleprim :lt :command clnl-nvm:turn-left)
 (defkeywordprim :nobody)
+(defsimpleprim :of :reporter clnl-nvm:of)
 (defsimpleprim :reset-ticks :command clnl-nvm:reset-ticks)
 (defsimpleprim :random-float :reporter clnl-nvm:random-float)
 (defsimpleprim :rt :command clnl-nvm:turn-right)
@@ -150,6 +160,7 @@ DESCRIPTION:
 (defsimpleprim :tick :command clnl-nvm:tick)
 (defsimpleprim :ticks :reporter clnl-nvm:ticks)
 (defsimpleprim :turtles :reporter clnl-nvm:turtles)
+(defagentvalueprim :who)
 
 ; Colors
 (defmacro defcolorprim (color) `(defprim ,color :reporter (lambda () `(clnl-nvm:lookup-color ,,color))))

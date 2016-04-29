@@ -149,3 +149,6 @@
 
 (defreportertestwithsetup "ticks 1" "reset-ticks tick tick" "ticks" "2"
  "E1DE30F072D785E0D0B59F28B0F7853E3D3E0D8B")
+
+(defreportertestwithsetup "of / who 1" "crt 10" "[ who ] of turtles" "[5 9 4 3 7 0 1 2 6 8]"
+ "3F39BD2D8D5A1B2333E6C0DB665DBE3DCD5A75CE")

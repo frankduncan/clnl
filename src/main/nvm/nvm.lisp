@@ -55,7 +55,7 @@ DESCRIPTION:
    *turtles*
    (list
     (make-turtle
-     :who *current-id*
+     :who (coerce *current-id* 'double-float)
      :color (coerce (+ 5 (* 10 (clnl-random:next-int 14))) 'double-float)
      :heading (coerce (clnl-random:next-int 360) 'double-float)
      :xcor 0d0
@@ -126,6 +126,32 @@ DESCRIPTION:
    :for agent := (funcall iter)
    :while agent
    :do (let ((*myself* *self*) (*self* agent)) (funcall fn)))))
+
+(defun of (fn agent-set)
+ "OF FN AGENT-SET => RESULT
+
+ARGUMENTS AND VALUES:
+
+  FN: a function, run on each agent
+  AGENT-SET: a NetLogo agentset
+  RESULT: a list
+
+DESCRIPTION:
+
+  OF is equivalent to of in NetLogo.
+
+  The specified AGENT-SET runs the given FN.  The order in which the agents
+  are run is random each time, and only agents that are in the set at the
+  beginning of the call.  A list is returned of the returned valuse of
+  FN.
+
+  See http://ccl.northwestern.edu/netlogo/docs/dictionary.html#of"
+ (let
+  ((iter (shufflerator agent-set)))
+  (loop
+   :for agent := (funcall iter)
+   :while agent
+   :collect (let ((*myself* *self*) (*self* agent)) (funcall fn)))))
 
 (defun shufflerator (agent-set)
  (let
@@ -363,6 +389,8 @@ DESCRIPTION:
 (defmethod dump-object ((o (eql t))) "true")
 (defmethod dump-object ((o (eql nil))) "false")
 
+(defmethod dump-object ((o list)) (format nil "[~{~A~^ ~}]" (mapcar #'dump-object o)))
+
 (defun current-state ()
  "CURRENT-STATE => WORLD-STATE
 
@@ -410,7 +438,7 @@ DESCRIPTION:
    (lambda (turtle)
     (format nil
      "\"~A\",\"~A\",\"~A\",\"~A\",\"~A\",~A"
-     (turtle-who turtle)
+     (dump-object (turtle-who turtle))
      (dump-object (turtle-color turtle))
      (dump-object (turtle-heading turtle))
      (dump-object (turtle-xcor turtle))
