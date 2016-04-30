@@ -35,6 +35,12 @@ DESCRIPTION:
     (defmethod agent-value-inner ((,agent ,type) (,var (eql ,symb))) (,accessor ,agent))
     (defmethod set-agent-value-inner ((,agent ,type) (,var (eql ,symb)) ,new-val) (setf (,accessor ,agent) ,new-val)))))
 
-(defagent-value turtle :who)
+; Don't want the setter for :who
+(defmethod agent-value-inner ((agent turtle) (var (eql :who))) (turtle-who agent))
 
 (defagent-value patch :pcolor patch-color)
+
+(defagent-value turtle :color)
+(defagent-value turtle :label)
+(defagent-value turtle :label-color)
+(defagent-value turtle :size)

@@ -23,3 +23,6 @@
 
 (defviewtest "pcolor green" "ask patches [ set pcolor green ]"
  "90F5F4870955B9FF02224F00E3C9814B8A6F766E")
+
+(defviewtest "size" "crt 10 ask turtles [ fd 2 set size 3 ] "
+ '("66E47E4579C2CA48CA672052B99F25DE94456D3A" "0A8EC908783A913CD15E9A0F19E6B8DBBA4EF5D9"))

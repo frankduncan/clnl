@@ -65,6 +65,7 @@
        (gl:translate x-modification y-modification 0)
        (gl:rotate (getf turtle :heading) 0 0 -1)
        (gl:scale *patch-size* *patch-size* 1)
+       (gl:scale (getf turtle :size) (getf turtle :size) 1)
        (gl:call-list *turtle-list*)))
      (list 0 (1- (world-width-in-pixels)) (- (1- (world-width-in-pixels))) 0 0)
      (list 0 0 0 (1- (world-height-in-pixels)) (- (1- (world-height-in-pixels))))))

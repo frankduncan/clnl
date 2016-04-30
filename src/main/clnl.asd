@@ -4,6 +4,7 @@
  :maintainer "Frank Duncan (frank@kank.com)"
  :author "Frank Duncan (frank@kank.com)"
  :components ((:file "package")
+              (:file "base")
               (:file "model")
               (:file "lex")
               (:file "parse")

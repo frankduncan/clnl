@@ -10,7 +10,7 @@
 (defvar *topology* :torus)
 (defvar *ticks* nil)
 
-(defstruct turtle who color heading xcor ycor)
+(defstruct turtle who color heading xcor ycor (label "") (label-color 9.9d0) (size 1d0))
 (defstruct patch color xcor ycor)
 
 (defun agent-set-list (agent-set)

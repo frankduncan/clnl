@@ -421,7 +421,7 @@ DESCRIPTION:
     ; Someday we'll have d<posint>, but this is not that day!
     (cl-ppcre:regex-replace "d-" (cl-ppcre:regex-replace "d0" output "") "E-")))))
 
-(defmethod dump-object ((o string)) o)
+(defmethod dump-object ((o string)) (format nil "~A" (cl-ppcre:regex-replace-all "\"" (format nil "~S" o) "\"\"")))
 
 (defmethod dump-object ((o (eql t))) "true")
 (defmethod dump-object ((o (eql nil))) "false")
@@ -460,7 +460,8 @@ DESCRIPTION:
      :color (turtle-color turtle)
      :xcor (turtle-xcor turtle)
      :ycor (turtle-ycor turtle)
-     :heading (turtle-heading turtle)))
+     :heading (turtle-heading turtle)
+     :size (turtle-size turtle)))
    *turtles*)
   (mapcar
    (lambda (patch)
@@ -480,13 +481,16 @@ DESCRIPTION:
   (mapcar
    (lambda (turtle)
     (format nil
-     "\"~A\",\"~A\",\"~A\",\"~A\",\"~A\",~A"
+     "\"~A\",\"~A\",\"~A\",\"~A\",\"~A\",\"\"\"default\"\"\",\"~A\",\"~A\",\"{all-turtles}\",\"false\",\"~A\",~A"
      (dump-object (turtle-who turtle))
      (dump-object (turtle-color turtle))
      (dump-object (turtle-heading turtle))
      (dump-object (turtle-xcor turtle))
      (dump-object (turtle-ycor turtle))
-     "\"\"\"default\"\"\",\"\"\"\"\"\",\"9.9\",\"{all-turtles}\",\"false\",\"1\",\"1\",\"\"\"up\"\"\""))
+     (dump-object (turtle-label turtle))
+     (dump-object (turtle-label-color turtle))
+     (dump-object (turtle-size turtle))
+     "\"1\",\"\"\"up\"\"\""))
    *turtles*)))
 
 (defun export-patches ()
