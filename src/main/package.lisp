@@ -33,7 +33,7 @@ other things."))
 (defpackage #:clnl-random
  (:use :common-lisp)
  (:shadow #:export)
- (:export #:export #:set-seed #:next-int #:next-double)
+ (:export #:export #:set-seed #:next-int #:next-double #:next-long)
  (:documentation
   "Wrapper around mt19937.
 
@@ -64,6 +64,7 @@ into an ast that can be transpiled later."))
 
 (defpackage #:clnl-nvm
  (:use :common-lisp)
+ (:shadow #:random)
  (:export #:export-world #:create-world #:current-state
   ; API as used by transpiled NetLogo programs
   #:agent-value
@@ -76,7 +77,11 @@ into an ast that can be transpiled later."))
   #:one-of
   #:patches
   #:reset-ticks
+  #:random
   #:random-float
+  #:random-xcor
+  #:random-ycor
+  #:setxy
   #:show
   #:turtles
   #:tick

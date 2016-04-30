@@ -24,15 +24,40 @@ ARGUMENTS AND VALUES:
 
 DESCRIPTION:
 
-  NEXT-INTEGER returns the next randomly generated integer.
+  NEXT-INT returns the next randomly generated integer.
 
   It does so in a way that's in accordance with java.util.Random and
   the MerseinneTwisterFast that's in NetLogo.  It also advances the
   RNG and is bounded by N."
  (if
-  (= n (logand n (- n) ))
-  (ash (* n (ash (mt19937:random-chunk mt19937:*random-state*) -1) ) -31)
+  (= n (logand n (- n)))
+  (ash (* n (ash (mt19937:random-chunk mt19937:*random-state*) -1)) -31)
   (rem (ash (mt19937:random-chunk mt19937:*random-state*) -1) n)))
+
+(defun next-long (n)
+ "NEXT-LONG N => LONG
+
+ARGUMENTS AND VALUES:
+
+  N: A long representing the upper bound
+  LONG: A long
+
+DESCRIPTION:
+
+  NEXT-LONG returns the next randomly generated long.
+
+  It does so in a way that's in accordance with java.util.Random and
+  the MerseinneTwisterFast that's in NetLogo.  It also advances the
+  RNG and is bounded by N."
+ (flet
+  ((unsigned-to-signed (value size) ; We need this because MersenneTwisterFast
+    (if (logbitp (1- size) value) (dpb value (byte size 0) -1) value))
+   (signed-to-unsigned (value size) (ldb (byte size 0) value)))
+  (let
+   ((y (unsigned-to-signed (mt19937:random-chunk mt19937:*random-state*) 32))
+    (z (unsigned-to-signed (mt19937:random-chunk mt19937:*random-state*) 32)))
+   ;(mod (+ (ash y 32) z) n)))
+   (mod (signed-to-unsigned (ash (+ (ash y 32) z) -1) 63) n))))
 
 (defun next-double (&optional (n 1d0))
  "NEXT-DOUBLE &optional N => DOUBLE

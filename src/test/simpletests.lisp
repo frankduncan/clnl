@@ -177,3 +177,13 @@
 
 (defsimplecommandtest "size 1" "crt 10 ask turtles [ set size 5 ]"
  "8837CF2681A2091B0664FAA2C32062B19F548ED6")
+
+(defsimplereportertest "random 1" "random 100000" "85402"
+ "17D1BF7FF7BF2C7F3F5F7DD7CF67CFF2772CFFFC")
+
+(defreportertestwithsetup "random 2" "crt 10" "[ random 1000000 ] of turtles"
+ "[512564 490953 127774 976371 218233 692751 909837 655769 977588 485347]"
+ "2048ED1C553B0342D5DE1302577394CD09DE88DA")
+
+(defsimplecommandtest "setxy 1" "crt 10 ask turtles [ setxy random-xcor random-ycor ]"
+ "B02FD5B864A129AED5254A68C499607F7F6EA236")

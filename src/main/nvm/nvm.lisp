@@ -212,6 +212,69 @@ DESCRIPTION:
   See http://ccl.northwestern.edu/netlogo/docs/dictionary.html#random-float"
  (clnl-random:next-double n))
 
+(defun random (n)
+ "RANDOM N => RANDOM-NUMBER
+
+ARGUMENTS AND VALUES:
+
+  N: an integer, the upper bound of the random
+  RANDOM-NUMBER: an integer, the random result
+
+DESCRIPTION:
+
+  Returns a random number strictly closer to zero than N.
+
+  If number is positive, returns a random integer greater than or equal to 0,
+  but strictly less than number.
+
+  If number is negative, returns a random integer less than or equal to 0,
+  but strictly greater than number.
+
+  If number is zero, the result is always 0.
+
+  See http://ccl.northwestern.edu/netlogo/docs/dictionary.html#random"
+ (coerce (clnl-random:next-long (truncate n)) 'double-float))
+
+(defun random-xcor ()
+ "RANDOM-XCOR => RANDOM-NUMBER
+
+ARGUMENTS AND VALUES:
+
+  RANDOM-NUMBER: a float, the random result
+
+DESCRIPTION:
+
+  Returns a random floating point number in the allowable range of turtle
+  coordinates along the x axis.
+
+  These range from min-pxcor - 0.5 (inclusive) to max-pxcor + 0.5 (exclusive)
+
+  See http://ccl.northwestern.edu/netlogo/docs/dictionary.html#random-cor"
+ (let
+  ((min (- (min-pxcor) 0.5d0))
+   (max (+ (max-pxcor) 0.5d0)))
+  (+ min (clnl-random:next-double (- max min)))))
+
+(defun random-ycor ()
+ "RANDOM-YCOR => RANDOM-NUMBER
+
+ARGUMENTS AND VALUES:
+
+  RANDOM-NUMBER: a float, the random result
+
+DESCRIPTION:
+
+  Returns a random floating point number in the allowable range of turtle
+  coordinates along the y axis.
+
+  These range from min-pycor - 0.5 (inclusive) to max-pycor + 0.5 (exclusive)
+
+  See http://ccl.northwestern.edu/netlogo/docs/dictionary.html#random-cor"
+ (let
+  ((min (- (min-pycor) 0.5d0))
+   (max (+ (max-pycor) 0.5d0)))
+  (+ min (clnl-random:next-double (- max min)))))
+
 (defun one-of (agent-set)
  "ONE-OF AGENT-SET => RESULT
 
@@ -233,7 +296,7 @@ DESCRIPTION:
   (if (zerop length) :nobody (nth (clnl-random:next-int length) agent-set-list))))
 
 (defun jump (n)
- (when (not (turtle-p *self*)) (error "Gotta call fd in turtle scope, dude (~A)" *self*))
+ (when (not (turtle-p *self*)) (error "Gotta call jump in turtle scope, dude (~A)" *self*))
  (setf
   (turtle-xcor *self*)
   (wrap-x *topology*
@@ -242,6 +305,25 @@ DESCRIPTION:
   (turtle-ycor *self*)
   (wrap-y *topology*
    (+ (turtle-ycor *self*) (* n (using-cached-cos (turtle-heading *self*)))))))
+
+(defun setxy (x y)
+ "SETXY X Y => RESULT
+
+ARGUMENTS AND VALUES:
+
+  X: a double
+  Y: a double
+  RESULT: undefined
+
+DESCRIPTION:
+
+  Sets the x-coordinate and y-coordinate for the turle.  Equivalent to
+  set xcor x set ycor y, except it happens in one step inside of two.
+
+  See http://ccl.northwestern.edu/netlogo/docs/dictionary.html#setxy"
+ (when (not (turtle-p *self*)) (error "Gotta call setxy in turtle scope, dude (~A)" *self*))
+ (setf (turtle-xcor *self*) (wrap-x *topology* x))
+ (setf (turtle-ycor *self*) (wrap-y *topology* y)))
 
 (defun forward (n)
  "FORWARD N => RESULT
