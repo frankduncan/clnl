@@ -15,6 +15,9 @@
 (defsimplecommandtest "Simple crt and fd" "crt 5 ask turtles [ fd 1 ]"
  "BEB43404EDC7852985A9A7FC312481785FE553A0")
 
+(defsimplecommandtest "Simple crt and fd 2" "crt 5 [ fd 1 ]"
+ "BEB43404EDC7852985A9A7FC312481785FE553A0")
+
 (defsimplecommandtest "Wrapping 1" "crt 5 ask turtles [ fd 5 ]"
  "1098A56973DA04E7AEA7659C40E3FF3EC7862B02")
 
@@ -147,7 +150,7 @@
 (defsimplecommandtest "ticks 1" "reset-ticks tick"
  "E1DE30F072D785E0D0B59F28B0F7853E3D3E0D8B")
 
-(defreportertestwithsetup "ticks 1" "reset-ticks tick tick" "ticks" "2"
+(defreportertestwithsetup "ticks 2" "reset-ticks tick tick" "ticks" "2"
  "E1DE30F072D785E0D0B59F28B0F7853E3D3E0D8B")
 
 (defreportertestwithsetup "of / who 1" "crt 10" "[ who ] of turtles" "[5 9 4 3 7 0 1 2 6 8]"

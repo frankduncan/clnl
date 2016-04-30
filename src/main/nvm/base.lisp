@@ -20,6 +20,9 @@
   ((and (listp agentset) (eql :agentset (car agentset))) (cdr agentset))
   (t (error "Doesn't seem to be an agentset: ~A" agentset))))
 
+(defun list->agentset (list)
+ (cons :agentset list))
+
 (defun agentset-p (o)
  (or
   (eql o :turtles)

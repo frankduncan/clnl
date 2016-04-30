@@ -26,7 +26,6 @@
 (defparameter *dynamic-prims* nil)
 
 (defun prim-name (prim) (getf prim :name))
-(defun prim-num-args (prim) (length (getf prim :args)))
 (defun prim-args (prim) (getf prim :args))
 (defun prim-structure-prim (prim) (getf prim :structure-prim))
 (defun prim-is-infix (prim) (getf prim :infix))
@@ -79,85 +78,110 @@ DESCRIPTION:
   ((*dynamic-prims* dynamic-prims))
   (parse-internal lexed-ast)))
 
-(defun parse-internal (lexed-ast &key prev-item arg-countdown)
+(defun parse-internal (lexed-ast &key prev-item prev-remaining-arg remaining-args)
  (let
   ((prim (and lexed-ast (symbolp (car lexed-ast)) (find-prim (car lexed-ast)))))
   (cond
-   ((and arg-countdown (zerop arg-countdown)) (append (when prev-item (list prev-item)) lexed-ast))
+   ((and remaining-args (eql (car remaining-args) :done-with-args))
+    (append (when prev-item (list (help-arg prev-item prev-remaining-arg))) lexed-ast))
    ((and prim (prim-is-infix prim))
-    (parse-prim prim lexed-ast prev-item arg-countdown)) ; Special casing infix prims is cleaner
+    (parse-prim prim lexed-ast prev-item prev-remaining-arg remaining-args)) ; Special casing infix prims is cleaner
    (t
     (append
-     (when prev-item (list prev-item))
+     (when prev-item (list (help-arg prev-item prev-remaining-arg)))
      (cond
       ((not lexed-ast) nil)
       ((stringp (car lexed-ast))
        (parse-internal (cdr lexed-ast)
         :prev-item (car lexed-ast)
-        :arg-countdown (when arg-countdown (1- arg-countdown))))
+        :prev-remaining-arg (car remaining-args)
+        :remaining-args (cdr remaining-args)))
       ((numberp (car lexed-ast))
        (parse-internal (cdr lexed-ast)
         :prev-item (coerce (car lexed-ast) 'double-float)
-        :arg-countdown (when arg-countdown (1- arg-countdown))))
-      ((eql (intern "(" :keyword) (car lexed-ast)) (parse-parened-expr (cdr lexed-ast) arg-countdown))
+        :prev-remaining-arg (car remaining-args)
+        :remaining-args (cdr remaining-args)))
+      ((eql (intern "(" :keyword) (car lexed-ast)) (parse-parened-expr (cdr lexed-ast) remaining-args))
       ((eql (intern ")" :keyword) (car lexed-ast)) (error "Closing parens has no opening parens"))
-      ((eql :let (car lexed-ast)) (parse-let (cdr lexed-ast) arg-countdown))
-      ((eql :[ (car lexed-ast)) (parse-block (cdr lexed-ast) arg-countdown))
+      ((eql :let (car lexed-ast)) (parse-let (cdr lexed-ast) remaining-args))
+      ((eql :[ (car lexed-ast)) (parse-block (cdr lexed-ast) remaining-args))
       (prim
        (when (prim-structure-prim prim)
         (error "This doesn't make sense here"))
-       (parse-prim prim lexed-ast nil arg-countdown))
+       (parse-prim prim lexed-ast nil prev-remaining-arg remaining-args))
       (t (error "Couldn't parse ~S" lexed-ast))))))))
 
-(defun parse-let (lexed-ast arg-countdown)
+(defun parse-let (lexed-ast remaining-args)
  (when (not (keywordp (car lexed-ast))) (error "Needed a keyword for let"))
  (let*
-  ((half-parsed-remainder (parse-internal (cdr lexed-ast) :arg-countdown 1)))
+  ((half-parsed-remainder (parse-internal (cdr lexed-ast) :remaining-args (list t :done-with-args))))
   (let
    ((*dynamic-prims* (cons (list :name (car lexed-ast)) *dynamic-prims*)))
    (parse-internal
     (cdr half-parsed-remainder)
-    :arg-countdown (when arg-countdown (1- arg-countdown))
-    :prev-item (list :let (car lexed-ast) (car half-parsed-remainder))))))
+    :remaining-args (cdr remaining-args)
+    :prev-remaining-arg (car remaining-args)
+    :prev-item (list :let (car lexed-ast) (cadr (car half-parsed-remainder)))))))
 
-(defun parse-prim (prim lexed-ast prev-item arg-countdown)
+(defun parse-prim (prim lexed-ast prev-item prev-remaining-arg remaining-args)
  (let*
-  ((num-args (- (prim-num-args prim) (if (prim-is-infix prim) 1 0)))
-   (half-parsed-remainder (parse-internal (cdr lexed-ast) :arg-countdown num-args)))
-  (parse-internal
-   (nthcdr num-args half-parsed-remainder)
-   :arg-countdown (when arg-countdown (if (prim-is-infix prim) arg-countdown (1- arg-countdown)))
-   :prev-item
-   (cons
-    (prim-name prim)
-    (mapcar
-     #'help-arg
-     (prim-args prim)
-     (append
-      (when (prim-is-infix prim) (list prev-item))
-      (butlast half-parsed-remainder (- (length half-parsed-remainder) num-args))))))))
+  ((args (if (prim-is-infix prim) (cdr (prim-args prim)) (prim-args prim)))
+   (half-parsed-remainder (parse-internal (cdr lexed-ast) :remaining-args (append args (list :done-with-args))))
+   (breakpoint (or
+                (position-if (lambda (form) (or (not (listp form)) (not (eql :arg (car form))))) half-parsed-remainder)
+                (length half-parsed-remainder)))
+   (already-parsed-limbo-forms
+    (subseq half-parsed-remainder breakpoint (min (length args) (length half-parsed-remainder))))
+   (middle-forms
+    (cons
+     (cons
+      (prim-name prim)
+      (append
+       (when (prim-is-infix prim) (list (second (help-arg prev-item (car (prim-args prim))))))
+       (mapcar #'cadr (subseq half-parsed-remainder 0 breakpoint))))
+     already-parsed-limbo-forms)))
+  (append
+   (butlast middle-forms)
+   (parse-internal
+    (nthcdr (length args) half-parsed-remainder)
+    :remaining-args (if (prim-is-infix prim) remaining-args (cdr remaining-args))
+    :prev-remaining-arg (if (prim-is-infix prim) prev-remaining-arg (car remaining-args))
+    :prev-item (car (last middle-forms))))))
 
-(defun help-arg (arg-type arg)
+(defun help-arg (arg arg-type)
  (cond
+  ((not arg-type) arg)
   ((eql arg-type :command-block)
    (if (not (and (consp arg) (eql 'block (car arg))))
     (error "Required a block, but found a ~A" arg)
-    (cons :command-block (cdr arg))))
+    (list :arg (cons :command-block (cdr arg)))))
   ((eql arg-type :reporter-block)
    (if (not (and (consp arg) (eql 'block (car arg))))
     (error "Required a block, but found a ~A" arg)
-    (cons :reporter-block (cdr arg))))
-  ((or (eql arg-type :list) (and (listp arg-type) (find :list arg-type)))
-   (if (and (consp arg) (eql 'block (car arg)))
-    (cons :list-literal (cdr arg))
-    arg))
-  (t arg)))
+    (list :arg (cons :reporter-block (cdr arg)))))
+  ((or
+    (eql arg-type :list)
+    (and (listp arg-type) (find :list arg-type)))
+   (list
+    :arg
+    (if (and (consp arg) (eql 'block (car arg)))
+     (cons :list-literal (cdr arg))
+     arg)))
+  ((and
+    (listp arg-type)
+    (find :command-block arg-type)
+    (consp arg)
+    (eql 'block (car arg)))
+   (list :arg (cons :command-block (cdr arg))))
+  ((and (listp arg-type) (find :optional arg-type)) arg)
+  (t (list :arg arg))))
 
-(defun parse-block (tokens arg-countdown)
+(defun parse-block (tokens remaining-args)
  (multiple-value-bind (in-block after-block) (find-closing-bracket tokens)
   (parse-internal after-block
    :prev-item (cons 'block (parse-internal in-block))
-   :arg-countdown (when arg-countdown (1- arg-countdown)))))
+   :prev-remaining-arg (car remaining-args)
+   :remaining-args (cdr remaining-args))))
 
 (defun find-closing-bracket (tokens &optional (depth 0))
  (cond
@@ -168,7 +192,7 @@ DESCRIPTION:
       (find-closing-bracket (cdr tokens) (case (car tokens) (:[ (1+ depth)) (:] (1- depth)) (t depth)))
       (values (cons (car tokens) in-block) after-block)))))
 
-(defun parse-parened-expr (tokens arg-countdown)
+(defun parse-parened-expr (tokens remaining-args)
  (multiple-value-bind (in-block after-block) (find-closing-paren tokens)
   (parse-internal after-block
    :prev-item
@@ -176,7 +200,8 @@ DESCRIPTION:
     ((parsed-in-block (parse-internal in-block)))
     (when (/= 1 (length parsed-in-block)) (error "Expected ) here"))
     (car parsed-in-block))
-   :arg-countdown (when arg-countdown (1- arg-countdown)))))
+   :prev-remaining-arg (car remaining-args)
+   :remaining-args (cdr remaining-args))))
 
 (defun find-closing-paren (tokens &optional (depth 0))
  (cond
@@ -222,7 +247,7 @@ DESCRIPTION:
 (defprim :any? (:agentset))
 (defprim :ask (:agentset :command-block))
 (defprim :clear-all ())
-(defprim :crt (:number))
+(defprim :crt (:number (:command-block :optional)))
 (defprim :color ())
 (defprim :count (:agentset))
 (defprim :die ())

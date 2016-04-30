@@ -49,18 +49,16 @@ DESCRIPTION:
   (:pink 135d0)))
 
 (defun create-turtle ()
- (setf
-  *turtles*
-  (nconc
-   *turtles*
-   (list
-    (make-turtle
-     :who (coerce *current-id* 'double-float)
-     :color (coerce (+ 5 (* 10 (clnl-random:next-int 14))) 'double-float)
-     :heading (coerce (clnl-random:next-int 360) 'double-float)
-     :xcor 0d0
-     :ycor 0d0))))
- (incf *current-id*))
+ (let
+  ((new-turtle (make-turtle
+                :who (coerce *current-id* 'double-float)
+                :color (coerce (+ 5 (* 10 (clnl-random:next-int 14))) 'double-float)
+                :heading (coerce (clnl-random:next-int 360) 'double-float)
+                :xcor 0d0
+                :ycor 0d0)))
+  (setf *turtles* (nconc *turtles* (list new-turtle)))
+  (incf *current-id*)
+  new-turtle))
 
 (defun die ()
  "DIE => RESULT
@@ -441,12 +439,13 @@ DESCRIPTION:
   See http://ccl.northwestern.edu/netlogo/docs/dictionary.html#right"
  (turn-right (- n)))
 
-(defun create-turtles (n)
- "CREATE-TURTLES N => RESULT
+(defun create-turtles (n &optional fn)
+ "CREATE-TURTLES N &optional FN => RESULT
 
 ARGUMENTS AND VALUES:
 
   N: an integer, the numbers of turtles to create
+  FN: A function, applied to each turtle after creation
   RESULT: undefined
 
 DESCRIPTION:
@@ -454,11 +453,13 @@ DESCRIPTION:
   Creates number new turtles at the origin.
 
   New turtles have random integer headings and the color is randomly selected
-  from the 14 primary colors.  If commands are supplied, the new turtles
-  immediately run them (unimplemented).
+  from the 14 primary colors.  If a function is supplied, the new turtles
+  immediately run it.
 
   See http://ccl.northwestern.edu/netlogo/docs/dictionary.html#create-turtles"
- (loop :for i :from 1 :to n :do (create-turtle)))
+ (let
+  ((new-turtles (loop :repeat n :collect (create-turtle))))
+  (when fn (ask (list->agentset new-turtles) fn))))
 
 (defun reset-ticks ()
  "RESET-TICKS => RESULT
