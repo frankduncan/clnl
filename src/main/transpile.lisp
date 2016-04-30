@@ -94,6 +94,7 @@ DESCRIPTION:
   ((symbolp reporter) (intern (symbol-name reporter) clnl:*model-package*))
   ((not (listp reporter)) (error "Expected a statement of some sort"))
   ((eql :command-block (car reporter)) (transpile-command-block reporter))
+  ((eql :list-literal (car reporter)) (cons 'list (mapcar #'transpile-reporter (cdr reporter))))
   ((eql :reporter-block (car reporter)) (transpile-reporter-block reporter))
   ((and (symbolp (car reporter)) (find (car reporter) *local-variables*))
    (intern (symbol-name (car reporter)) clnl:*model-package*))

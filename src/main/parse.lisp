@@ -138,16 +138,16 @@ DESCRIPTION:
       (butlast half-parsed-remainder (- (length half-parsed-remainder) num-args))))))))
 
 (defun help-arg (arg-type arg)
- (case arg-type
-  (:command-block
+ (cond
+  ((eql arg-type :command-block)
    (if (not (and (consp arg) (eql 'block (car arg))))
     (error "Required a block, but found a ~A" arg)
     (cons :command-block (cdr arg))))
-  (:reporter-block
+  ((eql arg-type :reporter-block)
    (if (not (and (consp arg) (eql 'block (car arg))))
     (error "Required a block, but found a ~A" arg)
     (cons :reporter-block (cdr arg))))
-  (:list
+  ((or (eql arg-type :list) (and (listp arg-type) (find :list arg-type)))
    (if (and (consp arg) (eql 'block (car arg)))
     (cons :list-literal (cdr arg))
     arg))
@@ -238,7 +238,7 @@ DESCRIPTION:
 (defprim :label-color ())
 (defprim :not (:boolean))
 (defprim :nobody ())
-(defprim :one-of (t))
+(defprim :one-of ((:agentset :list)))
 (defprim :of (:reporter-block :agentset) :infix)
 (defprim :patches ())
 (defprim :pcolor ())

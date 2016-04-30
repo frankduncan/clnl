@@ -13,18 +13,18 @@
 (defstruct turtle who color heading xcor ycor (label "") (label-color 9.9d0) (size 1d0))
 (defstruct patch color xcor ycor)
 
-(defun agent-set-list (agent-set)
+(defun agentset-list (agentset)
  (cond
-  ((eql agent-set :turtles) *turtles*)
-  ((eql agent-set :patches) *patches*)
-  ((and (listp agent-set) (eql :agent-set (car agent-set))) (cdr agent-set))
-  (t (error "Doesn't seem to be an agent-set: ~A" agent-set))))
+  ((eql agentset :turtles) *turtles*)
+  ((eql agentset :patches) *patches*)
+  ((and (listp agentset) (eql :agentset (car agentset))) (cdr agentset))
+  (t (error "Doesn't seem to be an agentset: ~A" agentset))))
 
-(defun agent-set-p (o)
+(defun agentset-p (o)
  (or
   (eql o :turtles)
   (eql o :patches)
-  (and (listp o) (eql :agent-set (car o)))))
+  (and (listp o) (eql :agentset (car o)))))
 
 (defun agent-p (o)
  (or (turtle-p o) (patch-p o)))

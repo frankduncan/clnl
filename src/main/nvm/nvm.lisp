@@ -119,67 +119,67 @@ DESCRIPTION:
   See http://ccl.northwestern.edu/netlogo/docs/dictionary.html#turtles"
  :turtles)
 
-(defun ask (agent-or-agent-set fn)
- "ASK AGENT-OR-AGENT-SET FN => RESULT
+(defun ask (agent-or-agentset fn)
+ "ASK AGENT-OR-AGENTSET FN => RESULT
 
-  AGENT-OR-AGENT-SET: AGENT | AGENT-SET
+  AGENT-OR-AGENTSET: AGENT | AGENTSET
 
 ARGUMENTS AND VALUES:
 
   FN: a function, run on each agent
   RESULT: undefined, commands don't return
   AGENT: a NetLogo agent
-  AGENT-SET: a NetLogo agentset
+  AGENTSET: a NetLogo agentset
 
 DESCRIPTION:
 
   ASK is equivalent to ask in NetLogo.
 
-  The specified AGENT-SET or AGENT runs the given FN.  In the case of an
-  AGENT-SET, the order in which the agents are run is random each time,
+  The specified AGENTSET or AGENT runs the given FN.  In the case of an
+  AGENTSET, the order in which the agents are run is random each time,
   and only agents that are in the set at the beginning of the call.
 
   See http://ccl.northwestern.edu/netlogo/docs/dictionary.html#ask"
  (cond
-  ((agent-set-p agent-or-agent-set)
+  ((agentset-p agent-or-agentset)
    (let
-    ((iter (shufflerator (agent-set-list agent-or-agent-set))))
+    ((iter (shufflerator (agentset-list agent-or-agentset))))
     (loop
      :for agent := (funcall iter)
      :while agent
      :do (let ((*myself* *self*) (*self* agent)) (funcall fn)))))
-  ((agent-p agent-or-agent-set)
-   (let ((*myself* *self*) (*self* agent-or-agent-set)) (funcall fn)))
+  ((agent-p agent-or-agentset)
+   (let ((*myself* *self*) (*self* agent-or-agentset)) (funcall fn)))
   (t
-   (error "Ask requires an agent-set or agent but got: ~A" agent-or-agent-set))))
+   (error "Ask requires an agentset or agent but got: ~A" agent-or-agentset))))
 
-(defun count (agent-set)
- "COUNT AGENT-SET => N
+(defun count (agentset)
+ "COUNT AGENTSET => N
 
 ARGUMENTS AND VALUES:
 
-  AGENT-SET: a NetLogo agentset
+  AGENTSET: a NetLogo agentset
   N: a number
 
 DESCRIPTION:
 
   COUNT is equivalent to count in NetLogo.  Returns N, the number of
-  agents in AGENT-SET.
+  agents in AGENTSET.
 
   See http://ccl.northwestern.edu/netlogo/docs/dictionary.html#count"
- (coerce (length (agent-set-list agent-set)) 'double-float))
+ (coerce (length (agentset-list agentset)) 'double-float))
 
-(defun of (fn agent-or-agent-set)
- "OF FN AGENT-OR-AGENT-SET => RESULT
+(defun of (fn agent-or-agentset)
+ "OF FN AGENT-OR-AGENTSET => RESULT
 
-  AGENT-OR-AGENT-SET: AGENT | AGENT-SET
+  AGENT-OR-AGENTSET: AGENT | AGENTSET
   RESULT: RESULT-LIST | RESULT-VALUE
 
 ARGUMENTS AND VALUES:
 
   FN: a function, run on each agent
   AGENT: a NetLogo agent
-  AGENT-SET: a NetLogo agentset
+  AGENTSET: a NetLogo agentset
   RESULT-LIST: a list
   RESULT-VALUE: a single value
 
@@ -187,30 +187,30 @@ DESCRIPTION:
 
   OF is equivalent to of in NetLogo.
 
-  The specified AGENT-SET or AGENT runs the given FN.  In the case of an
-  AGENT-SET, the order in which the agents are run is random each time,
+  The specified AGENTSET or AGENT runs the given FN.  In the case of an
+  AGENTSET, the order in which the agents are run is random each time,
   and only agents that are in the set at the beginning of the call.
 
-  RESULT-LIST is returned when the input is an AGENT-SET, but RESULT-VALUE
+  RESULT-LIST is returned when the input is an AGENTSET, but RESULT-VALUE
   is returned when only passed an AGENT.
 
   See http://ccl.northwestern.edu/netlogo/docs/dictionary.html#of"
  (cond
-  ((agent-set-p agent-or-agent-set)
+  ((agentset-p agent-or-agentset)
    (let
-    ((iter (shufflerator (agent-set-list agent-or-agent-set))))
+    ((iter (shufflerator (agentset-list agent-or-agentset))))
     (loop
      :for agent := (funcall iter)
      :while agent
      :collect (let ((*myself* *self*) (*self* agent)) (funcall fn)))))
-  ((agent-p agent-or-agent-set)
-   (let ((*myself* *self*) (*self* agent-or-agent-set)) (funcall fn)))
+  ((agent-p agent-or-agentset)
+   (let ((*myself* *self*) (*self* agent-or-agentset)) (funcall fn)))
   (t
-   (error "Of requires an agent-set or agent but got: ~A" agent-or-agent-set))))
+   (error "Of requires an agentset or agent but got: ~A" agent-or-agentset))))
 
-(defun shufflerator (agent-set-list)
+(defun shufflerator (agentset-list)
  (let
-  ((copy (copy-list agent-set-list))
+  ((copy (copy-list agentset-list))
    (i 0)
    (agent nil))
   (flet
@@ -313,25 +313,38 @@ DESCRIPTION:
    (max (+ (max-pycor) 0.5d0)))
   (+ min (clnl-random:next-double (- max min)))))
 
-(defun one-of (agent-set)
- "ONE-OF AGENT-SET => RESULT
+(defun one-of (list-or-agentset)
+ "ONE-OF LIST-OR-AGENTSET => RESULT
 
-  RESULT: RANDOM-AGENT | :nobody
+  LIST-OR-AGENTSET: LIST | AGENTSET
+  RESULT: RANDOM-VALUE | RANDOM-AGENT | :nobody
 
 ARGUMENTS AND VALUES:
 
-  AGENT-SET: An agent set
-  RANDOM-AGENT: an agent if AGENT-SET is non empty
+  LIST: A list
+  AGENTSET: An agent set
+  RANDOM-VALUE: a value in LIST
+  RANDOM-AGENT: an agent if AGENTSET is non empty
 
 DESCRIPTION:
 
-  From an agentset, returns a random agent. If the agentset is empty, returns nobody.
+  From an AGENTSET, returns a RANDOM-AGENT. If the agentset is empty, returns :nobody.
+  From a list, returns a RANDOM-VALUE.  If the list is empty, an error occurs.
 
   See http://ccl.northwestern.edu/netlogo/docs/dictionary.html#one-of"
- (let*
-  ((agent-set-list (agent-set-list agent-set))
-   (length (length agent-set-list)))
-  (if (zerop length) :nobody (nth (clnl-random:next-int length) agent-set-list))))
+ (cond
+  ((agentset-p list-or-agentset)
+   (let*
+    ((agentset-list (agentset-list list-or-agentset))
+     (length (length agentset-list)))
+    (if (zerop length) :nobody (nth (clnl-random:next-int length) agentset-list))))
+  ((listp list-or-agentset)
+   (let*
+    ((length (length list-or-agentset)))
+    (if (zerop length)
+     (error "one-of requires a nonempty list")
+     (nth (clnl-random:next-int length) list-or-agentset))))
+  (t (error "one-of requires a list or agentset"))))
 
 (defun jump (n)
  (when (not (turtle-p *self*)) (error "Gotta call jump in turtle scope, dude (~A)" *self*))
