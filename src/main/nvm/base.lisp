@@ -19,3 +19,12 @@
   ((eql agent-set :patches) *patches*)
   ((and (listp agent-set) (eql :agent-set (car agent-set))) (cdr agent-set))
   (t (error "Doesn't seem to be an agent-set: ~A" agent-set))))
+
+(defun agent-set-p (o)
+ (or
+  (eql o :turtles)
+  (eql o :patches)
+  (and (listp o) (eql :agent-set (car o)))))
+
+(defun agent-p (o)
+ (or (turtle-p o) (patch-p o)))

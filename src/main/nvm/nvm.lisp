@@ -119,30 +119,39 @@ DESCRIPTION:
   See http://ccl.northwestern.edu/netlogo/docs/dictionary.html#turtles"
  :turtles)
 
-(defun ask (agent-set fn)
- "ASK AGENT-SET FN => RESULT
+(defun ask (agent-or-agent-set fn)
+ "ASK AGENT-OR-AGENT-SET FN => RESULT
+
+  AGENT-OR-AGENT-SET: AGENT | AGENT-SET
 
 ARGUMENTS AND VALUES:
 
-  AGENT-SET: a NetLogo agentset
   FN: a function, run on each agent
   RESULT: undefined, commands don't return
+  AGENT: a NetLogo agent
+  AGENT-SET: a NetLogo agentset
 
 DESCRIPTION:
 
   ASK is equivalent to ask in NetLogo.
 
-  The specified AGENT-SET runs the given FN.  The order in which the agents
-  are run is random each time, and only agents that are in the set at the
-  beginning of the call.
+  The specified AGENT-SET or AGENT runs the given FN.  In the case of an
+  AGENT-SET, the order in which the agents are run is random each time,
+  and only agents that are in the set at the beginning of the call.
 
   See http://ccl.northwestern.edu/netlogo/docs/dictionary.html#ask"
- (let
-  ((iter (shufflerator (agent-set-list agent-set))))
-  (loop
-   :for agent := (funcall iter)
-   :while agent
-   :do (let ((*myself* *self*) (*self* agent)) (funcall fn)))))
+ (cond
+  ((agent-set-p agent-or-agent-set)
+   (let
+    ((iter (shufflerator (agent-set-list agent-or-agent-set))))
+    (loop
+     :for agent := (funcall iter)
+     :while agent
+     :do (let ((*myself* *self*) (*self* agent)) (funcall fn)))))
+  ((agent-p agent-or-agent-set)
+   (let ((*myself* *self*) (*self* agent-or-agent-set)) (funcall fn)))
+  (t
+   (error "Ask requires an agent-set or agent but got: ~A" agent-or-agent-set))))
 
 (defun count (agent-set)
  "COUNT AGENT-SET => N
@@ -160,31 +169,44 @@ DESCRIPTION:
   See http://ccl.northwestern.edu/netlogo/docs/dictionary.html#count"
  (coerce (length (agent-set-list agent-set)) 'double-float))
 
-(defun of (fn agent-set)
- "OF FN AGENT-SET => RESULT
+(defun of (fn agent-or-agent-set)
+ "OF FN AGENT-OR-AGENT-SET => RESULT
+
+  AGENT-OR-AGENT-SET: AGENT | AGENT-SET
+  RESULT: RESULT-LIST | RESULT-VALUE
 
 ARGUMENTS AND VALUES:
 
   FN: a function, run on each agent
+  AGENT: a NetLogo agent
   AGENT-SET: a NetLogo agentset
-  RESULT: a list
+  RESULT-LIST: a list
+  RESULT-VALUE: a single value
 
 DESCRIPTION:
 
   OF is equivalent to of in NetLogo.
 
-  The specified AGENT-SET runs the given FN.  The order in which the agents
-  are run is random each time, and only agents that are in the set at the
-  beginning of the call.  A list is returned of the returned valuse of
-  FN.
+  The specified AGENT-SET or AGENT runs the given FN.  In the case of an
+  AGENT-SET, the order in which the agents are run is random each time,
+  and only agents that are in the set at the beginning of the call.
+
+  RESULT-LIST is returned when the input is an AGENT-SET, but RESULT-VALUE
+  is returned when only passed an AGENT.
 
   See http://ccl.northwestern.edu/netlogo/docs/dictionary.html#of"
- (let
-  ((iter (shufflerator (agent-set-list agent-set))))
-  (loop
-   :for agent := (funcall iter)
-   :while agent
-   :collect (let ((*myself* *self*) (*self* agent)) (funcall fn)))))
+ (cond
+  ((agent-set-p agent-or-agent-set)
+   (let
+    ((iter (shufflerator (agent-set-list agent-or-agent-set))))
+    (loop
+     :for agent := (funcall iter)
+     :while agent
+     :collect (let ((*myself* *self*) (*self* agent)) (funcall fn)))))
+  ((agent-p agent-or-agent-set)
+   (let ((*myself* *self*) (*self* agent-or-agent-set)) (funcall fn)))
+  (t
+   (error "Of requires an agent-set or agent but got: ~A" agent-or-agent-set))))
 
 (defun shufflerator (agent-set-list)
  (let

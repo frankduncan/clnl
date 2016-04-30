@@ -166,6 +166,12 @@
 (defreportertestwithsetup "one-of 3" "crt 10" "one-of turtles" "(turtle 5)"
  "A056ED8BF26A69FB4437E79F263E362C27F8820E")
 
+(defreportertestwithsetup "one-of / of" "crt 10" "[ color ] of one-of turtles" "65"
+ "A056ED8BF26A69FB4437E79F263E362C27F8820E")
+
+(defsimplecommandtest "one-of / ask" "crt 10 ask one-of turtles [ fd 1 ]"
+ "40106C3853F3870AAE37F232353115968A3A02F6")
+
 (defsimplecommandtest "color 1" "crt 10 ask turtles [ set color green ]"
  "20943094E2C70D5A12AC6EEB29E8E9E2D21BD87D")
 
