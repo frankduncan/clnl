@@ -224,7 +224,7 @@ DESCRIPTION:
 (defprim :clear-all ())
 (defprim :crt (:number))
 (defprim :color ())
-(defprim :count ())
+(defprim :count (:agentset))
 (defprim :die ())
 (defprim :display ())
 (defprim :with (:reporter-block))

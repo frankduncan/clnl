@@ -100,7 +100,7 @@ DESCRIPTION:
   each time it's used, so changes depending on the state of the engine.
 
   See http://ccl.northwestern.edu/netlogo/docs/dictionary.html#patches"
- *patches*)
+ :patches)
 
 (defun turtles ()
  "TURTLES => ALL-TURTLES
@@ -117,7 +117,7 @@ DESCRIPTION:
   each time it's used, so changes depending on the state of the engine.
 
   See http://ccl.northwestern.edu/netlogo/docs/dictionary.html#turtles"
- *turtles*)
+ :turtles)
 
 (defun ask (agent-set fn)
  "ASK AGENT-SET FN => RESULT
@@ -143,6 +143,22 @@ DESCRIPTION:
    :for agent := (funcall iter)
    :while agent
    :do (let ((*myself* *self*) (*self* agent)) (funcall fn)))))
+
+(defun count (agent-set)
+ "COUNT AGENT-SET => N
+
+ARGUMENTS AND VALUES:
+
+  AGENT-SET: a NetLogo agentset
+  N: a number
+
+DESCRIPTION:
+
+  COUNT is equivalent to count in NetLogo.  Returns N, the number of
+  agents in AGENT-SET.
+
+  See http://ccl.northwestern.edu/netlogo/docs/dictionary.html#count"
+ (coerce (length (agent-set-list agent-set)) 'double-float))
 
 (defun of (fn agent-set)
  "OF FN AGENT-SET => RESULT

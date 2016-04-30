@@ -64,11 +64,12 @@ into an ast that can be transpiled later."))
 
 (defpackage #:clnl-nvm
  (:use :common-lisp)
- (:shadow #:random)
+ (:shadow #:random #:count)
  (:export #:export-world #:create-world #:current-state
   ; API as used by transpiled NetLogo programs
   #:agent-value
   #:ask
+  #:count
   #:create-turtles
   #:die
   #:of

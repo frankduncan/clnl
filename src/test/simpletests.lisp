@@ -187,3 +187,12 @@
 
 (defsimplecommandtest "setxy 1" "crt 10 ask turtles [ setxy random-xcor random-ycor ]"
  "B02FD5B864A129AED5254A68C499607F7F6EA236")
+
+(defsimplereportertest "count 1" "count turtles" "0"
+ "E1DE30F072D785E0D0B59F28B0F7853E3D3E0D8B")
+
+(defreportertestwithsetup "count 2" "crt 10" "count turtles" "10"
+ "A925E39EC022967568D238D31F70F0A375024A89")
+
+(defsimplereportertest "count 3" "count patches" "9"
+ "E1DE30F072D785E0D0B59F28B0F7853E3D3E0D8B")

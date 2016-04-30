@@ -14,4 +14,8 @@
 (defstruct patch color xcor ycor)
 
 (defun agent-set-list (agent-set)
- agent-set)
+ (cond
+  ((eql agent-set :turtles) *turtles*)
+  ((eql agent-set :patches) *patches*)
+  ((and (listp agent-set) (eql :agent-set (car agent-set))) (cdr agent-set))
+  (t (error "Doesn't seem to be an agent-set: ~A" agent-set))))
