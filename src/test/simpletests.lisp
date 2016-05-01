@@ -240,3 +240,13 @@
 
 (defsimplecommandtest "set-default-shapes 1" "crt 10 set-default-shape turtles \"sheep\" crt 10"
  "F0B80936630E8B597CB1088493E3765B5B4A2137")
+
+(defreportertestwithsetup "round 1" "crt 10" "[ round random-float 1000 ] of turtles"
+ "[264 551 807 834 47 117 999 259 87 963]"
+ "2048ED1C553B0342D5DE1302577394CD09DE88DA")
+
+(defsimplereportertest "round 2" "round 1.5" "2"
+ "E1DE30F072D785E0D0B59F28B0F7853E3D3E0D8B")
+
+(defsimplereportertest "round 3" "round 2.5" "3"
+ "E1DE30F072D785E0D0B59F28B0F7853E3D3E0D8B")

@@ -169,6 +169,7 @@ DESCRIPTION:
 (defsimpleprim :random-float :reporter clnl-nvm:random-float)
 (defsimpleprim :random-xcor :reporter clnl-nvm:random-xcor)
 (defsimpleprim :random-ycor :reporter clnl-nvm:random-ycor)
+(defprim :round :reporter (lambda (n) `(ffloor (+ ,n 0.5d0))))
 (defsimpleprim :rt :command clnl-nvm:turn-right)
 (defsimpleprim :set :command cl:setf)
 (defsimpleprim :set-default-shape :command clnl-nvm:set-default-shape)

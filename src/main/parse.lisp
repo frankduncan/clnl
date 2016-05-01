@@ -271,7 +271,7 @@ DESCRIPTION:
 (defprim :random-float (:number))
 (defprim :random-xcor ())
 (defprim :random-ycor ())
-(defprim :round ())
+(defprim :round (t))
 (defprim :reset-ticks ())
 (defprim :lt (:number))
 (defprim :rt (:number))
