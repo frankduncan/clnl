@@ -250,3 +250,6 @@
 
 (defsimplereportertest "round 3" "round 2.5" "3"
  "E1DE30F072D785E0D0B59F28B0F7853E3D3E0D8B")
+
+(defsimplecommandtest "clear-all 1" "crt 10 ask patches [ set pcolor random 100 ] clear-all"
+ "7B5DF28923D7FD72158018A876DE8ED02CFB0882")

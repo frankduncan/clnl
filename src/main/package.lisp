@@ -69,6 +69,7 @@ into an ast that can be transpiled later."))
   ; API as used by transpiled NetLogo programs
   #:agent-value
   #:ask
+  #:clear-all
   #:count
   #:create-turtles
   #:die

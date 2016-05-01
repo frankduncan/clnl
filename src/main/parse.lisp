@@ -246,6 +246,7 @@ DESCRIPTION:
 (defprim :<= (:number :number) :infix)
 (defprim :any? (:agentset))
 (defprim :ask (:agentset :command-block))
+(defprim :ca ())
 (defprim :clear-all ())
 (defprim :crt (:number (:command-block :optional)))
 (defprim :color ())

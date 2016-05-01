@@ -13,9 +13,9 @@
 
 (defun find-prim (symb)
  (when symb
-  (or
-   (find symb *prims* :key #'prim-name)
-   (find-prim (getf (find symb *prim-aliases* :key #'prim-name) :real-symb)))))
+  (find-if
+   (lambda (prim-name) (or (eql symb prim-name) (and (listp prim-name) (find symb prim-name))))
+   *prims* :key #'prim-name)))
 
 ; Let this grow, slowly but surely, eventually taking on calling context, etc.
 ; For now, it's just a
@@ -143,18 +143,19 @@ DESCRIPTION:
 (defprim :any? :reporter (lambda (agentset) `(> (clnl-nvm:count ,agentset) 0)))
 (defsimpleprim :ask :command clnl-nvm:ask)
 (defagentvalueprim :color)
+(defsimpleprim '(:clear-all :ca) :command clnl-nvm:clear-all)
 (defsimpleprim :count :reporter clnl-nvm:count)
 (defsimpleprim :crt :command clnl-nvm:create-turtles)
 (defsimpleprim :die :command clnl-nvm:die)
 (defsimpleprim :fd :command clnl-nvm:forward)
 (defsimpleprim :hatch :command clnl-nvm:hatch)
 (defprim :if :command (lambda (pred a) `(when ,pred ,@(make-command-block-inline a))))
-(defprim :ifelse :command (lambda (pred a b)
-                           `(if ,pred
-                             ,@(make-command-block-inline a)
-                             ,@(make-command-block-inline b))))
+(defprim '(:ifelse :if-else)
+ :command (lambda (pred a b)
+           `(if ,pred
+             ,@(make-command-block-inline a)
+             ,@(make-command-block-inline b))))
 
-(defprim-alias :if-else :ifelse)
 (defagentvalueprim :label)
 (defagentvalueprim :label-color)
 (defsimpleprim :lt :command clnl-nvm:turn-left)

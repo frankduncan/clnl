@@ -172,6 +172,22 @@ DESCRIPTION:
   See http://ccl.northwestern.edu/netlogo/docs/dictionary.html#count"
  (coerce (length (agentset-list agentset)) 'double-float))
 
+(defun clear-all ()
+ "CLEAR-ALL => RESULT
+
+ARGUMENTS AND VALUES:
+
+  RESULT: undefined
+
+DESCRIPTION:
+
+  Clears ticks, turtles, patches, globals (unimplemented).
+
+  See http://ccl.northwestern.edu/netlogo/docs/dictionary.html#clear-all"
+ (clear-turtles)
+ (clear-patches)
+ (clear-ticks))
+
 (defun of (fn agent-or-agentset)
  "OF FN AGENT-OR-AGENTSET => RESULT
 
@@ -581,6 +597,25 @@ DESCRIPTION:
  (when (not *ticks*) (error "reset-ticks must be called"))
  *ticks*)
 
+(defun clear-patches ()
+ (setf
+  *patches*
+  (loop
+   :for y :from (max-pycor) :downto (min-pycor)
+   :append (loop
+            :for x :from (min-pxcor) :to (max-pxcor)
+            :collect (make-patch
+                      :xcor (coerce x 'double-float)
+                      :ycor (coerce y 'double-float)
+                      :color 0d0)))))
+
+(defun clear-turtles ()
+ (setf *turtles* nil)
+ (setf *current-id* 0))
+
+(defun clear-ticks ()
+ (setf *ticks* nil))
+
 (defun create-world (&key dims)
  "CREATE-WORLD &key DIMS => RESULT
 
@@ -602,18 +637,9 @@ DESCRIPTION:
   called when an engine is already running, it may do somethign weird."
  (setf *dimensions* dims)
  (setf *breeds* (list (list :turtles "default")))
- (setf
-  *patches*
-  (loop
-   :for y :from (max-pycor) :downto (min-pycor)
-   :append (loop
-            :for x :from (min-pxcor) :to (max-pxcor)
-            :collect (make-patch
-                      :xcor (coerce x 'double-float)
-                      :ycor (coerce y 'double-float)
-                      :color 0d0))))
- (setf *turtles* nil)
- (setf *current-id* 0))
+ (clear-ticks)
+ (clear-patches)
+ (clear-turtles))
 
 ; These match netlogo's dump
 (defgeneric dump-object (o))
