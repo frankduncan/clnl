@@ -58,6 +58,7 @@ DESCRIPTION:
                 :heading (if base-turtle
                           (turtle-heading base-turtle)
                           (coerce (clnl-random:next-int 360) 'double-float))
+                :shape (breed-default-shape :turtles)
                 :xcor (if base-turtle (turtle-xcor base-turtle) 0d0)
                 :ycor (if base-turtle (turtle-ycor base-turtle) 0d0))))
   (setf *turtles* (nconc *turtles* (list new-turtle)))
@@ -402,6 +403,26 @@ DESCRIPTION:
  (setf (turtle-xcor *self*) (wrap-x *topology* x))
  (setf (turtle-ycor *self*) (wrap-y *topology* y)))
 
+(defun set-default-shape (breed shape)
+ "SET-DEFAULT-SHAPE BREED SHAPE => RESULT
+
+ARGUMENTS AND VALUES:
+
+  BREED: a valid breed
+  SHAPE: a string
+  RESULT: undefined
+
+DESCRIPTION:
+
+  Specifies a default initial shape for a BREED. When a turtle, or it changes breeds,
+  its shape is set to the given shape.
+
+  SET-DEFAULT-SHAPE doesn't affect existing agents, only agents you create afterwards.
+
+  See http://ccl.northwestern.edu/netlogo/docs/dictionary.html#set-default-shape"
+ (when (not (breed-p breed)) (error "Need a valid breed"))
+ (setf (breed-default-shape breed) shape))
+
 (defun forward (n)
  "FORWARD N => RESULT
 
@@ -580,6 +601,7 @@ DESCRIPTION:
   This should be called before using the engine in any real capacity.  If
   called when an engine is already running, it may do somethign weird."
  (setf *dimensions* dims)
+ (setf *breeds* (list (list :turtles "default")))
  (setf
   *patches*
   (loop
@@ -668,12 +690,13 @@ DESCRIPTION:
   (mapcar
    (lambda (turtle)
     (format nil
-     "\"~A\",\"~A\",\"~A\",\"~A\",\"~A\",\"\"\"default\"\"\",\"~A\",\"~A\",\"{all-turtles}\",\"false\",\"~A\",~A"
+     "\"~A\",\"~A\",\"~A\",\"~A\",\"~A\",\"~A\",\"~A\",\"~A\",\"{all-turtles}\",\"false\",\"~A\",~A"
      (dump-object (turtle-who turtle))
      (dump-object (turtle-color turtle))
      (dump-object (turtle-heading turtle))
      (dump-object (turtle-xcor turtle))
      (dump-object (turtle-ycor turtle))
+     (dump-object (turtle-shape turtle))
      (dump-object (turtle-label turtle))
      (dump-object (turtle-label-color turtle))
      (dump-object (turtle-size turtle))

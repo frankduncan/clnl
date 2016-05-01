@@ -90,6 +90,7 @@ DESCRIPTION:
   The Common lisp code that is returned, when run, will return some value."
  (cond
   ((numberp reporter) reporter) ; The parser converts to double for us
+  ((stringp reporter) reporter)
   ; The parser should have checked that having a symbol here is ok
   ((symbolp reporter) (intern (symbol-name reporter) clnl:*model-package*))
   ((not (listp reporter)) (error "Expected a statement of some sort"))
@@ -169,9 +170,10 @@ DESCRIPTION:
 (defsimpleprim :random-xcor :reporter clnl-nvm:random-xcor)
 (defsimpleprim :random-ycor :reporter clnl-nvm:random-ycor)
 (defsimpleprim :rt :command clnl-nvm:turn-right)
-(defsimpleprim :show :command clnl-nvm:show)
 (defsimpleprim :set :command cl:setf)
+(defsimpleprim :set-default-shape :command clnl-nvm:set-default-shape)
 (defsimpleprim :setxy :command clnl-nvm:setxy)
+(defsimpleprim :show :command clnl-nvm:show)
 (defagentvalueprim :size)
 (defsimpleprim :tick :command clnl-nvm:tick)
 (defsimpleprim :ticks :reporter clnl-nvm:ticks)

@@ -237,3 +237,6 @@
 
 (defsimplecommandtest "hatch 2" "crt 10 ask turtles [ hatch 1 [ fd .5 ] ] ask turtles [ fd .5 ]"
  "58E3CBC869F26B7D9ABC0C05C58C29F2FD588912")
+
+(defsimplecommandtest "set-default-shapes 1" "crt 10 set-default-shape turtles \"sheep\" crt 10"
+ "F0B80936630E8B597CB1088493E3765B5B4A2137")

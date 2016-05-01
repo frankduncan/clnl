@@ -83,6 +83,7 @@ into an ast that can be transpiled later."))
   #:random-float
   #:random-xcor
   #:random-ycor
+  #:set-default-shape
   #:setxy
   #:show
   #:turtles

@@ -7,12 +7,12 @@ exec scalas "$0" -q "$@"
 
   logLevel in Global := Level.Error
 
-  scalaVersion := "2.10.3"
+  scalaVersion := "2.9.2"
 
   libraryDependencies ++= Seq(
     "asm" % "asm-all" % "3.3.1",
     "org.picocontainer" % "picocontainer" % "2.13.6",
-    "org.nlogo" % "NetLogoHeadless" % "6.0.0-M3" from "http://ccl.northwestern.edu/devel/6.0.0-M3/NetLogoHeadless.jar"
+    "org.nlogo" % "NetLogo" % "5.2.0" from "http://ccl.northwestern.edu/netlogo/5.2.0/NetLogo.jar"
   )
 */
 
@@ -33,11 +33,11 @@ val commands = input(0)
 
 workspace.mainRNG.setSeed(15)
 if(commands.length > 0) {
-  workspace.runCompiledCommands(new api.SimpleJobOwner("test", workspace.world.mainRNG, api.AgentKind.Observer), workspace.compileCommands(commands, api.AgentKind.Observer))
+  workspace.runCompiledCommands(new api.SimpleJobOwner("test", workspace.world.mainRNG, classOf[api.Observer]), workspace.compileCommands(commands))
 }
 if(input.length > 1) {
   val reporter = input(1)
-  System.out.println(org.nlogo.api.Dump.logoObject(workspace.runCompiledReporter(new api.SimpleJobOwner("test", workspace.world.mainRNG, api.AgentKind.Observer), workspace.compileReporter(reporter))))
+  System.out.println(org.nlogo.api.Dump.logoObject(workspace.runCompiledReporter(new api.SimpleJobOwner("test", workspace.world.mainRNG, classOf[api.Observer]), workspace.compileReporter(reporter))))
 }
 
 workspace.world.exportWorld(new java.io.PrintWriter(System.out, true), true)

@@ -107,7 +107,15 @@ DESCRIPTION:
    (if (numberp num?) num? (error "Invalid number")))))
 
 (deflex :initial (format nil "~A*" *identifier-char*) #'as-symbol)
-(deflex :initial (format nil "\"~A*\"" *string-text*) #'identity)
+(deflex :initial (format nil "\"~A*\"" *string-text*)
+ ; While this shouldn't let harmful strings in,
+ ; one can't be too careful
+ (lambda (text)
+  (let
+   ((*readtable* (copy-readtable nil))
+    (*read-eval* nil))
+   (read-from-string text))))
+
 (deflex :initial (format nil "\"~A*" *string-text*)
  (lambda (text) (declare (ignore text)) (error "Closing double quote is missing")))
 ;(deflex :initial "." (lambda (text) (error "Non standard character is not allowed")))

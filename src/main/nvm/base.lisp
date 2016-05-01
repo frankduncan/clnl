@@ -9,8 +9,9 @@
 (defvar *dimensions* nil)
 (defvar *topology* :torus)
 (defvar *ticks* nil)
+(defvar *breeds* nil)
 
-(defstruct turtle who color heading xcor ycor (label "") (label-color 9.9d0) (size 1d0))
+(defstruct turtle who color heading xcor ycor (label "") (label-color 9.9d0) (size 1d0) shape)
 (defstruct patch color xcor ycor)
 
 (defun agentset-list (agentset)
@@ -38,3 +39,12 @@
 
 (defun agent-p (o)
  (or (turtle-p o) (patch-p o)))
+
+(defun breed-p (breed)
+ (find breed *breeds* :key #'car))
+
+(defun breed-default-shape (breed)
+ (second (find breed *breeds* :key #'car)))
+
+(defsetf breed-default-shape (breed) (shape)
+ `(setf (second (find ,breed *breeds* :key #'car)) ,shape))
