@@ -156,6 +156,7 @@ DESCRIPTION:
 (defagentvalueprim :label)
 (defagentvalueprim :label-color)
 (defsimpleprim :lt :command clnl-nvm:turn-left)
+(defsimpleprim :not :reporter cl:not)
 (defkeywordprim :nobody)
 (defsimpleprim :one-of :reporter clnl-nvm:one-of)
 (defsimpleprim :of :reporter clnl-nvm:of)
