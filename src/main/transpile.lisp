@@ -177,6 +177,7 @@ DESCRIPTION:
 (defsimpleprim :set-default-shape :command clnl-nvm:set-default-shape)
 (defsimpleprim :setxy :command clnl-nvm:setxy)
 (defsimpleprim :show :command clnl-nvm:show)
+(defsimpleprim :stop :command clnl-nvm:stop)
 (defagentvalueprim :size)
 (defsimpleprim :tick :command clnl-nvm:tick)
 (defsimpleprim :ticks :reporter clnl-nvm:ticks)

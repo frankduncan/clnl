@@ -11,6 +11,23 @@
 (defvar *ticks* nil)
 (defvar *breeds* nil)
 
+(define-condition stop nil nil)
+
+(defmacro with-stop-handler (&rest forms)
+ "MACRO WITH-STOP-HANDLER &rest FORMS => HANDLED-FORM
+
+ARGUMENTS AND VALUES:
+
+  FORMS: body to be handled
+  HANDLED-FORM: body with handling
+
+DESCRIPTION:
+
+  WITH-STOP-HANDLER is a convenience macro to handle when
+  programs issue a stop condition.  When one does, a simple
+  :stop is returned."
+ `(handler-case (progn ,@forms) (stop (s) :stop)))
+
 (defstruct turtle who color heading xcor ycor (label "") (label-color 9.9d0) (size 1d0) shape)
 (defstruct patch color xcor ycor)
 

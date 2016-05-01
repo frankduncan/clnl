@@ -253,3 +253,9 @@
 
 (defsimplecommandtest "clear-all 1" "crt 10 ask patches [ set pcolor random 100 ] clear-all"
  "7B5DF28923D7FD72158018A876DE8ED02CFB0882")
+
+(defsimplecommandtest "stop 1" "crt 10 stop crt 10"
+ "A925E39EC022967568D238D31F70F0A375024A89")
+
+(defsimplecommandtest "stop 2" "crt 10 ask turtles [ fd 1 stop fd 1 ]"
+ "A6C980CC9843CDD211ABD9C13899010D555F3DC5")

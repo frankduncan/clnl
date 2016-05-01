@@ -62,7 +62,7 @@ DESCRIPTION:
 
   RUN-COMMANDS will take NetLogo commands, put them through the various
   stages need to turn them into Common Lisp code, and run it."
- (eval (clnl-transpiler:transpile-commands (clnl-parser:parse (clnl-lexer:lex cmds)))))
+ (clnl-nvm:with-stop-handler (eval (clnl-transpiler:transpile-commands (clnl-parser:parse (clnl-lexer:lex cmds))))))
 
 (defun run-reporter (reporter)
  "RUN-REPORTER REPORTER => RESULT

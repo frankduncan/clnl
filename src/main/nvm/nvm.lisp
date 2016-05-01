@@ -150,9 +150,9 @@ DESCRIPTION:
     (loop
      :for agent := (funcall iter)
      :while agent
-     :do (let ((*myself* *self*) (*self* agent)) (funcall fn)))))
+     :do (let ((*myself* *self*) (*self* agent)) (with-stop-handler (funcall fn))))))
   ((agent-p agent-or-agentset)
-   (let ((*myself* *self*) (*self* agent-or-agentset)) (funcall fn)))
+   (let ((*myself* *self*) (*self* agent-or-agentset)) (with-stop-handler (funcall fn))))
   (t
    (error "Ask requires an agentset or agent but got: ~A" agent-or-agentset))))
 
@@ -202,6 +202,22 @@ DESCRIPTION:
 
   See http://ccl.northwestern.edu/netlogo/docs/dictionary.html#display"
  nil)
+
+(defun stop ()
+ "STOP => RESULT
+
+ARGUMENTS AND VALUES:
+
+  RESULT: undefined
+
+DESCRIPTION:
+
+  Returns from the current stop block, which will halt the currently running
+  thing, be that the program, current ask block, or procedure.  Stop has odd
+  semantics that are best gleaned from the actual NetLogo manual.
+
+  See http://ccl.northwestern.edu/netlogo/docs/dictionary.html#stop"
+ (error (make-condition 'stop)))
 
 (defun of (fn agent-or-agentset)
  "OF FN AGENT-OR-AGENTSET => RESULT
