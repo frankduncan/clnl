@@ -188,6 +188,21 @@ DESCRIPTION:
  (clear-patches)
  (clear-ticks))
 
+(defun display ()
+ "DISPLAY => RESULT
+
+ARGUMENTS AND VALUES:
+
+  RESULT: undefined
+
+DESCRIPTION:
+
+  As of yet, this does nothing.  A placeholder method for forced dipslay
+  updates from the engine.
+
+  See http://ccl.northwestern.edu/netlogo/docs/dictionary.html#display"
+ nil)
+
 (defun of (fn agent-or-agentset)
  "OF FN AGENT-OR-AGENTSET => RESULT
 

@@ -73,6 +73,7 @@ into an ast that can be transpiled later."))
   #:count
   #:create-turtles
   #:die
+  #:display
   #:hatch
   #:of
   #:forward
