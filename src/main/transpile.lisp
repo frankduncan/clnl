@@ -175,6 +175,7 @@ DESCRIPTION:
 (defsimpleprim :ticks :reporter clnl-nvm:ticks)
 (defsimpleprim :turtles :reporter clnl-nvm:turtles)
 (defagentvalueprim :who)
+(defsimpleprim :with :reporter clnl-nvm:with)
 
 ; Colors
 (defmacro defcolorprim (color) `(defprim ,color :reporter (lambda () `(clnl-nvm:lookup-color ,,color))))

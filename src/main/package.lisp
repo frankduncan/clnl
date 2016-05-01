@@ -87,7 +87,8 @@ into an ast that can be transpiled later."))
   #:turtles
   #:tick
   #:ticks
-  #:turn-right #:turn-left)
+  #:turn-right #:turn-left
+  #:with)
  (:documentation
   "CLNL NVM
 

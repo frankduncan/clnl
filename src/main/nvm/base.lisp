@@ -17,11 +17,18 @@
  (cond
   ((eql agentset :turtles) *turtles*)
   ((eql agentset :patches) *patches*)
-  ((and (listp agentset) (eql :agentset (car agentset))) (cdr agentset))
+  ((and (listp agentset) (eql :agentset (car agentset))) (cddr agentset))
   (t (error "Doesn't seem to be an agentset: ~A" agentset))))
 
-(defun list->agentset (list)
- (cons :agentset list))
+(defun agentset-breed (agentset)
+ (cond
+  ((eql agentset :turtles) :turtles)
+  ((eql agentset :patches) :patches)
+  ((and (listp agentset) (eql :agentset (car agentset))) (second agentset))
+  (t (error "Doesn't seem to be an agentset: ~A" agentset))))
+
+(defun list->agentset (list breed)
+ (append (list :agentset breed) list))
 
 (defun agentset-p (o)
  (or

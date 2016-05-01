@@ -252,7 +252,7 @@ DESCRIPTION:
 (defprim :count (:agentset))
 (defprim :die ())
 (defprim :display ())
-(defprim :with (:reporter-block))
+(defprim :with (:agentset :reporter-block) :infix)
 (defprim :fd (:number))
 (defprim :hatch (:number :command-block))
 ; (defprim :let (t t)) ; keeping this here, commented out, to note that it has special processing

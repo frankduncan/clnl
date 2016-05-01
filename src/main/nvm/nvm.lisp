@@ -206,6 +206,30 @@ DESCRIPTION:
   (t
    (error "Of requires an agentset or agent but got: ~A" agent-or-agentset))))
 
+(defun with (agentset fn)
+ "WITH AGENTSET FN => RESULT-AGENTSET
+
+ARGUMENTS AND VALUES:
+
+  AGENTSET: a NetLogo agentset
+  FN: a boolean function, run on each agent to determine if included
+  RESULT-AGENTSET: an agentset of valid agents
+
+DESCRIPTION:
+
+  WITH is equivalent to with in NetLogo.
+
+  Returns a new agentset containing only those agents that reported true
+  when FN is called.
+
+  See http://ccl.northwestern.edu/netlogo/docs/dictionary.html#with"
+ (list->agentset
+  (remove-if-not
+   (lambda (agent)
+    (let ((*myself* *self*) (*self* agent)) (funcall fn)))
+   (agentset-list agentset))
+  (agentset-breed agentset)))
+
 (defun shufflerator (agentset-list)
  (let
   ((copy (copy-list agentset-list))
@@ -459,7 +483,7 @@ DESCRIPTION:
   See http://ccl.northwestern.edu/netlogo/docs/dictionary.html#create-turtles"
  (let
   ((new-turtles (loop :repeat n :collect (create-turtle))))
-  (when fn (ask (list->agentset new-turtles) fn))))
+  (when fn (ask (list->agentset new-turtles :turtles) fn))))
 
 (defun reset-ticks ()
  "RESET-TICKS => RESULT
@@ -560,7 +584,10 @@ DESCRIPTION:
 (defmethod dump-object ((o (eql t))) "true")
 (defmethod dump-object ((o (eql nil))) "false")
 
-(defmethod dump-object ((o list)) (format nil "[~{~A~^ ~}]" (mapcar #'dump-object o)))
+(defmethod dump-object ((o list))
+ (cond
+  ((agentset-p o) (format nil "(agentset, ~A ~A)" (dump-object (count o)) (string-downcase (agentset-breed o))))
+  (t (format nil "[~{~A~^ ~}]" (mapcar #'dump-object o)))))
 
 (defmethod dump-object ((o patch))
  (format nil "(patch ~A ~A)" (dump-object (patch-xcor o)) (dump-object (patch-ycor o))))

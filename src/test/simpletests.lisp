@@ -211,3 +211,17 @@
 
 (defsimplereportertest "count 3" "count patches" "9"
  "E1DE30F072D785E0D0B59F28B0F7853E3D3E0D8B")
+
+(defreportertestwithsetup "with 1"
+ "crt 10 [ set color blue ] crt 10 [ set color green ]" "turtles with [ color = blue ]"
+ "(agentset, 10 turtles)"
+ "3FA51464CBF2AD493FA95A52E17768E1D8C8EFBB")
+
+(defreportertestwithsetup "with 2"
+ "crt 10 [ set color blue ] crt 10 [ set color green ]" "turtles with [ color = black ]"
+ "(agentset, 0 turtles)"
+ "3FA51464CBF2AD493FA95A52E17768E1D8C8EFBB")
+
+(defsimplereportertest "with 3" "patches with [ pcolor = green ]"
+ "(agentset, 0 patches)"
+ "E1DE30F072D785E0D0B59F28B0F7853E3D3E0D8B")
