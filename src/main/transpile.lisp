@@ -146,6 +146,7 @@ DESCRIPTION:
 (defsimpleprim :crt :command clnl-nvm:create-turtles)
 (defsimpleprim :die :command clnl-nvm:die)
 (defsimpleprim :fd :command clnl-nvm:forward)
+(defsimpleprim :hatch :command clnl-nvm:hatch)
 (defprim :if :command (lambda (pred a) `(when ,pred ,@(make-command-block-inline a))))
 (defprim :ifelse :command (lambda (pred a b)
                            `(if ,pred

@@ -48,14 +48,18 @@ DESCRIPTION:
   (:magenta 125d0)
   (:pink 135d0)))
 
-(defun create-turtle ()
+(defun create-turtle (&optional base-turtle)
  (let
   ((new-turtle (make-turtle
                 :who (coerce *current-id* 'double-float)
-                :color (coerce (+ 5 (* 10 (clnl-random:next-int 14))) 'double-float)
-                :heading (coerce (clnl-random:next-int 360) 'double-float)
-                :xcor 0d0
-                :ycor 0d0)))
+                :color (if base-turtle
+                        (turtle-color base-turtle)
+                        (coerce (+ 5 (* 10 (clnl-random:next-int 14))) 'double-float))
+                :heading (if base-turtle
+                          (turtle-heading base-turtle)
+                          (coerce (clnl-random:next-int 360) 'double-float))
+                :xcor (if base-turtle (turtle-xcor base-turtle) 0d0)
+                :ycor (if base-turtle (turtle-ycor base-turtle) 0d0))))
   (setf *turtles* (nconc *turtles* (list new-turtle)))
   (incf *current-id*)
   new-turtle))
@@ -483,6 +487,28 @@ DESCRIPTION:
   See http://ccl.northwestern.edu/netlogo/docs/dictionary.html#create-turtles"
  (let
   ((new-turtles (loop :repeat n :collect (create-turtle))))
+  (when fn (ask (list->agentset new-turtles :turtles) fn))))
+
+(defun hatch (n &optional fn)
+ "HATCH N &optional FN => RESULT
+
+ARGUMENTS AND VALUES:
+
+  N: an integer, the numbers of turtles to hatch
+  FN: A function, applied to each turtle after creation
+  RESULT: undefined
+
+DESCRIPTION:
+
+  The turtle in *self* creates N new turtles. Each new turtle inherits of all its
+  variables, including its location, from self.
+
+  If FN is supplied, the new turtles immediately run it.
+
+  See http://ccl.northwestern.edu/netlogo/docs/dictionary.html#hatch"
+ (when (not (turtle-p *self*)) (error "Can only hatch from turtle scope"))
+ (let
+  ((new-turtles (loop :repeat n :collect (create-turtle *self*))))
   (when fn (ask (list->agentset new-turtles :turtles) fn))))
 
 (defun reset-ticks ()

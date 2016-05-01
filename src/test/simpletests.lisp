@@ -231,3 +231,9 @@
 (defsimplereportertest "with 3" "patches with [ pcolor = green ]"
  "(agentset, 0 patches)"
  "E1DE30F072D785E0D0B59F28B0F7853E3D3E0D8B")
+
+(defsimplecommandtest "hatch 1" "crt 10 ask turtles [ hatch 1 ]"
+ "29E3D1D3FAA14FC0D6E03DB1315932EEBC7CB1F1")
+
+(defsimplecommandtest "hatch 2" "crt 10 ask turtles [ hatch 1 [ fd .5 ] ] ask turtles [ fd .5 ]"
+ "58E3CBC869F26B7D9ABC0C05C58C29F2FD588912")

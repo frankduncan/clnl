@@ -72,6 +72,7 @@ into an ast that can be transpiled later."))
   #:count
   #:create-turtles
   #:die
+  #:hatch
   #:of
   #:forward
   #:lookup-color

@@ -254,7 +254,7 @@ DESCRIPTION:
 (defprim :display ())
 (defprim :with (:agentset :reporter-block) :infix)
 (defprim :fd (:number))
-(defprim :hatch (:number :command-block))
+(defprim :hatch (:number (:command-block :optional)))
 ; (defprim :let (t t)) ; keeping this here, commented out, to note that it has special processing
 (defprim :if (:boolean :command-block))
 (defprim :if-else (:boolean :command-block :command-block))
