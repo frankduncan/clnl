@@ -76,7 +76,16 @@ DESCRIPTION:
   ; could have defined this using the special variable, but didn't to make the
   ; function definition simpler, as well as the documentation.
   ((*dynamic-prims* dynamic-prims))
-  (parse-internal lexed-ast)))
+  (remove-parened-forms (parse-internal lexed-ast))))
+
+; This is needed to clean up where we had to note parenthesis wrapped
+; things for the purpose of precedence
+(defun remove-parened-forms (parsed-ast)
+ (cond
+  ((not parsed-ast) nil)
+  ((and (listp parsed-ast) (eql :parened (car parsed-ast))) (remove-parened-forms (cadr parsed-ast)))
+  ((listp parsed-ast) (mapcar #'remove-parened-forms parsed-ast))
+  (t parsed-ast)))
 
 (defun parse-internal (lexed-ast &key prev-item prev-remaining-arg remaining-args)
  (let
@@ -123,6 +132,32 @@ DESCRIPTION:
     :prev-remaining-arg (car remaining-args)
     :prev-item (list :let (car lexed-ast) (cadr (car half-parsed-remainder)))))))
 
+(defun reconfigure-due-to-precedence (prev-item prim following-args)
+ (flet
+  ((calculate-precedence (x)
+    (or
+     (and
+      (listp x)
+      (< 1 (length prev-item))
+      (keywordp (car x))
+      (find-prim (car x))
+      (getf (find-prim (car x)) :precedence))
+     20)))
+  (cond
+   ((<= (getf prim :precedence) (calculate-precedence prev-item))
+    (cons
+     (prim-name prim)
+     (cons
+      (second (help-arg prev-item (car (prim-args prim))))
+      following-args)))
+   (t (append
+       (butlast prev-item)
+       (list
+        (reconfigure-due-to-precedence
+         (car (last prev-item))
+         prim
+         following-args)))))))
+
 (defun parse-prim (prim lexed-ast prev-item prev-remaining-arg remaining-args)
  (let*
   ((args (if (prim-is-infix prim) (cdr (prim-args prim)) (prim-args prim)))
@@ -134,10 +169,11 @@ DESCRIPTION:
     (subseq half-parsed-remainder breakpoint (min (length args) (length half-parsed-remainder))))
    (middle-forms
     (cons
-     (cons
-      (prim-name prim)
-      (append
-       (when (prim-is-infix prim) (list (second (help-arg prev-item (car (prim-args prim))))))
+     (if
+      (prim-is-infix prim)
+      (reconfigure-due-to-precedence prev-item prim (mapcar #'cadr (subseq half-parsed-remainder 0 breakpoint)))
+      (cons
+       (prim-name prim)
        (mapcar #'cadr (subseq half-parsed-remainder 0 breakpoint))))
      already-parsed-limbo-forms)))
   (append
@@ -199,7 +235,7 @@ DESCRIPTION:
    (let
     ((parsed-in-block (parse-internal in-block)))
     (when (/= 1 (length parsed-in-block)) (error "Expected ) here"))
-    (car parsed-in-block))
+    (list :parened (car parsed-in-block)))
    :prev-remaining-arg (car remaining-args)
    :remaining-args (cdr remaining-args))))
 
@@ -216,9 +252,9 @@ DESCRIPTION:
         ((eql (intern ")" :keyword) (car tokens)) (1- depth)) (t depth)))
       (values (cons (car tokens) in-block) after-block)))))
 
-(defmacro defprim (name args &optional infix)
+(defmacro defprim (name args precedence &rest options)
  `(push
-   (list :name ,name :args ',args :infix ,infix)
+   (list :name ,name :args ',args :infix ,(find :infix options) :precedence ,precedence)
    *prims*))
 
 (defmacro defstructureprim (name)
@@ -236,63 +272,63 @@ DESCRIPTION:
 ;
 ; After the arguments, :infix denotes that it's an :infix operator
 ;  - Note: Later we should move it to have a list of optional attributes of the primitive
-(defprim := (t t) :infix)
-(defprim :!= (t t) :infix)
-(defprim :- (:number :number) :infix)
-(defprim :* (:number :number) :infix)
-(defprim :+ (:number :number) :infix)
-(defprim :/ (:number :number) :infix)
-(defprim :< (:number :number) :infix)
-(defprim :<= (:number :number) :infix)
-(defprim :any? (:agentset))
-(defprim :ask (:agentset :command-block))
-(defprim :ca ())
-(defprim :clear-all ())
-(defprim :crt (:number (:command-block :optional)))
-(defprim :color ())
-(defprim :count (:agentset))
-(defprim :die ())
-(defprim :display ())
-(defprim :with (:agentset :reporter-block) :infix)
-(defprim :fd (:number))
-(defprim :hatch (:number (:command-block :optional)))
-; (defprim :let (t t)) ; keeping this here, commented out, to note that it has special processing
-(defprim :if (:boolean :command-block))
-(defprim :if-else (:boolean :command-block :command-block))
-(defprim :ifelse (:boolean :command-block :command-block))
-(defprim :label ())
-(defprim :label-color ())
-(defprim :not (:boolean))
-(defprim :nobody ())
-(defprim :one-of ((:agentset :list)))
-(defprim :of (:reporter-block :agentset) :infix)
-(defprim :patches ())
-(defprim :pcolor ())
-(defprim :random (:number))
-(defprim :random-float (:number))
-(defprim :random-xcor ())
-(defprim :random-ycor ())
-(defprim :round (t))
-(defprim :reset-ticks ())
-(defprim :lt (:number))
-(defprim :rt (:number))
-(defprim :set (t t))
-(defprim :set-default-shape (t t))
-(defprim :setxy (:number :number))
-(defprim :show (t))
-(defprim :size ())
-(defprim :stop ())
-(defprim :tick ())
-(defprim :ticks ())
-(defprim :turtles ())
-(defprim :who ())
+(defprim := (t t) 5 :infix)
+(defprim :!= (t t) 5 :infix)
+(defprim :- (:number :number) 7 :infix)
+(defprim :* (:number :number) 8 :infix)
+(defprim :+ (:number :number) 7 :infix)
+(defprim :/ (:number :number) 8 :infix)
+(defprim :< (:number :number) 6 :infix)
+(defprim :<= (:number :number) 6 :infix)
+(defprim :any? (:agentset) 10)
+(defprim :ask (:agentset :command-block) 0)
+(defprim :ca () 0)
+(defprim :clear-all () 0)
+(defprim :crt (:number (:command-block :optional)) 0)
+(defprim :color () 10)
+(defprim :count (:agentset) 10)
+(defprim :die () 0)
+(defprim :display () 0)
+(defprim :with (:agentset :reporter-block) 12 :infix)
+(defprim :fd (:number) 0)
+(defprim :hatch (:number (:command-block :optional)) 0)
+(defprim :let (t t) 0) ; while this has special processing, we need a prim for meta information
+(defprim :if (:boolean :command-block) 0)
+(defprim :if-else (:boolean :command-block :command-block) 0)
+(defprim :ifelse (:boolean :command-block :command-block) 0)
+(defprim :label () 10)
+(defprim :label-color () 10)
+(defprim :not (:boolean) 10)
+(defprim :nobody () 10)
+(defprim :one-of ((:agentset :list)) 10)
+(defprim :of (:reporter-block :agentset) 11 :infix)
+(defprim :patches () 10)
+(defprim :pcolor () 10)
+(defprim :random (:number) 10)
+(defprim :random-float (:number) 10)
+(defprim :random-xcor () 10)
+(defprim :random-ycor () 10)
+(defprim :round (t) 10)
+(defprim :reset-ticks () 0)
+(defprim :lt (:number) 0)
+(defprim :rt (:number) 0)
+(defprim :set (t t) 0)
+(defprim :set-default-shape (t t) 0)
+(defprim :setxy (:number :number) 0)
+(defprim :show (t) 0)
+(defprim :size () 10)
+(defprim :stop () 0)
+(defprim :tick () 0)
+(defprim :ticks () 10)
+(defprim :turtles () 10)
+(defprim :who () 10)
 
 ; colors
-(defprim :black ())
-(defprim :blue ())
-(defprim :brown ())
-(defprim :green ())
-(defprim :white ())
+(defprim :black () 10)
+(defprim :blue () 10)
+(defprim :brown () 10)
+(defprim :green () 10)
+(defprim :white () 10)
 
 (defstructureprim :globals)
 (defstructureprim :breed)
