@@ -92,26 +92,44 @@ DESCRIPTION:
      (append
       (clnl-model:widget-globals model)
       (clnl-code-parser:globals code-ast))))
-   `(let
-     ,(mapcar (lambda (pair) (list (intern (string-upcase (car pair)) *model-package*) (cadr pair))) globals)
+   `(prog ()
+     ; First declare is in case we don't use it, it shows up in export correctly
      (declare (special ,@(mapcar (lambda (pair) (intern (string-upcase (car pair)) *model-package*)) globals)))
-     (clnl-random:set-seed ,seed)
-     (clnl-nvm:create-world
-      :dims ',(clnl-model:world-dimensions model)
-      :globals (list
-                ,@(mapcar
-                   (lambda (pair) `(list ,(car pair) (lambda () ,(intern (string-upcase (car pair)) *model-package*))))
-                   globals)))
-     ,@(when netlogo-callback
-        `((funcall ,netlogo-callback
-           (lambda (netlogo-code)
-            (eval
-             (clnl-transpiler:transpile
-              (clnl-parser:parse
-               (clnl-lexer:lex netlogo-code)
-               (list ,@(mapcar (lambda (prim) `(list ,@prim)) prims)))
-              (list ,@(mapcar (lambda (prim) `(list ,@prim)) prims))))))))
-     ,@(when initialize-interface `((clnl-interface:initialize :dims ',(clnl-model:world-dimensions model))))))))
+     (let
+      ,(mapcar (lambda (pair) (list (intern (string-upcase (car pair)) *model-package*) (cadr pair))) globals)
+      ; We declare twice rather than once and doing a bunch of setfs
+      (declare (special ,@(mapcar (lambda (pair) (intern (string-upcase (car pair)) *model-package*)) globals)))
+      (labels
+       ,(mapcar
+         (lambda (proc)
+          `(,(intern (string-upcase (car proc)) *model-package*) ()
+            ,@(cdr ; remove the progn, cuz it looks nicer
+               (clnl-transpiler:transpile (cadr proc)
+                (mapcar
+                 (lambda (prim)
+                  (if (getf prim :macro) ; The reason we do this is because with macros, we want to evaluate them in
+                                         ; this scope while preserving them for the generational purposes below
+                   (append (list :macro (eval (getf prim :macro))) prim)
+                   prim)) prims)))))
+         (clnl-code-parser:procedures code-ast))
+       (clnl-random:set-seed ,seed)
+       (clnl-nvm:create-world
+        :dims ',(clnl-model:world-dimensions model)
+        :globals (list
+                  ,@(mapcar
+                     (lambda (pair)
+                      `(list ,(car pair) (lambda () ,(intern (string-upcase (car pair)) *model-package*))))
+                     globals)))
+       ,@(when netlogo-callback
+          `((funcall ,netlogo-callback
+             (lambda (netlogo-code)
+              (eval
+               (clnl-transpiler:transpile
+                (clnl-parser:parse
+                 (clnl-lexer:lex netlogo-code)
+                 (list ,@(mapcar (lambda (prim) `(list ,@prim)) prims)))
+                (list ,@(mapcar (lambda (prim) `(list ,@prim)) prims))))))))
+       ,@(when initialize-interface `((clnl-interface:initialize :dims ',(clnl-model:world-dimensions model))))))))))
 
 (setf (documentation 'model->single-form-lisp 'function)
  "MODEL->SINGLE-FORM-LISP MODEL &key SEED INITIALIZE-INTERFACE NETLOGO-CALLBACK => FORM
@@ -154,6 +172,18 @@ DESCRIPTION:
         (lambda (pair)
          `(defvar ,(intern (string-upcase (car pair)) *model-package*) ,(cadr pair)))
         globals)
+     ,@(mapcar
+        (lambda (proc)
+         `(defun ,(intern (string-upcase (car proc)) *model-package*) ()
+           ,@(cdr ; remove the progn, cuz it looks nicer
+              (clnl-transpiler:transpile (cadr proc)
+               (mapcar
+                (lambda (prim)
+                 (if (getf prim :macro) ; The reason we do this is because with macros, we want to evaluate them in
+                                        ; this scope while preserving them for the generational purposes below
+                  (append (list :macro (eval (getf prim :macro))) prim)
+                  prim)) prims)))))
+        (clnl-code-parser:procedures code-ast))
      (defun ,boot-fn ()
       (clnl-random:set-seed ,seed)
       (clnl-nvm:create-world

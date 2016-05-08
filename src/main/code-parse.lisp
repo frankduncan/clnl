@@ -53,18 +53,25 @@ DESCRIPTION:
    (parsed (parse-internal lexed-ast)))
   (values
    (butlast parsed)
-   (last parsed))))
+   (car (last parsed)))))
 
 (defun procedures->prims (lexed-ast)
  (cond
   ((not lexed-ast) nil)
   ; We'll need argument handling here sometime :)
-  ((eql :to (car lexed-ast)) (cons (list :name (cadr lexed-ast)) (procedures->prims (cdr lexed-ast))))
+  ((eql :to (car lexed-ast))
+   (cons
+    (list
+     :name (cadr lexed-ast)
+     :type :command
+     :func `(function ,(intern (symbol-name (cadr lexed-ast)) clnl:*model-package*)))
+    (procedures->prims (cddr lexed-ast))))
   (t (procedures->prims (cdr lexed-ast)))))
 
 (defun parse-internal (lexed-ast)
  (cond
-  ((not lexed-ast) *dynamic-prims*)
+  ((not lexed-ast)
+   (list *dynamic-prims*))
   ((eql :to (car lexed-ast)) (parse-procedure lexed-ast))
   ((find (car lexed-ast) '(:globals :turtles-own :patches-own))
    (parse-with-unevaluated-list lexed-ast))
@@ -131,3 +138,24 @@ DESCRIPTION:
  (mapcar
   (lambda (global) (list (intern (symbol-name global) :keyword) 0d0))
   (cdr (second (find :globals code-parsed-ast :key #'car)))))
+
+(defun procedures (code-parsed-ast)
+ "PROCEDURES MODEL => PROCEDURES
+
+  PROCEDURES: PROCEDURE*
+  PROCEDURE: (NAME BODY)
+
+ARGUMENTS AND VALUES:
+
+  MODEL: An ast as created by clnl-code-parse:parse
+  NAME: A symbol interned in :keyword
+  BODY: A list of lexed forms
+
+DESCRIPTION:
+
+  Returns the procedures that were defined in the code.  These can
+  then be translated into common lisp by using mapcar on the BODY, and
+  set to some function defined by NAME"
+ (mapcar
+  (lambda (proc) (cdr proc))
+  (remove-if-not (lambda (form) (find (car form) '(:to :to-report))) code-parsed-ast)))

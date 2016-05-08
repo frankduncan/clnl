@@ -19,7 +19,7 @@ into an ast that can be transpiled later."))
 
 (defpackage #:clnl-code-parser
  (:use :common-lisp)
- (:export #:parse #:globals)
+ (:export #:parse #:globals #:procedures)
  (:documentation
   "CLNL Code Parser
 
@@ -139,3 +139,7 @@ The representation, parsing, and serializing of NetLogo model files, including
 all of the sections, and subsections held within.  This package houses not only
 the code to read and write .nlogo files, but also the living state of the model
 as clnl runs."))
+
+(defpackage #:clnl-default-model-package
+ (:use :common-lisp)
+ (:shadow #:go))
