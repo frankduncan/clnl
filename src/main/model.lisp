@@ -27,6 +27,7 @@ DESCRIPTION:
 
   Returns the default startup model."
  (make-model
+  :code ""
   :interface (list
               (make-view :min-pxcor -5 :max-pxcor 5 :min-pycor -5 :max-pycor 5))))
 
@@ -54,15 +55,7 @@ DESCRIPTION:
           (read-sections (append section (list line))))))))
      (read-sections))))
   (make-model
-   :code (clnl-code-parser:parse
-          (clnl-lexer:lex (format nil "~{~A~^~%~}" (nth 0 sections)))
-          (remove nil
-           (mapcar
-            (lambda (widget)
-             (typecase widget
-              (slider (intern (string-upcase (slider-varname widget)) :keyword))
-              (switch (intern (string-upcase (switch-varname widget)) :keyword))))
-            (parse-interface (nth 1 sections)))))
+   :code (format nil "~{~A~^~%~}" (nth 0 sections))
    :interface (parse-interface (nth 1 sections))
    :info (nth 2 sections)
    :turtle-shapes (nth 3 sections)
@@ -230,33 +223,40 @@ DESCRIPTION:
    :ymin (view-min-pycor view)
    :ymax (view-max-pycor view))))
 
-; For now, we keep the code hidden in this package
-(defun globals (model)
- "GLOBALS MODEL => GLOBALS
+(defun widget-globals (model)
+ "WIDGET-GLOBALS MODEL => GLOBALS
 
   GLOBALS: GLOBAL*
+  GLOBAL: (NAME DEFAULT)
 
 ARGUMENTS AND VALUES:
 
   MODEL: A valid model
-  GLOBAL: A symbol interned in clnl:*model-package*
+  NAME: A symbol interned in the keyworkd package
+  DEFAULT: The widget default value
 
 DESCRIPTION:
 
-  Returns the globals that get declared in the model, from widgets or
-  from code.  They are interned in the package set for clnl, so
-  that they can later be used by functions in that package."
- (mapcar
-  (lambda (pair)
-   (list
-    (intern (string-upcase (car pair)) clnl:*model-package*)
-    (cadr pair)))
-  (append
-   (clnl-code-parser:globals (model-code model))
-   (remove nil
-    (mapcar
-     (lambda (widget)
-      (typecase widget
-       (slider (list (slider-varname widget) (slider-default widget)))
-       (switch (list (switch-varname widget) (switch-on widget)))))
-     (model-interface model))))))
+  Returns the globals that get declared in the model from widgets.
+  They are interned in the keyword package package set for clnl, so
+  that they can later be used for multiple purposes."
+ (remove nil
+  (mapcar
+   (lambda (widget)
+    (typecase widget
+     (slider (list (intern (string-upcase (slider-varname widget)) :keyword) (slider-default widget)))
+     (switch (list (intern (string-upcase (switch-varname widget)) :keyword) (switch-on widget)))))
+   (model-interface model))))
+
+(defun code (model)
+ "CODE MODEL => CODE
+
+ARGUMENTS AND VALUES:
+
+  MODEL: A valid model
+  CODE: The string representing the netlogo code in this model
+
+DESCRIPTION:
+
+  Returns the code from the model."
+ (model-code model))

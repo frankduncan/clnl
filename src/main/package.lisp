@@ -1,5 +1,7 @@
 (defpackage #:clnl (:use :common-lisp)
- (:export #:run #:boot #:run-commands #:run-reporter #:*model-package*)
+ (:export
+  #:run #:boot #:run-commands #:run-reporter #:*model-package*
+  #:model->multi-form-lisp #:model->single-form-lisp)
  (:documentation
   "Main CLNL package
 
@@ -43,7 +45,7 @@ to match how java.util.Random works.  Turtles, all the way down."))
 
 (defpackage #:clnl-transpiler
  (:use :common-lisp)
- (:export #:transpile-commands #:transpile-reporter)
+ (:export #:transpile #:reporter-p #:command-list-p)
  (:documentation
   "CLNL Transpiler
 
@@ -129,7 +131,7 @@ is where all the features that the traditional NetLogo UI lives."))
 
 (defpackage #:clnl-model
  (:use :common-lisp)
- (:export #:default-model #:read-from-nlogo #:world-dimensions #:globals)
+ (:export #:default-model #:read-from-nlogo #:world-dimensions #:widget-globals #:code)
  (:documentation
   "CLNL Model
 

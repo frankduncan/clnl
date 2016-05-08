@@ -7,7 +7,10 @@
 ; other things
 
 (defvar *dynamic-prims* nil)
-(defun global->prim (global) (list :name global))
+
+(defun global->prim (global)
+ (list :name global :type :reporter :macro `(lambda () ',(intern (symbol-name global) clnl:*model-package*))))
+
 (defun breed->prims (breed-list)
  (let
   ((plural-name (symbol-name (car breed-list))))
@@ -17,17 +20,21 @@
    (list :name (intern (format nil "CREATE-~A" plural-name) :keyword) :args '(:number :command-block)))))
 
 (defun parse (lexed-ast &optional external-globals)
- "PARSE LEXED-AST &optional EXTERNAL-GLOBALS => AST
+ "PARSE LEXED-AST &optional EXTERNAL-GLOBALS => AST, PRIMS
 
 ARGUMENTS AND VALUES:
 
   LEXED-AST: An ambigious ast
   EXTERNAL-GLOBALS: A list of symbols in keyword package
   AST: An unambigious ast that represents the code block of a model
+  PRIMS: Primitives that can be sent to the parser and transpiler
 
 DESCRIPTION:
 
   PARSE takes a ambigious LEXED-AST and converts it to an unambigious one.
+  It also returns the primitives that are defined in the code file, including
+  ones generated from the EXTERNAL-GLOBALS, that can then be passed to both
+  the parser and the transpiler.
 
   EXTERNAL-GLOBALS is a list of symbols representing global variables that
   are not defined within the code.  Normally these come from widgets defined
@@ -38,23 +45,26 @@ DESCRIPTION:
   Rather, the ast that's returned can be queried with other functions included
   in the CLNL-CODE-PARSER package to tease out necessary information.  Some of
   those things will involve code blocks that can then be transpiled."
- (let
+ (let*
   ((*dynamic-prims*
     (append
      (mapcar #'global->prim external-globals)
-     (procedures->prims lexed-ast))))
-  (parse-internal lexed-ast)))
+     (procedures->prims lexed-ast)))
+   (parsed (parse-internal lexed-ast)))
+  (values
+   (butlast parsed)
+   (last parsed))))
 
 (defun procedures->prims (lexed-ast)
  (cond
   ((not lexed-ast) nil)
   ; We'll need argument handling here sometime :)
-  ((eql :to (car lexed-ast)) (cons (list :name (cadr lexed-ast)) (procedures-to-prims (cdr lexed-ast))))
-  (t (procedures-to-prims (cdr lexed-ast)))))
+  ((eql :to (car lexed-ast)) (cons (list :name (cadr lexed-ast)) (procedures->prims (cdr lexed-ast))))
+  (t (procedures->prims (cdr lexed-ast)))))
 
 (defun parse-internal (lexed-ast)
  (cond
-  ((not lexed-ast) nil)
+  ((not lexed-ast) *dynamic-prims*)
   ((eql :to (car lexed-ast)) (parse-procedure lexed-ast))
   ((find (car lexed-ast) '(:globals :turtles-own :patches-own))
    (parse-with-unevaluated-list lexed-ast))
@@ -113,11 +123,11 @@ DESCRIPTION:
 ARGUMENTS AND VALUES:
 
   MODEL: An ast as created by clnl-code-parse:parse
-  GLOBAL: A symbol interned in clnl:*model-package*
+  GLOBAL: A symbol interned in :keyword
 
 DESCRIPTION:
 
   Returns the globals that get declared in the code."
  (mapcar
-  (lambda (global) (list (intern (symbol-name global) clnl:*model-package*) 0d0))
+  (lambda (global) (list (intern (symbol-name global) :keyword) 0d0))
   (cdr (second (find :globals code-parsed-ast :key #'car)))))

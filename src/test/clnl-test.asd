@@ -6,5 +6,6 @@
  :components ((:file "package")
               (:file "main")
               (:file "simpletests")
+              (:file "modeltests")
               (:file "viewtests"))
  :depends-on (#-travis :ironclad :clnl))

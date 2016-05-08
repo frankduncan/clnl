@@ -7,6 +7,7 @@
 (defvar *myself* nil)
 (defvar *self* nil)
 (defvar *dimensions* nil)
+(defvar *globals* nil)
 (defvar *topology* :torus)
 (defvar *ticks* nil)
 (defvar *breeds* nil)
@@ -26,7 +27,7 @@ DESCRIPTION:
   WITH-STOP-HANDLER is a convenience macro to handle when
   programs issue a stop condition.  When one does, a simple
   :stop is returned."
- `(handler-case (progn ,@forms) (stop (s) :stop)))
+ `(handler-case (progn ,@forms) (stop (s) (declare (ignore s)) :stop)))
 
 (defstruct turtle who color heading xcor ycor (label "") (label-color 9.9d0) (size 1d0) shape)
 (defstruct patch color xcor ycor)

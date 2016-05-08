@@ -53,11 +53,11 @@
  `(defsimpletest
    (format nil "Simple Command - ~A" ,name)
    (lambda ()
-    (clnl:boot "resources/empty.nlogo")
+    (clnl:boot "resources/empty.nlogo" t)
     (clnl:run-commands ,commands)
     (checksum= ,checksum (checksum-world)))
    (lambda ()
-    (clnl:boot "resources/empty.nlogo")
+    (clnl:boot "resources/empty.nlogo" t)
     (clnl:run-commands ,commands)
     (format nil "~A~A"
      (clnl-nvm:export-world)
@@ -69,37 +69,102 @@
  `(defsimpletest
    (format nil "Simple Reporter - ~A" ,name)
    (lambda ()
-    (clnl:boot "resources/empty.nlogo")
+    (clnl:boot "resources/empty.nlogo" t)
     (and
      (string= (funcall (intern "DUMP-OBJECT" :clnl-nvm) (clnl:run-reporter ,reporter)) ,value)
      (checksum= ,checksum (checksum-world))))
    (lambda ()
-    (clnl:boot "resources/empty.nlogo")
+    (clnl:boot "resources/empty.nlogo" t)
     (format nil "~A~%~A~A"
      (funcall (intern "DUMP-OBJECT" :clnl-nvm) (clnl:run-reporter ,reporter))
      (clnl-nvm:export-world)
      (checksum-world)))
    "bin/runcmd.scala"
-   (format nil "~%@#$#@#$#@~A~%" ,reporter)))
+   (format nil "@#$#@#$#@~A" ,reporter)))
 
 (defmacro defreportertestwithsetup (name setup reporter value checksum)
  `(defsimpletest
    (format nil "Reporter With Setup - ~A" ,name)
    (lambda ()
-    (clnl:boot "resources/empty.nlogo")
+    (clnl:boot "resources/empty.nlogo" t)
     (clnl:run-commands ,setup)
     (and
      (string= (funcall (intern "DUMP-OBJECT" :clnl-nvm) (clnl:run-reporter ,reporter)) ,value)
      (checksum= ,checksum (checksum-world))))
    (lambda ()
-    (clnl:boot "resources/empty.nlogo")
+    (clnl:boot "resources/empty.nlogo" t)
     (clnl:run-commands ,setup)
     (format nil "~A~%~A~A"
      (funcall (intern "DUMP-OBJECT" :clnl-nvm) (clnl:run-reporter ,reporter))
      (clnl-nvm:export-world)
      (checksum-world)))
    "bin/runcmd.scala"
-   (format nil "~A~%@#$#@#$#@~A" ,setup ,reporter)))
+   (format nil "~A@#$#@#$#@~A" ,setup ,reporter)))
+
+(defun model-code->nlogo (code)
+ (format nil
+  "~A
+@#$#@#$#@
+GRAPHICS-WINDOW~%210~%10~%649~%470~%-1~%-1~%13.0~%1~%10~%1~%1~%1~%0~%1~%1~%1~%-1~%1~%-1~%1~%0~%0~%1~%ticks~%30.0~%
+@#$#@#$#@
+"
+  code))
+
+(defmacro defmodeltest (name model commands reporter value checksum)
+ `(defsimpletest
+   ,name
+   (lambda ()
+    (let
+     ((model (with-input-from-string (str ,(model-code->nlogo model)) (clnl-model:read-from-nlogo str))))
+     (and
+      (let
+       ((callback nil))
+       (declaim (sb-ext:muffle-conditions cl:warning))
+       (eval (clnl:model->single-form-lisp model :netlogo-callback (lambda (f) (setf callback f))))
+       (when ,commands (funcall callback ,commands))
+       (and
+        (or (not ,reporter) (string= (funcall (intern "DUMP-OBJECT" :clnl-nvm) (funcall callback ,reporter)) ,value))
+        (checksum= ,checksum (checksum-world))))
+      (let*
+       ((pkg (make-package (gensym)))
+        (clnl:*model-package* pkg)
+        (prev-package *package*))
+       (eval
+        (cons
+         'progn
+         (clnl:model->multi-form-lisp model (intern "BOOT-ME" pkg)
+          :netlogo-callback-fn (intern "NETLOGO-CALLBACK" pkg))))
+       (eval `(in-package ,(package-name prev-package)))
+       (funcall (symbol-function (intern "BOOT-ME" pkg)))
+       (when ,commands (funcall (symbol-function (intern "NETLOGO-CALLBACK" pkg)) ,commands))
+       (and
+        (or
+         (not ,reporter)
+         (string=
+          (funcall (intern "DUMP-OBJECT" :clnl-nvm) (funcall (intern "NETLOGO-CALLBACK" pkg) ,reporter))
+          ,value))
+        (checksum= ,checksum (checksum-world)))))))
+   (lambda ()
+    (let
+     ((callback nil))
+     (declaim (sb-ext:muffle-conditions cl:warning))
+     (eval
+      (clnl:model->single-form-lisp
+       (with-input-from-string (str ,(model-code->nlogo model)) (clnl-model:read-from-nlogo str))
+       :netlogo-callback (lambda (f) (setf callback f))))
+     (when ,commands (funcall callback ,commands))
+     (format nil "~A~A~A"
+      (if ,reporter (format nil "~A~%" (funcall (intern "DUMP-OBJECT" :clnl-nvm) (funcall callback ,reporter))) "")
+      (clnl-nvm:export-world)
+      (checksum-world))))
+   "bin/runcmd.scala"
+   (format nil "~A@#$#@#$#@~A@#$#@#$#@~A" ,commands (or ,reporter "") ,model)))
+
+(defmacro defmodelcommandtest (name model commands checksum)
+ `(defmodeltest (format nil "Model Command - ~A" ,name) ,model ,commands nil nil ,checksum))
+
+(defmacro defmodelreportertest (name model commands reporter value checksum)
+ `(defmodeltest (format nil "Model Reporter - ~A" ,name) ,model ,commands ,reporter ,value ,checksum))
 
 (defmacro defviewtest (name commands checksum)
  `(defsimpletest

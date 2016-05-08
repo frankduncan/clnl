@@ -647,10 +647,12 @@ DESCRIPTION:
 (defun clear-ticks ()
  (setf *ticks* nil))
 
-(defun create-world (&key dims)
- "CREATE-WORLD &key DIMS => RESULT
+(defun create-world (&key dims globals)
+ "CREATE-WORLD &key DIMS GLOBALS => RESULT
 
   DIMS: (:xmin XMIN :xmax XMAX :ymin YMIN :ymax YMAX)
+  GLOBALS: GLOBAL*
+  GLOBAL: (NAME ACCESS-FUNC)
 
 ARGUMENTS AND VALUES:
 
@@ -659,6 +661,8 @@ ARGUMENTS AND VALUES:
   XMAX: An integer representing the maximum patch coord in X
   YMIN: An integer representing the minimum patch coord in Y
   YMAX: An integer representing the maximum patch coord in Y
+  NAME: Symbol for the global in the keyword package
+  ACCESS-FUNC: Function to get the value of the global
 
 DESCRIPTION:
 
@@ -667,6 +671,7 @@ DESCRIPTION:
   This should be called before using the engine in any real capacity.  If
   called when an engine is already running, it may do somethign weird."
  (setf *dimensions* dims)
+ (setf *globals* globals)
  (setf *breeds* (list (list :turtles "default")))
  (clear-ticks)
  (clear-patches)
@@ -794,11 +799,13 @@ DESCRIPTION:
    (format nil "~S" (clnl-random:export))
    ""
    (format nil "~S" "GLOBALS")
-   (format nil "~A~A"
+   (format nil "~A~A~{\"~A\"~^,~}"
     "\"min-pxcor\",\"max-pxcor\",\"min-pycor\",\"max-pycor\",\"perspective\",\"subject\","
-    "\"nextIndex\",\"directed-links\",\"ticks\",")
-   (format nil "\"~A\",\"~A\",\"~A\",\"~A\",\"0\",\"nobody\",\"~A\",\"\"\"NEITHER\"\"\",\"-1\""
-    (min-pxcor) (max-pxcor) (min-pycor) (max-pycor) *current-id*)
+    "\"nextIndex\",\"directed-links\",\"ticks\","
+    (mapcar #'string-downcase (mapcar #'car *globals*)))
+   (format nil "\"~A\",\"~A\",\"~A\",\"~A\",\"0\",\"nobody\",\"~A\",\"\"\"NEITHER\"\"\",\"~A\"~{,\"~A\"~}"
+    (min-pxcor) (max-pxcor) (min-pycor) (max-pycor) *current-id* (dump-object (or *ticks* -1d0))
+    (mapcar #'dump-object (mapcar #'funcall (mapcar #'cadr *globals*))))
    ""
    (format nil "~{~A~^~%~}" (export-turtles))
    ""

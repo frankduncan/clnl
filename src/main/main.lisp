@@ -8,7 +8,7 @@
                (format t "Via lexing, AST for~%~S~% became~%~S~%~%" str ast) ast))
    (parsed-ast (let ((ast (clnl-parser:parse lexed-ast)))
                 (format t "Via parsing, AST for~%~S~% became~%~S~%~%" lexed-ast ast) ast))
-   (transpiled-ast (let ((ast (clnl-transpiler:transpile-commands parsed-ast)))
+   (transpiled-ast (let ((ast (clnl-transpiler:transpile parsed-ast)))
                     (format t "Via transpiling, AST for~%~S~% became~%~S~%" parsed-ast ast) ast)))
   (eval transpiled-ast)))
 
@@ -29,12 +29,13 @@ DESCRIPTION:
  (sb-thread:make-thread #'clnl-cli:run)
  (clnl-interface:run))
 
-(defun boot (&optional file)
- "BOOT &optional FILE => RESULT
+(defun boot (&optional file headless-mode)
+ "BOOT &optional FILE HEADLESS-MODE => RESULT
 
 ARGUMENTS AND VALUES:
 
   FILE: nlogo file with which to initialize state
+  HEADLESS-MODE: a boolean, defaults to nil
   RESULT: undefined
 
 DESCRIPTION:
@@ -42,11 +43,15 @@ DESCRIPTION:
   BOOT does exactly that, boots the clnl system in a clean state.  The seed
   is set so that multiple runs will evaluate to the same.
 
-  When FILE is not provided, a default model is used."
+  When FILE is not provided, a default model is used.
+
+  When HEADLESS-MODE is set to nil, the opengl interface is initialized.
+  Otherwise, the model will run headlessly, with no view."
  (let
   ((netlogoed-lisp
-    (model->lisp
-     (if file (with-open-file (str file) (clnl-model:read-from-nlogo str)) (clnl-model:default-model))))
+    (model->single-form-lisp
+     (if file (with-open-file (str file) (clnl-model:read-from-nlogo str)) (clnl-model:default-model))
+     :initialize-interface (not headless-mode)))
    (*package* *model-package*))
   (eval netlogoed-lisp)))
 
@@ -62,7 +67,7 @@ DESCRIPTION:
 
   RUN-COMMANDS will take NetLogo commands, put them through the various
   stages need to turn them into Common Lisp code, and run it."
- (clnl-nvm:with-stop-handler (eval (clnl-transpiler:transpile-commands (clnl-parser:parse (clnl-lexer:lex cmds))))))
+ (clnl-nvm:with-stop-handler (eval (clnl-transpiler:transpile (clnl-parser:parse (clnl-lexer:lex cmds))))))
 
 (defun run-reporter (reporter)
  "RUN-REPORTER REPORTER => RESULT
@@ -76,14 +81,120 @@ DESCRIPTION:
 
   RUN-REPORTER will take a NetLogo REPORTER, put it through the various
   stages need to turn them into Common Lisp code, run it, and return the RESULT."
- (eval (clnl-transpiler:transpile-reporter (car (clnl-parser:parse (clnl-lexer:lex reporter))))))
+ (eval (clnl-transpiler:transpile (clnl-parser:parse (clnl-lexer:lex reporter)))))
 
-; Everything gets tied together here
-; The intention of this method is to generate the common lisp equivalent of a model file,
-; such that if you decided to no longer use nlogo, you could use the engine without it.
-(defun model->lisp (model)
- `(let
-   ,(clnl-model:globals model)
-   (clnl-random:set-seed 15) ; should the seed always be 15?
-   (clnl-nvm:create-world :dims ',(clnl-model:world-dimensions model))
-   (clnl-interface:initialize :dims ',(clnl-model:world-dimensions model))))
+(defun model->single-form-lisp (model &key (seed 15) initialize-interface netlogo-callback)
+ (multiple-value-bind
+  (code-ast prims)
+  (clnl-code-parser:parse (clnl-lexer:lex (clnl-model:code model)) (clnl-model:widget-globals model))
+  (let
+   ((globals
+     (append
+      (clnl-model:widget-globals model)
+      (clnl-code-parser:globals code-ast))))
+   `(let
+     ,(mapcar (lambda (pair) (list (intern (string-upcase (car pair)) *model-package*) (cadr pair))) globals)
+     (declare (special ,@(mapcar (lambda (pair) (intern (string-upcase (car pair)) *model-package*)) globals)))
+     (clnl-random:set-seed ,seed)
+     (clnl-nvm:create-world
+      :dims ',(clnl-model:world-dimensions model)
+      :globals (list
+                ,@(mapcar
+                   (lambda (pair) `(list ,(car pair) (lambda () ,(intern (string-upcase (car pair)) *model-package*))))
+                   globals)))
+     ,@(when netlogo-callback
+        `((funcall ,netlogo-callback
+           (lambda (netlogo-code)
+            (eval
+             (clnl-transpiler:transpile
+              (clnl-parser:parse
+               (clnl-lexer:lex netlogo-code)
+               (list ,@(mapcar (lambda (prim) `(list ,@prim)) prims)))
+              (list ,@(mapcar (lambda (prim) `(list ,@prim)) prims))))))))
+     ,@(when initialize-interface `((clnl-interface:initialize :dims ',(clnl-model:world-dimensions model))))))))
+
+(setf (documentation 'model->single-form-lisp 'function)
+ "MODEL->SINGLE-FORM-LISP MODEL &key SEED INITIALIZE-INTERFACE NETLOGO-CALLBACK => FORM
+
+ARGUMENTS AND VALUES:
+
+  MODEL: A valid model
+  SEED: An integer, defaults to 15
+  INITIALIZE-INTERFACE: A boolean
+  NETLOGO-CALLBACK: A function of one argument, or a symbol
+  FORM: A common lisp form
+
+DESCRIPTION:
+
+  MODEL->SINGLE-FORM-LISP takes a model and returns a lisp program as a single form,
+  that when executed runs the model.  The SEED passed in is used to start the
+  clnl-random RNG.
+
+  INITIALIZE-INTERFACE, when non nil, leads to initialization code for the
+  opengl interface being included.
+
+  NETLOGO-CALLBACK is a function that when called with a single argument,
+  a function that when called with netlogo code, will compile and run that
+  code in the environment of the model.
+
+  Of note, all globals defined either in the model code or via the widgets
+  are declared special in order to remain in the lexical environment for EVAL.")
+
+(defun model->multi-form-lisp (model boot-fn &key (seed 15) initialize-interface netlogo-callback-fn)
+ (multiple-value-bind
+  (code-ast prims)
+  (clnl-code-parser:parse (clnl-lexer:lex (clnl-model:code model)) (clnl-model:widget-globals model))
+  (let
+   ((globals
+     (append
+      (clnl-model:widget-globals model)
+      (clnl-code-parser:globals code-ast))))
+   `((in-package ,(intern (package-name *model-package*) :keyword))
+     ,@(mapcar
+        (lambda (pair)
+         `(defvar ,(intern (string-upcase (car pair)) *model-package*) ,(cadr pair)))
+        globals)
+     (defun ,boot-fn ()
+      (clnl-random:set-seed ,seed)
+      (clnl-nvm:create-world
+       :dims ',(clnl-model:world-dimensions model)
+       :globals (list
+                 ,@(mapcar
+                    (lambda (pair) `(list ,(car pair) (lambda () ,(intern (string-upcase (car pair)) *model-package*))))
+                    globals)))
+      ,@(when initialize-interface `((clnl-interface:initialize :dims ',(clnl-model:world-dimensions model)))))
+     ,@(when netlogo-callback-fn
+        `((defun ,netlogo-callback-fn (,(intern "NETLOGO-CODE" *model-package*))
+           (eval
+            (clnl-transpiler:transpile
+             (clnl-parser:parse
+              (clnl-lexer:lex ,(intern "NETLOGO-CODE" *model-package*))
+              (list ,@(mapcar (lambda (prim) `(list ,@prim)) prims)))
+             (list ,@(mapcar (lambda (prim) `(list ,@prim)) prims)))))))))))
+
+(setf (documentation 'model->multi-form-lisp 'function)
+ "MODEL->MULTI-FORM-LISP MODEL BOOT-FN &key SEED INITIALIZE-INTERFACE NETLOGO-CALLBACK-FN => FORMS
+
+ARGUMENTS AND VALUES:
+
+  MODEL: A valid model
+  BOOT-FN: A function name
+  SEED: An integer, defaults to 15
+  INITIALIZE-INTERFACE: A boolean
+  NETLOGO-CALLBACK-FN: a symbol
+  FORMS: A list of common lisp form
+
+DESCRIPTION:
+
+  MODEL->MULTI-FORM-LISP takes a model and returns a multi form lisp program,
+  that when executed, sets up the model.  Procedures map to defuns, globals
+  to defvars, etc.  This can be output to load up quickly later.  A function
+  named by BOOT-FN will be set for booting the program.
+
+  The SEED passed in is used to start the clnl-random RNG.
+
+  INITIALIZE-INTERFACE, when non nil, leads to initialization code for the
+  opengl interface being included.
+
+  NETLOGO-CALLBACK-FN is a symbol that will be defined as a function
+  to be called to execute code in the running netlogo instance.")
