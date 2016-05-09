@@ -120,7 +120,8 @@ DESCRIPTION:
                      (lambda (pair)
                       `(list ,(car pair) (lambda () ,(intern (string-upcase (car pair)) *model-package*))))
                      globals))
-        :turtles-own-vars ',(clnl-code-parser:turtles-own-vars code-ast))
+        :turtles-own-vars ',(clnl-code-parser:turtles-own-vars code-ast)
+        :patches-own-vars ',(clnl-code-parser:patches-own-vars code-ast))
        ,@(when netlogo-callback
           `((funcall ,netlogo-callback
              (lambda (netlogo-code)
@@ -193,7 +194,8 @@ DESCRIPTION:
                  ,@(mapcar
                     (lambda (pair) `(list ,(car pair) (lambda () ,(intern (string-upcase (car pair)) *model-package*))))
                     globals))
-       :turtles-own-vars ',(clnl-code-parser:turtles-own-vars code-ast))
+       :turtles-own-vars ',(clnl-code-parser:turtles-own-vars code-ast)
+       :patches-own-vars ',(clnl-code-parser:patches-own-vars code-ast))
       ,@(when initialize-interface `((clnl-interface:initialize :dims ',(clnl-model:world-dimensions model)))))
      ,@(when netlogo-callback-fn
         `((defun ,netlogo-callback-fn (,(intern "NETLOGO-CODE" *model-package*))

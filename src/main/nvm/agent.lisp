@@ -54,3 +54,13 @@ DESCRIPTION:
  (if (getf (turtle-own-vars turtle) var)
   (setf (getf (turtle-own-vars turtle) var) new-val)
   (setf (turtle-own-vars turtle) (append (list var new-val) (turtle-own-vars turtle)))))
+
+(defmethod agent-value-inner ((patch patch) var)
+ (when (not (find var *patches-own-vars*)) (error "~S is not a patch variable" var))
+ (or (getf (patch-own-vars patch) var) 0d0))
+
+(defmethod set-agent-value-inner ((patch patch) var new-val)
+ (when (not (find var *patches-own-vars*)) (error "~S is not a patch variable" var))
+ (if (getf (patch-own-vars patch) var)
+  (setf (getf (patch-own-vars patch) var) new-val)
+  (setf (patch-own-vars patch) (append (list var new-val) (patch-own-vars patch)))))

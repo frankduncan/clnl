@@ -61,3 +61,28 @@ to go
 end"
  "setup go"
  "F8A2BFD71A8A064C37DDB744217AB07CDB0686EB")
+
+(defmodelcommandtest "patches-own 1"
+ "patches-own [a]
+to setup
+  ask patches [
+    set a 2
+  ]
+end"
+ "setup"
+ "73FE87B52A2DAB0EC02DB23F26DB3B5336A61679")
+
+(defmodelcommandtest "patches-own 2"
+ "patches-own [a b]
+to setup
+  ask patches [
+    set a 2
+    set b a + 1
+  ]
+end
+
+to go
+  ask patches [ set pcolor b ]
+end"
+ "setup go"
+ "2972B3EC1285BDA17656401001E1AE667FA7F5AF")

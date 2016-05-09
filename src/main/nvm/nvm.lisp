@@ -647,12 +647,13 @@ DESCRIPTION:
 (defun clear-ticks ()
  (setf *ticks* nil))
 
-(defun create-world (&key dims globals turtles-own-vars)
- "CREATE-WORLD &key DIMS GLOBALS TURTLES-OWN-VARS => RESULT
+(defun create-world (&key dims globals turtles-own-vars patches-own-vars)
+ "CREATE-WORLD &key DIMS GLOBALS TURTLES-OWN-VARS PATCHES-OWN-VARS => RESULT
 
   DIMS: (:xmin XMIN :xmax XMAX :ymin YMIN :ymax YMAX)
   GLOBALS: GLOBAL*
   TURTLES-OWN-VARS: TURTLES-OWN-VAR*
+  PATCHES-OWN-VARS: PATCHES-OWN-VAR*
   GLOBAL: (GLOBAL-NAME GLOBAL-ACCESS-FUNC)
 
 ARGUMENTS AND VALUES:
@@ -663,6 +664,7 @@ ARGUMENTS AND VALUES:
   YMIN: An integer representing the minimum patch coord in Y
   YMAX: An integer representing the maximum patch coord in Y
   TURTLES-OWN-VAR: Symbol for the turtles own variable in the keyword package
+  PATCHES-OWN-VAR: Symbol for the patches own variable in the keyword package
   GLOBAL-NAME: Symbol for the global in the keyword package
   GLOBAL-ACCESS-FUNC: Function to get the value of the global
 
@@ -673,6 +675,7 @@ DESCRIPTION:
   This should be called before using the engine in any real capacity.  If
   called when an engine is already running, it may do somethign weird."
  (setf *turtles-own-vars* turtles-own-vars)
+ (setf *patches-own-vars* patches-own-vars)
  (setf *dimensions* dims)
  (setf *globals* globals)
  (setf *breeds* (list (list :turtles "default")))
@@ -774,14 +777,16 @@ DESCRIPTION:
  (append
   (list
    "\"PATCHES\""
-   "\"pxcor\",\"pycor\",\"pcolor\",\"plabel\",\"plabel-color\"")
+   (format nil "\"pxcor\",\"pycor\",\"pcolor\",\"plabel\",\"plabel-color\"~{,\"~A\"~}"
+    (mapcar #'string-downcase *patches-own-vars*)))
   (mapcar
    (lambda (patch)
     (format nil
-     "\"~A\",\"~A\",\"~A\",\"\"\"\"\"\",\"9.9\""
+     "\"~A\",\"~A\",\"~A\",\"\"\"\"\"\",\"9.9\"~{,\"~A\"~}"
      (dump-object (patch-xcor patch))
      (dump-object (patch-ycor patch))
-     (dump-object (patch-color patch))))
+     (dump-object (patch-color patch))
+     (mapcar #'dump-object (mapcar (lambda (var) (agent-value-inner patch var)) *patches-own-vars*))))
    *patches*)))
 
 (defun export-world ()

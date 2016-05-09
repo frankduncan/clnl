@@ -11,7 +11,7 @@
 (defun global->prim (global)
  (list :name global :type :reporter :macro `(lambda () ',(intern (symbol-name global) clnl:*model-package*))))
 
-(defun turtles-own->prim (symb)
+(defun own->prim (symb)
  (list :name symb :type :reporter :macro `(lambda () '(clnl-nvm:agent-value ,symb))))
 
 (defun breed->prims (breed-list)
@@ -110,7 +110,8 @@ DESCRIPTION:
        (mapcar
         (case (car lexed-ast)
          (:globals #'global->prim)
-         (:turtles-own #'turtles-own->prim)
+         (:turtles-own #'own->prim)
+         (:patches-own #'own->prim)
          (t #'global->prim))
         in-list) *dynamic-prims*)))
     (parse-internal after-list)))))
@@ -165,6 +166,23 @@ DESCRIPTION:
  (mapcar
   (lambda (turtles-own-var) (intern (symbol-name turtles-own-var) :keyword))
   (cdr (second (find :turtles-own code-parsed-ast :key #'car)))))
+
+(defun patches-own-vars (code-parsed-ast)
+ "PATCHES-OWN-VARS CODE-PARSED-AST => PATCHES-OWN-VARS
+
+  PATCHES-OWN-VARS: PATCHES-OWN-VAR*
+
+ARGUMENTS AND VALUES:
+
+  CODE-PARSED-AST: An ast as created by clnl-code-parse:parse
+  PATCHES-OWN-VAR: A symbol interned in :keyword
+
+DESCRIPTION:
+
+  Returns the turtles own variables that get declared in the code."
+ (mapcar
+  (lambda (patches-own-var) (intern (symbol-name patches-own-var) :keyword))
+  (cdr (second (find :patches-own code-parsed-ast :key #'car)))))
 
 (defun procedures (code-parsed-ast)
  "PROCEDURES CODE-PARSED-AST => PROCEDURES
