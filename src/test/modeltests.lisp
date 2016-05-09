@@ -36,3 +36,28 @@ to go
 end"
  "go"
  "46C620AB8995266C4A2094C461BE197BBACEB8C3")
+
+(defmodelcommandtest "turtles-own 1"
+ "turtles-own [a b]
+to setup
+  crt 10 [
+    set a 2
+  ]
+end"
+ "setup"
+ "482947557971AC2A66CB35AA5D6850A489C45215")
+
+(defmodelcommandtest "turtles-own 2"
+ "turtles-own [a b]
+to setup
+  crt 10 [
+    set a 2
+    set b a + 1
+  ]
+end
+
+to go
+  ask turtles [ fd b ]
+end"
+ "setup go"
+ "F8A2BFD71A8A064C37DDB744217AB07CDB0686EB")

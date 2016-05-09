@@ -11,6 +11,9 @@
 (defun global->prim (global)
  (list :name global :type :reporter :macro `(lambda () ',(intern (symbol-name global) clnl:*model-package*))))
 
+(defun turtles-own->prim (symb)
+ (list :name symb :type :reporter :macro `(lambda () '(clnl-nvm:agent-value ,symb))))
+
 (defun breed->prims (breed-list)
  (let
   ((plural-name (symbol-name (car breed-list))))
@@ -102,7 +105,14 @@ DESCRIPTION:
   (cons
    (list (car lexed-ast) (cons :list-literal in-list))
    (let
-    ((*dynamic-prims* (append (mapcar #'global->prim in-list) *dynamic-prims*)))
+    ((*dynamic-prims*
+      (append
+       (mapcar
+        (case (car lexed-ast)
+         (:globals #'global->prim)
+         (:turtles-own #'turtles-own->prim)
+         (t #'global->prim))
+        in-list) *dynamic-prims*)))
     (parse-internal after-list)))))
 
 (defun parse-breed (lexed-ast)
@@ -123,13 +133,13 @@ DESCRIPTION:
       (values (cons (car tokens) in-block) after-block)))))
 
 (defun globals (code-parsed-ast)
- "GLOBALS MODEL => GLOBALS
+ "GLOBALS CODE-PARSED-AST => GLOBALS
 
   GLOBALS: GLOBAL*
 
 ARGUMENTS AND VALUES:
 
-  MODEL: An ast as created by clnl-code-parse:parse
+  CODE-PARSED-AST: An ast as created by clnl-code-parse:parse
   GLOBAL: A symbol interned in :keyword
 
 DESCRIPTION:
@@ -139,15 +149,32 @@ DESCRIPTION:
   (lambda (global) (list (intern (symbol-name global) :keyword) 0d0))
   (cdr (second (find :globals code-parsed-ast :key #'car)))))
 
+(defun turtles-own-vars (code-parsed-ast)
+ "TURTLES-OWN-VARS CODE-PARSED-AST => TURTLES-OWN-VARS
+
+  TURTLES-OWN-VARS: TURTLES-OWN-VAR*
+
+ARGUMENTS AND VALUES:
+
+  CODE-PARSED-AST: An ast as created by clnl-code-parse:parse
+  TURTLES-OWN-VAR: A symbol interned in :keyword
+
+DESCRIPTION:
+
+  Returns the turtles own variables that get declared in the code."
+ (mapcar
+  (lambda (turtles-own-var) (intern (symbol-name turtles-own-var) :keyword))
+  (cdr (second (find :turtles-own code-parsed-ast :key #'car)))))
+
 (defun procedures (code-parsed-ast)
- "PROCEDURES MODEL => PROCEDURES
+ "PROCEDURES CODE-PARSED-AST => PROCEDURES
 
   PROCEDURES: PROCEDURE*
   PROCEDURE: (NAME BODY)
 
 ARGUMENTS AND VALUES:
 
-  MODEL: An ast as created by clnl-code-parse:parse
+  CODE-PARSED-AST: An ast as created by clnl-code-parse:parse
   NAME: A symbol interned in :keyword
   BODY: A list of lexed forms
 

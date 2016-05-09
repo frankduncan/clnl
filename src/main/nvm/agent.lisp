@@ -36,7 +36,7 @@ DESCRIPTION:
     (defmethod set-agent-value-inner ((,agent ,type) (,var (eql ,symb)) ,new-val) (setf (,accessor ,agent) ,new-val)))))
 
 ; Don't want the setter for :who
-(defmethod agent-value-inner ((agent turtle) (var (eql :who))) (turtle-who agent))
+(defmethod agent-value-inner ((turtle turtle) (var (eql :who))) (turtle-who turtle))
 
 (defagent-value patch :pcolor patch-color)
 
@@ -44,3 +44,13 @@ DESCRIPTION:
 (defagent-value turtle :label)
 (defagent-value turtle :label-color)
 (defagent-value turtle :size)
+
+(defmethod agent-value-inner ((turtle turtle) var)
+ (when (not (find var *turtles-own-vars*)) (error "~S is not a turtle variable" var))
+ (or (getf (turtle-own-vars turtle) var) 0d0))
+
+(defmethod set-agent-value-inner ((turtle turtle) var new-val)
+ (when (not (find var *turtles-own-vars*)) (error "~S is not a turtle variable" var))
+ (if (getf (turtle-own-vars turtle) var)
+  (setf (getf (turtle-own-vars turtle) var) new-val)
+  (setf (turtle-own-vars turtle) (append (list var new-val) (turtle-own-vars turtle)))))

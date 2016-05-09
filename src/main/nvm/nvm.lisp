@@ -647,12 +647,13 @@ DESCRIPTION:
 (defun clear-ticks ()
  (setf *ticks* nil))
 
-(defun create-world (&key dims globals)
- "CREATE-WORLD &key DIMS GLOBALS => RESULT
+(defun create-world (&key dims globals turtles-own-vars)
+ "CREATE-WORLD &key DIMS GLOBALS TURTLES-OWN-VARS => RESULT
 
   DIMS: (:xmin XMIN :xmax XMAX :ymin YMIN :ymax YMAX)
   GLOBALS: GLOBAL*
-  GLOBAL: (NAME ACCESS-FUNC)
+  TURTLES-OWN-VARS: TURTLES-OWN-VAR*
+  GLOBAL: (GLOBAL-NAME GLOBAL-ACCESS-FUNC)
 
 ARGUMENTS AND VALUES:
 
@@ -661,8 +662,9 @@ ARGUMENTS AND VALUES:
   XMAX: An integer representing the maximum patch coord in X
   YMIN: An integer representing the minimum patch coord in Y
   YMAX: An integer representing the maximum patch coord in Y
-  NAME: Symbol for the global in the keyword package
-  ACCESS-FUNC: Function to get the value of the global
+  TURTLES-OWN-VAR: Symbol for the turtles own variable in the keyword package
+  GLOBAL-NAME: Symbol for the global in the keyword package
+  GLOBAL-ACCESS-FUNC: Function to get the value of the global
 
 DESCRIPTION:
 
@@ -670,6 +672,7 @@ DESCRIPTION:
 
   This should be called before using the engine in any real capacity.  If
   called when an engine is already running, it may do somethign weird."
+ (setf *turtles-own-vars* turtles-own-vars)
  (setf *dimensions* dims)
  (setf *globals* globals)
  (setf *breeds* (list (list :turtles "default")))
@@ -746,13 +749,14 @@ DESCRIPTION:
  (append
   (list
    "\"TURTLES\""
-   (format nil "~A~A"
+   (format nil "~A~A~{,\"~A\"~}"
     "\"who\",\"color\",\"heading\",\"xcor\",\"ycor\",\"shape\",\"label\",\"label-color\","
-    "\"breed\",\"hidden?\",\"size\",\"pen-size\",\"pen-mode\""))
+    "\"breed\",\"hidden?\",\"size\",\"pen-size\",\"pen-mode\""
+    (mapcar #'string-downcase *turtles-own-vars*)))
   (mapcar
    (lambda (turtle)
     (format nil
-     "\"~A\",\"~A\",\"~A\",\"~A\",\"~A\",\"~A\",\"~A\",\"~A\",\"{all-turtles}\",\"false\",\"~A\",~A"
+     "\"~A\",\"~A\",\"~A\",\"~A\",\"~A\",\"~A\",\"~A\",\"~A\",\"{all-turtles}\",\"false\",\"~A\",~A~{,\"~A\"~}"
      (dump-object (turtle-who turtle))
      (dump-object (turtle-color turtle))
      (dump-object (turtle-heading turtle))
@@ -762,7 +766,8 @@ DESCRIPTION:
      (dump-object (turtle-label turtle))
      (dump-object (turtle-label-color turtle))
      (dump-object (turtle-size turtle))
-     "\"1\",\"\"\"up\"\"\""))
+     "\"1\",\"\"\"up\"\"\""
+     (mapcar #'dump-object (mapcar (lambda (var) (agent-value-inner turtle var)) *turtles-own-vars*))))
    *turtles*)))
 
 (defun export-patches ()

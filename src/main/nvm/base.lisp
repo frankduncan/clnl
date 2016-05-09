@@ -3,6 +3,7 @@
 (defvar *current-id* 0)
 
 (defvar *turtles* nil)
+(defvar *turtles-own-vars* nil)
 (defvar *patches* nil)
 (defvar *myself* nil)
 (defvar *self* nil)
@@ -29,7 +30,7 @@ DESCRIPTION:
   :stop is returned."
  `(handler-case (progn ,@forms) (stop (s) (declare (ignore s)) :stop)))
 
-(defstruct turtle who color heading xcor ycor (label "") (label-color 9.9d0) (size 1d0) shape)
+(defstruct turtle who color heading xcor ycor (label "") (label-color 9.9d0) (size 1d0) shape own-vars)
 (defstruct patch color xcor ycor)
 
 (defun agentset-list (agentset)
