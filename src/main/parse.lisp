@@ -321,6 +321,7 @@ DESCRIPTION:
 (defprim :tick () 0)
 (defprim :ticks () 10)
 (defprim :turtles () 10)
+(defprim :turtles-here () 10)
 (defprim :who () 10)
 
 ; colors

@@ -32,7 +32,7 @@ DESCRIPTION:
  `(handler-case (progn ,@forms) (stop (s) (declare (ignore s)) :stop)))
 
 (defstruct turtle who color heading xcor ycor (label "") (label-color 9.9d0) (size 1d0) shape own-vars)
-(defstruct patch color xcor ycor own-vars)
+(defstruct patch color xcor ycor own-vars turtles)
 
 (defun agentset-list (agentset)
  (cond

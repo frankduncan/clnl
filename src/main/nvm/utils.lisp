@@ -26,3 +26,25 @@
 
 (defun using-cached-cos (n)
  (if (= (floor n) n) (nth (floor n) *cached-coses*) (strictmath:cos (strictmath:to-radians n))))
+
+(defun patch-at (xcor ycor)
+ (flet
+  ((rnd (d) (truncate (if (< d 0) (- d 0.5d0) (+ d 0.5d0)))))
+  (or
+   (find-if
+    (lambda (patch)
+     (and (equalp (patch-xcor patch) (rnd xcor)) (equalp (patch-ycor patch) (rnd ycor))))
+    *patches*)
+   (error "This shouldn't be possible: ~S ~S ~S" (rnd xcor) (rnd ycor) *patches*))))
+
+(defmacro with-patch-update (turtle &rest forms)
+ (let
+  ((patch (gensym)) (new-patch (gensym)))
+  `(let
+    ((,patch (patch-at (turtle-xcor ,turtle) (turtle-ycor ,turtle)))
+     (retn (progn ,@forms)))
+    (let
+     ((,new-patch (patch-at (turtle-xcor ,turtle) (turtle-ycor ,turtle))))
+     (when (not (eql ,patch ,new-patch))
+      (setf (patch-turtles ,patch) (remove ,turtle (patch-turtles ,patch)))
+      (setf (patch-turtles ,new-patch) (nconc (patch-turtles ,new-patch) (list ,turtle))))))))

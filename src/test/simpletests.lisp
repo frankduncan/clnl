@@ -265,3 +265,7 @@
 
 (defsimplecommandtest "stop 2" "crt 10 ask turtles [ fd 1 stop fd 1 ]"
  "A6C980CC9843CDD211ABD9C13899010D555F3DC5")
+
+(defsimplecommandtest "turtles-here 1"
+ "crt 1000 ask turtles [ fd random-float 10 ] ask turtles [ set label [ who ] of one-of turtles-here ]"
+ "F34192513765D221A15D939A2BC8FFE18B6ADF4C")

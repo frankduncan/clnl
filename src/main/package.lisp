@@ -92,6 +92,7 @@ into an ast that can be transpiled later."))
   #:show
   #:stop
   #:turtles
+  #:turtles-here
   #:tick
   #:ticks
   #:turn-right #:turn-left

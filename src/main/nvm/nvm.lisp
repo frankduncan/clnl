@@ -61,6 +61,9 @@ DESCRIPTION:
                 :shape (breed-default-shape :turtles)
                 :xcor (if base-turtle (turtle-xcor base-turtle) 0d0)
                 :ycor (if base-turtle (turtle-ycor base-turtle) 0d0))))
+  (let
+   ((patch (patch-at (turtle-xcor new-turtle) (turtle-ycor new-turtle))))
+   (setf (patch-turtles patch) (nconc (patch-turtles patch) (list new-turtle))))
   (setf *turtles* (nconc *turtles* (list new-turtle)))
   (incf *current-id*)
   new-turtle))
@@ -121,6 +124,22 @@ DESCRIPTION:
 
   See http://ccl.northwestern.edu/netlogo/docs/dictionary.html#turtles"
  :turtles)
+
+(defun turtles-here ()
+ "TURTLES-HERE => TURTLES
+
+ARGUMENTS AND VALUES:
+
+  TURTLES: an agentset
+
+DESCRIPTION:
+
+  Returns the agentset consisting of all the turtles sharing the patch
+  with the agent in by *self*
+
+  See http://ccl.northwestern.edu/netlogo/docs/dictionary.html#turtles-here"
+ (when (not (turtle-p *self*)) (error "Gotta call turtles-here with a turtle"))
+ (list->agentset (patch-turtles (patch-at (turtle-xcor *self*) (turtle-ycor *self*))) :turtles))
 
 (defun ask (agent-or-agentset fn)
  "ASK AGENT-OR-AGENTSET FN => RESULT
@@ -422,14 +441,15 @@ DESCRIPTION:
 
 (defun jump (n)
  (when (not (turtle-p *self*)) (error "Gotta call jump in turtle scope, dude (~A)" *self*))
- (setf
-  (turtle-xcor *self*)
-  (wrap-x *topology*
-   (+ (turtle-xcor *self*) (* n (using-cached-sin (turtle-heading *self*))))))
- (setf
-  (turtle-ycor *self*)
-  (wrap-y *topology*
-   (+ (turtle-ycor *self*) (* n (using-cached-cos (turtle-heading *self*)))))))
+ (with-patch-update *self*
+  (setf
+   (turtle-xcor *self*)
+   (wrap-x *topology*
+    (+ (turtle-xcor *self*) (* n (using-cached-sin (turtle-heading *self*))))))
+  (setf
+   (turtle-ycor *self*)
+   (wrap-y *topology*
+    (+ (turtle-ycor *self*) (* n (using-cached-cos (turtle-heading *self*))))))))
 
 (defun setxy (x y)
  "SETXY X Y => RESULT

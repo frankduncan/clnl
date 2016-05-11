@@ -226,6 +226,7 @@ DESCRIPTION:
 (defsimpleprim :tick :command clnl-nvm:tick)
 (defsimpleprim :ticks :reporter clnl-nvm:ticks)
 (defsimpleprim :turtles :reporter clnl-nvm:turtles)
+(defsimpleprim :turtles-here :reporter clnl-nvm:turtles-here)
 (defagentvalueprim :who)
 (defsimpleprim :with :reporter clnl-nvm:with)
 
