@@ -83,6 +83,47 @@ DESCRIPTION:
   stages need to turn them into Common Lisp code, run it, and return the RESULT."
  (eval (clnl-transpiler:transpile (clnl-parser:parse (clnl-lexer:lex reporter)))))
 
+; Because prims are used both at generation time and later at runtime, certain things in
+; them must be escaped a little bit more, such as wrapping the whole thing in a list
+; primitive.  This way, the output of these things looks like halfway decent lisp,
+; and everything works nicely.  We don't want any <FUNC #> showing up or anything
+(defun munge-prim (prim)
+ (let
+  ((copied (copy-list prim)))
+  (when (getf copied :args) (setf (getf copied :args) `(quote ,(getf copied :args))))
+  `(list ,@copied)))
+
+(defun netlogo-callback-body (prims)
+ `(eval
+   (clnl-transpiler:transpile
+    (clnl-parser:parse
+     (clnl-lexer:lex ,(intern "NETLOGO-CODE" *model-package*))
+     (list ,@(mapcar #'munge-prim prims)))
+    (list ,@(mapcar #'munge-prim prims)))))
+
+(defun create-world-call (model globals code-ast)
+ `(clnl-nvm:create-world
+   :dims ',(clnl-model:world-dimensions model)
+   :globals (list
+             ,@(mapcar
+                (lambda (pair)
+                 `(list ,(car pair) (lambda () ,(intern (string-upcase (car pair)) *model-package*))))
+                globals))
+   :turtles-own-vars ',(clnl-code-parser:turtles-own-vars code-ast)
+   :patches-own-vars ',(clnl-code-parser:patches-own-vars code-ast)
+   :breeds ',(clnl-code-parser:breeds code-ast)))
+
+(defun create-proc-body (proc prims)
+ `(,(intern (string-upcase (car proc)) *model-package*) ()
+   ,@(cdr ; remove the progn, cuz it looks nicer
+      (clnl-transpiler:transpile (cadr proc)
+       (mapcar
+        (lambda (prim)
+         (if (getf prim :macro) ; The reason we do this is because with macros, we want to evaluate them in
+                                ; this scope while preserving them for the generational purposes below
+          (append (list :macro (eval (getf prim :macro))) prim)
+          prim)) prims)))))
+
 (defun model->single-form-lisp (model &key (seed 15) initialize-interface netlogo-callback)
  (multiple-value-bind
   (code-ast prims)
@@ -94,43 +135,23 @@ DESCRIPTION:
       (clnl-code-parser:globals code-ast))))
    `(prog ()
      ; First declare is in case we don't use it, it shows up in export correctly
-     (declare (special ,@(mapcar (lambda (pair) (intern (string-upcase (car pair)) *model-package*)) globals)))
+     ,@(when (and (> (length globals) 0) netlogo-callback)
+        `((declare (special ,@(mapcar (lambda (pair) (intern (string-upcase (car pair)) *model-package*)) globals)))))
      (let
       ,(mapcar (lambda (pair) (list (intern (string-upcase (car pair)) *model-package*) (cadr pair))) globals)
       ; We declare twice rather than once and doing a bunch of setfs
-      (declare (special ,@(mapcar (lambda (pair) (intern (string-upcase (car pair)) *model-package*)) globals)))
+      ,@(when (and (> (length globals) 0) netlogo-callback)
+         `((declare (special ,@(mapcar (lambda (pair) (intern (string-upcase (car pair)) *model-package*)) globals)))))
       (labels
        ,(mapcar
-         (lambda (proc)
-          `(,(intern (string-upcase (car proc)) *model-package*) ()
-            ,@(cdr ; remove the progn, cuz it looks nicer
-               (clnl-transpiler:transpile (cadr proc)
-                (mapcar
-                 (lambda (prim)
-                  (if (getf prim :macro) ; The reason we do this is because with macros, we want to evaluate them in
-                                         ; this scope while preserving them for the generational purposes below
-                   (append (list :macro (eval (getf prim :macro))) prim)
-                   prim)) prims)))))
+         (lambda (proc) (create-proc-body proc prims))
          (clnl-code-parser:procedures code-ast))
        (clnl-random:set-seed ,seed)
-       (clnl-nvm:create-world
-        :dims ',(clnl-model:world-dimensions model)
-        :globals (list
-                  ,@(mapcar
-                     (lambda (pair)
-                      `(list ,(car pair) (lambda () ,(intern (string-upcase (car pair)) *model-package*))))
-                     globals))
-        :turtles-own-vars ',(clnl-code-parser:turtles-own-vars code-ast)
-        :patches-own-vars ',(clnl-code-parser:patches-own-vars code-ast))
+       ,(create-world-call model globals code-ast)
        ,@(when netlogo-callback
           `((funcall ,netlogo-callback
-             (lambda (netlogo-code)
-              (eval
-               (clnl-transpiler:transpile
-                (clnl-parser:parse
-                 (clnl-lexer:lex netlogo-code)
-                 (list ,@(mapcar (lambda (prim) `(list ,@prim)) prims)))
-                (list ,@(mapcar (lambda (prim) `(list ,@prim)) prims))))))))
+             (lambda (,(intern "NETLOGO-CODE" *model-package*))
+              ,(netlogo-callback-body prims)))))
        ,@(when initialize-interface `((clnl-interface:initialize :dims ',(clnl-model:world-dimensions model))))))))))
 
 (setf (documentation 'model->single-form-lisp 'function)
@@ -175,36 +196,15 @@ DESCRIPTION:
          `(defvar ,(intern (string-upcase (car pair)) *model-package*) ,(cadr pair)))
         globals)
      ,@(mapcar
-        (lambda (proc)
-         `(defun ,(intern (string-upcase (car proc)) *model-package*) ()
-           ,@(cdr ; remove the progn, cuz it looks nicer
-              (clnl-transpiler:transpile (cadr proc)
-               (mapcar
-                (lambda (prim)
-                 (if (getf prim :macro) ; The reason we do this is because with macros, we want to evaluate them in
-                                        ; this scope while preserving them for the generational purposes below
-                  (append (list :macro (eval (getf prim :macro))) prim)
-                  prim)) prims)))))
+        (lambda (proc) `(defun ,@(create-proc-body proc prims)))
         (clnl-code-parser:procedures code-ast))
      (defun ,boot-fn ()
       (clnl-random:set-seed ,seed)
-      (clnl-nvm:create-world
-       :dims ',(clnl-model:world-dimensions model)
-       :globals (list
-                 ,@(mapcar
-                    (lambda (pair) `(list ,(car pair) (lambda () ,(intern (string-upcase (car pair)) *model-package*))))
-                    globals))
-       :turtles-own-vars ',(clnl-code-parser:turtles-own-vars code-ast)
-       :patches-own-vars ',(clnl-code-parser:patches-own-vars code-ast))
+      ,(create-world-call model globals code-ast)
       ,@(when initialize-interface `((clnl-interface:initialize :dims ',(clnl-model:world-dimensions model)))))
      ,@(when netlogo-callback-fn
         `((defun ,netlogo-callback-fn (,(intern "NETLOGO-CODE" *model-package*))
-           (eval
-            (clnl-transpiler:transpile
-             (clnl-parser:parse
-              (clnl-lexer:lex ,(intern "NETLOGO-CODE" *model-package*))
-              (list ,@(mapcar (lambda (prim) `(list ,@prim)) prims)))
-             (list ,@(mapcar (lambda (prim) `(list ,@prim)) prims)))))))))))
+           ,(netlogo-callback-body prims))))))))
 
 (setf (documentation 'model->multi-form-lisp 'function)
  "MODEL->MULTI-FORM-LISP MODEL BOOT-FN &key SEED INITIALIZE-INTERFACE NETLOGO-CALLBACK-FN => FORMS

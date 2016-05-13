@@ -26,6 +26,7 @@
 (defparameter *dynamic-prims* nil)
 
 (defun prim-name (prim) (getf prim :name))
+(defun prim-precedence (prim) (getf prim :precedence))
 (defun prim-args (prim) (getf prim :args))
 (defun prim-structure-prim (prim) (getf prim :structure-prim))
 (defun prim-is-infix (prim) (getf prim :infix))
@@ -41,7 +42,7 @@
  "PARSE LEXED-AST &optional DYNAMIC-PRIMS => AST
 
   DYNAMIC-PRIMS: DYNAMIC-PRIM*
-  DYNAMIC-PRIM: (:name NAME :args ARGS :infix INFIX)
+  DYNAMIC-PRIM: (:name NAME :args ARGS :infix INFIX :precedence PRECEDENCE)
   ARGS: ARG*
 
 ARGUMENTS AND VALUES:
@@ -49,7 +50,8 @@ ARGUMENTS AND VALUES:
   LEXED-AST: An ambigious ast
   AST: An unambigious ast that can be transpiled
   NAME: A symbol in the keyword package
-  INFIX: Boolean denoting whether the prim is infix
+  INFIX: Boolean denoting whether the prim is infix, defaulting to NIL
+  PRECEDENCE: A number, usually 10 for reporters, and 0 for commands
   ARG: A list of symbols denoting the type of argument
 
 DESCRIPTION:
@@ -58,7 +60,12 @@ DESCRIPTION:
 
   DYNAMIC-PRIMS that are passed in are used to avoid compilation errors on
   things not statically defined by the NetLogo language, be they user defined
-  procedures or generated primitives from breed declarations.
+  procedures or generated primitives from breed declarations.  NAME and PRECEDENCE
+  are required for all dynamic prims.
+
+  PRECEDENCE is a number used to calculate the order of operations.  Higher numbers
+  have more precedence than lower ones.  Generally all commands should have the
+  lowest precedence, and all reporters should have 10 as the precedence.
 
   The possible values for ARG are :agentset, :boolean, :number, :command-block,
   or t for wildcard.
@@ -72,6 +79,10 @@ DESCRIPTION:
 
   Examples are too numerous and varied, but by inserting an output between
   the lexer and this code, a good idea of what goes on can be gotten."
+ (when (find nil dynamic-prims :key #'prim-name)
+  (error "All passed in prims must have a name: ~S" (find nil dynamic-prims :key #'prim-name)))
+ (when (find nil dynamic-prims :key #'prim-precedence)
+  (error "All passed in prims must have a precedence: ~S" (find nil dynamic-prims :key #'prim-precedence)))
  (let
   ; could have defined this using the special variable, but didn't to make the
   ; function definition simpler, as well as the documentation.
@@ -141,10 +152,10 @@ DESCRIPTION:
       (< 1 (length prev-item))
       (keywordp (car x))
       (find-prim (car x))
-      (getf (find-prim (car x)) :precedence))
+      (prim-precedence (find-prim (car x))))
      20)))
   (cond
-   ((<= (getf prim :precedence) (calculate-precedence prev-item))
+   ((<= (prim-precedence prim) (calculate-precedence prev-item))
     (cons
      (prim-name prim)
      (cons
@@ -285,6 +296,7 @@ DESCRIPTION:
 (defprim :ca () 0)
 (defprim :clear-all () 0)
 (defprim :crt (:number (:command-block :optional)) 0)
+(defprim :create-turtles (:number (:command-block :optional)) 0)
 (defprim :color () 10)
 (defprim :count (:agentset) 10)
 (defprim :die () 0)

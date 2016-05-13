@@ -31,7 +31,7 @@ DESCRIPTION:
   :stop is returned."
  `(handler-case (progn ,@forms) (stop (s) (declare (ignore s)) :stop)))
 
-(defstruct turtle who color heading xcor ycor (label "") (label-color 9.9d0) (size 1d0) shape own-vars)
+(defstruct turtle who breed color heading xcor ycor (label "") (label-color 9.9d0) (size 1d0) shape own-vars)
 (defstruct patch color xcor ycor own-vars turtles)
 
 (defun agentset-list (agentset)
@@ -39,12 +39,15 @@ DESCRIPTION:
   ((eql agentset :turtles) *turtles*)
   ((eql agentset :patches) *patches*)
   ((and (listp agentset) (eql :agentset (car agentset))) (cddr agentset))
+  ((find agentset *breeds* :key #'car)
+   (remove agentset *turtles* :key #'turtle-breed :test-not #'eql))
   (t (error "Doesn't seem to be an agentset: ~A" agentset))))
 
 (defun agentset-breed (agentset)
  (cond
   ((eql agentset :turtles) :turtles)
   ((eql agentset :patches) :patches)
+  ((find agentset *breeds* :key #'car) agentset)
   ((and (listp agentset) (eql :agentset (car agentset))) (second agentset))
   (t (error "Doesn't seem to be an agentset: ~A" agentset))))
 
@@ -55,6 +58,7 @@ DESCRIPTION:
  (or
   (eql o :turtles)
   (eql o :patches)
+  (find o *breeds* :key #'car)
   (and (listp o) (eql :agentset (car o)))))
 
 (defun agent-p (o)

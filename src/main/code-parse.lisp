@@ -9,18 +9,34 @@
 (defvar *dynamic-prims* nil)
 
 (defun global->prim (global)
- (list :name global :type :reporter :macro `(lambda () ',(intern (symbol-name global) clnl:*model-package*))))
+ (list
+  :name global
+  :type :reporter
+  :precedence 10
+  :macro `(lambda () ',(intern (symbol-name global) clnl:*model-package*))))
 
 (defun own->prim (symb)
- (list :name symb :type :reporter :macro `(lambda () '(clnl-nvm:agent-value ,symb))))
+ (list :name symb :type :reporter :precedence 10 :macro `(lambda () '(clnl-nvm:agent-value ,symb))))
 
 (defun breed->prims (breed-list)
- (let
-  ((plural-name (symbol-name (car breed-list))))
+ (let*
+  ((plural (car breed-list))
+   (singular (cadr breed-list))
+   (plural-name (symbol-name plural)))
   (list
-   (list :name (car breed-list))
-   (list :name (intern (format nil "~A-HERE" plural-name) :keyword))
-   (list :name (intern (format nil "CREATE-~A" plural-name) :keyword) :args '(:number :command-block)))))
+   (list :name plural :type :reporter :precedence 10 :macro `(lambda () ,plural))
+   (list
+    :name (intern (format nil "~A-HERE" plural-name) :keyword)
+    :type :reporter
+    :precedence 10
+    :macro `(lambda () '(clnl-nvm:turtles-here ,plural)))
+   (list
+    :name (intern (format nil "CREATE-~A" plural-name) :keyword)
+    :type :command
+    :args '(:number (:command-block :optional))
+    :precedence 0
+    :macro `(lambda (num &optional command-block)
+             `(clnl-nvm:create-turtles ,num ,,plural ,command-block))))))
 
 (defun parse (lexed-ast &optional external-globals)
  "PARSE LEXED-AST &optional EXTERNAL-GLOBALS => AST, PRIMS
@@ -67,6 +83,7 @@ DESCRIPTION:
     (list
      :name (cadr lexed-ast)
      :type :command
+     :precedence 0
      :func `(function ,(intern (symbol-name (cadr lexed-ast)) clnl:*model-package*)))
     (procedures->prims (cddr lexed-ast))))
   (t (procedures->prims (cdr lexed-ast)))))
@@ -163,9 +180,7 @@ ARGUMENTS AND VALUES:
 DESCRIPTION:
 
   Returns the turtles own variables that get declared in the code."
- (mapcar
-  (lambda (turtles-own-var) (intern (symbol-name turtles-own-var) :keyword))
-  (cdr (second (find :turtles-own code-parsed-ast :key #'car)))))
+ (cdr (second (find :turtles-own code-parsed-ast :key #'car))))
 
 (defun patches-own-vars (code-parsed-ast)
  "PATCHES-OWN-VARS CODE-PARSED-AST => PATCHES-OWN-VARS
@@ -180,9 +195,22 @@ ARGUMENTS AND VALUES:
 DESCRIPTION:
 
   Returns the turtles own variables that get declared in the code."
- (mapcar
-  (lambda (patches-own-var) (intern (symbol-name patches-own-var) :keyword))
-  (cdr (second (find :patches-own code-parsed-ast :key #'car)))))
+ (cdr (second (find :patches-own code-parsed-ast :key #'car))))
+
+(defun breeds (code-parsed-ast)
+ "BREEDS CODE-PARSED-AST => BREEDS
+
+  BREEDS: BREED*
+
+ARGUMENTS AND VALUES:
+
+  CODE-PARSED-AST: An ast as created by clnl-code-parse:parse
+  BREED: A symbol interned in :keyword
+
+DESCRIPTION:
+
+  Returns the breeds that get declared in the code."
+ (mapcar #'cadadr (remove :breed code-parsed-ast :test-not #'equal :key #'car)))
 
 (defun procedures (code-parsed-ast)
  "PROCEDURES CODE-PARSED-AST => PROCEDURES

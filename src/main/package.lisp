@@ -19,7 +19,7 @@ into an ast that can be transpiled later."))
 
 (defpackage #:clnl-code-parser
  (:use :common-lisp)
- (:export #:parse #:globals #:procedures #:turtles-own-vars #:patches-own-vars)
+ (:export #:parse #:globals #:procedures #:turtles-own-vars #:patches-own-vars #:breeds)
  (:documentation
   "CLNL Code Parser
 

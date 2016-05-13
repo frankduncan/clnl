@@ -86,3 +86,25 @@ to go
 end"
  "setup go"
  "2972B3EC1285BDA17656401001E1AE667FA7F5AF")
+
+(defmodelcommandtest "breeds 1"
+ "breed [wolves wolf]
+
+to setup
+  create-turtles 50
+  create-turtles 50 [ fd 1 ]
+  create-wolves 50
+  set-default-shape wolves \"sheep\"
+  create-wolves 50 [ fd 1 ]
+end
+
+to go
+  ask turtles [ fd 1 ]
+  ask wolves [ fd 1 ]
+  ask turtles [ if 1 < count turtles-here [ fd 1 ] ]
+  ask wolves [ if 1 < count turtles-here [ fd 1 ] ]
+  ask turtles [ if 1 < count wolves-here [ fd 1 ] ]
+  ask wolves [ if 1 < count wolves-here [ fd 1 ] ]
+end"
+ "setup go"
+ "2614B99F64ACFA2BD64D66B129C0A17F2150FADD")

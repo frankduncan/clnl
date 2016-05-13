@@ -188,7 +188,7 @@ DESCRIPTION:
 (defagentvalueprim :color)
 (defsimpleprim '(:clear-all :ca) :command clnl-nvm:clear-all)
 (defsimpleprim :count :reporter clnl-nvm:count)
-(defsimpleprim :crt :command clnl-nvm:create-turtles)
+(defprim '(:crt :create-turtles) :command (lambda (num &optional fn) `(clnl-nvm:create-turtles ,num nil ,fn)))
 (defsimpleprim :die :command clnl-nvm:die)
 (defsimpleprim :display :command clnl-nvm:display)
 (defsimpleprim :fd :command clnl-nvm:forward)

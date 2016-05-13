@@ -48,9 +48,10 @@ DESCRIPTION:
   (:magenta 125d0)
   (:pink 135d0)))
 
-(defun create-turtle (&optional base-turtle)
- (let
-  ((new-turtle (make-turtle
+(defun create-turtle (breed &optional base-turtle)
+ (let*
+  ((breed (or breed (and base-turtle (turtle-breed base-turtle)) :turtles))
+   (new-turtle (make-turtle
                 :who (coerce *current-id* 'double-float)
                 :color (if base-turtle
                         (turtle-color base-turtle)
@@ -58,7 +59,8 @@ DESCRIPTION:
                 :heading (if base-turtle
                           (turtle-heading base-turtle)
                           (coerce (clnl-random:next-int 360) 'double-float))
-                :shape (breed-default-shape :turtles)
+                :breed breed
+                :shape (breed-default-shape breed)
                 :xcor (if base-turtle (turtle-xcor base-turtle) 0d0)
                 :ycor (if base-turtle (turtle-ycor base-turtle) 0d0))))
   (let
@@ -125,7 +127,7 @@ DESCRIPTION:
   See http://ccl.northwestern.edu/netlogo/docs/dictionary.html#turtles"
  :turtles)
 
-(defun turtles-here ()
+(defun turtles-here (&optional breed)
  "TURTLES-HERE => TURTLES
 
 ARGUMENTS AND VALUES:
@@ -139,7 +141,11 @@ DESCRIPTION:
 
   See http://ccl.northwestern.edu/netlogo/docs/dictionary.html#turtles-here"
  (when (not (turtle-p *self*)) (error "Gotta call turtles-here with a turtle"))
- (list->agentset (patch-turtles (patch-at (turtle-xcor *self*) (turtle-ycor *self*))) :turtles))
+ (let
+  ((patch-turtles (patch-turtles (patch-at (turtle-xcor *self*) (turtle-ycor *self*)))))
+  (list->agentset
+   (if breed (remove breed patch-turtles :key #'turtle-breed :test-not #'eql) patch-turtles)
+   (or breed :turtles))))
 
 (defun ask (agent-or-agentset fn)
  "ASK AGENT-OR-AGENTSET FN => RESULT
@@ -555,26 +561,28 @@ DESCRIPTION:
   See http://ccl.northwestern.edu/netlogo/docs/dictionary.html#right"
  (turn-right (- n)))
 
-(defun create-turtles (n &optional fn)
- "CREATE-TURTLES N &optional FN => RESULT
+(defun create-turtles (n &optional breed fn)
+ "CREATE-TURTLES N &optional BREED FN => RESULT
 
 ARGUMENTS AND VALUES:
 
   N: an integer, the numbers of turtles to create
+  BREED: a breed
   FN: A function, applied to each turtle after creation
   RESULT: undefined
 
 DESCRIPTION:
 
-  Creates number new turtles at the origin.
+  Creates N new turtles at the origin.
 
   New turtles have random integer headings and the color is randomly selected
-  from the 14 primary colors.  If a function is supplied, the new turtles
-  immediately run it.
+  from the 14 primary colors.  If FN is supplied, the new turtles immediately
+  run it.  If a BREED is supplied, that is the breed the new turtles are set
+  to.
 
   See http://ccl.northwestern.edu/netlogo/docs/dictionary.html#create-turtles"
  (let
-  ((new-turtles (loop :repeat n :collect (create-turtle))))
+  ((new-turtles (loop :repeat n :collect (create-turtle breed))))
   (when fn (ask (list->agentset new-turtles :turtles) fn))))
 
 (defun hatch (n &optional fn)
@@ -596,7 +604,7 @@ DESCRIPTION:
   See http://ccl.northwestern.edu/netlogo/docs/dictionary.html#hatch"
  (when (not (turtle-p *self*)) (error "Can only hatch from turtle scope"))
  (let
-  ((new-turtles (loop :repeat n :collect (create-turtle *self*))))
+  ((new-turtles (loop :repeat n :collect (create-turtle nil *self*))))
   (when fn (ask (list->agentset new-turtles :turtles) fn))))
 
 (defun reset-ticks ()
@@ -667,13 +675,14 @@ DESCRIPTION:
 (defun clear-ticks ()
  (setf *ticks* nil))
 
-(defun create-world (&key dims globals turtles-own-vars patches-own-vars)
- "CREATE-WORLD &key DIMS GLOBALS TURTLES-OWN-VARS PATCHES-OWN-VARS => RESULT
+(defun create-world (&key dims globals turtles-own-vars patches-own-vars breeds)
+ "CREATE-WORLD &key DIMS GLOBALS TURTLES-OWN-VARS PATCHES-OWN-VARS BREEDS => RESULT
 
   DIMS: (:xmin XMIN :xmax XMAX :ymin YMIN :ymax YMAX)
   GLOBALS: GLOBAL*
   TURTLES-OWN-VARS: TURTLES-OWN-VAR*
   PATCHES-OWN-VARS: PATCHES-OWN-VAR*
+  BREEDS: BREED*
   GLOBAL: (GLOBAL-NAME GLOBAL-ACCESS-FUNC)
 
 ARGUMENTS AND VALUES:
@@ -685,6 +694,7 @@ ARGUMENTS AND VALUES:
   YMAX: An integer representing the maximum patch coord in Y
   TURTLES-OWN-VAR: Symbol for the turtles own variable in the keyword package
   PATCHES-OWN-VAR: Symbol for the patches own variable in the keyword package
+  BREED: A list of symbols representing the possible preeds
   GLOBAL-NAME: Symbol for the global in the keyword package
   GLOBAL-ACCESS-FUNC: Function to get the value of the global
 
@@ -698,7 +708,10 @@ DESCRIPTION:
  (setf *patches-own-vars* patches-own-vars)
  (setf *dimensions* dims)
  (setf *globals* globals)
- (setf *breeds* (list (list :turtles "default")))
+ (setf *breeds*
+  (append
+   (list (list :turtles "default"))
+   (mapcar (lambda (breed) (list breed "default")) breeds)))
  (clear-ticks)
  (clear-patches)
  (clear-turtles))
@@ -730,6 +743,11 @@ DESCRIPTION:
 
 (defmethod dump-object ((o turtle)) (format nil "(turtle ~A)" (dump-object (turtle-who o))))
 (defmethod dump-object ((o (eql :nobody))) (format nil "nobody"))
+(defmethod dump-object ((o (eql :turtles))) (format nil "{all-turtles}"))
+(defmethod dump-object ((o symbol))
+ (cond
+  ((find o *breeds* :key #'car) (format nil "{breed ~(~A~)}" o))
+  (t (error "Keyword unrecognized by dump object: ~A" o))))
 
 (defun current-state ()
  "CURRENT-STATE => WORLD-STATE
@@ -779,7 +797,7 @@ DESCRIPTION:
   (mapcar
    (lambda (turtle)
     (format nil
-     "\"~A\",\"~A\",\"~A\",\"~A\",\"~A\",\"~A\",\"~A\",\"~A\",\"{all-turtles}\",\"false\",\"~A\",~A~{,\"~A\"~}"
+     "\"~A\",\"~A\",\"~A\",\"~A\",\"~A\",\"~A\",\"~A\",\"~A\",\"~A\",\"false\",\"~A\",~A~{,\"~A\"~}"
      (dump-object (turtle-who turtle))
      (dump-object (turtle-color turtle))
      (dump-object (turtle-heading turtle))
@@ -788,6 +806,7 @@ DESCRIPTION:
      (dump-object (turtle-shape turtle))
      (dump-object (turtle-label turtle))
      (dump-object (turtle-label-color turtle))
+     (dump-object (turtle-breed turtle))
      (dump-object (turtle-size turtle))
      "\"1\",\"\"\"up\"\"\""
      (mapcar #'dump-object (mapcar (lambda (var) (agent-value-inner turtle var)) *turtles-own-vars*))))
