@@ -91,7 +91,8 @@ DESCRIPTION:
   See http://ccl.northwestern.edu/netlogo/docs/dictionary.html#die"
  (when (not (turtle-p *self*)) (error "Gotta call die in turtle scope, dude (~A)" *self*))
  (setf (turtle-who *self*) -1)
- (setf *turtles* (remove *self* *turtles*)))
+ (setf *turtles* (remove *self* *turtles*))
+ (error (make-condition 'stop)))
 
 (defun patches ()
  "PATCHES => ALL-PATCHES

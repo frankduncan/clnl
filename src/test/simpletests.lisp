@@ -114,6 +114,9 @@
 (defsimplecommandtest "die 1" "crt 10 ask turtles [ die ]"
  "A665C1BF95E1F9CAAE9B9F8B2FBE3DAA45453136")
 
+(defsimplecommandtest "die 2" "crt 10 ask turtles [ hatch 1 die hatch 1 ]"
+ "DFB46C61ACB9A24004FF26B04DCB0AC32E90AA36")
+
 (defreportertestwithsetup "any? 3" "crt 10 ask turtles [ die ]" "any? turtles" "false"
  "A665C1BF95E1F9CAAE9B9F8B2FBE3DAA45453136")
 
