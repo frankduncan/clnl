@@ -108,3 +108,17 @@ to go
 end"
  "setup go"
  "2614B99F64ACFA2BD64D66B129C0A17F2150FADD")
+
+(defmodelcommandtest "procedures stop"
+ "to setup
+  create-turtles 5
+  stop
+  create-turtles 5
+end
+
+to go
+  if 5 < count turtles [ stop ]
+  crt 1
+end"
+ "setup go go"
+ "438848EF35C6B0D28D50961072C70FCC02BB4FD8")

@@ -115,14 +115,15 @@ DESCRIPTION:
 
 (defun create-proc-body (proc prims)
  `(,(intern (string-upcase (car proc)) *model-package*) ()
-   ,@(cdr ; remove the progn, cuz it looks nicer
-      (clnl-transpiler:transpile (cadr proc)
-       (mapcar
-        (lambda (prim)
-         (if (getf prim :macro) ; The reason we do this is because with macros, we want to evaluate them in
-                                ; this scope while preserving them for the generational purposes below
-          (append (list :macro (eval (getf prim :macro))) prim)
-          prim)) prims)))))
+   (clnl-nvm:with-stop-handler
+    ,@(cdr ; remove the progn, cuz it looks nicer
+       (clnl-transpiler:transpile (cadr proc)
+        (mapcar
+         (lambda (prim)
+          (if (getf prim :macro) ; The reason we do this is because with macros, we want to evaluate them in
+                                 ; this scope while preserving them for the generational purposes below
+           (append (list :macro (eval (getf prim :macro))) prim)
+           prim)) prims))))))
 
 (defun model->single-form-lisp (model &key (seed 15) initialize-interface netlogo-callback)
  (multiple-value-bind
