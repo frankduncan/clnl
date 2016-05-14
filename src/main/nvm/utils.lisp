@@ -39,12 +39,13 @@
 
 (defmacro with-patch-update (turtle &rest forms)
  (let
-  ((patch (gensym)) (new-patch (gensym)))
+  ((patch (gensym)) (new-patch (gensym)) (retn (gensym)))
   `(let
     ((,patch (patch-at (turtle-xcor ,turtle) (turtle-ycor ,turtle)))
-     (retn (progn ,@forms)))
+     (,retn (progn ,@forms)))
     (let
      ((,new-patch (patch-at (turtle-xcor ,turtle) (turtle-ycor ,turtle))))
      (when (not (eql ,patch ,new-patch))
       (setf (patch-turtles ,patch) (remove ,turtle (patch-turtles ,patch)))
-      (setf (patch-turtles ,new-patch) (nconc (patch-turtles ,new-patch) (list ,turtle))))))))
+      (setf (patch-turtles ,new-patch) (nconc (patch-turtles ,new-patch) (list ,turtle))))
+     ,retn))))

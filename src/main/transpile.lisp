@@ -196,9 +196,12 @@ DESCRIPTION:
 (defprim :if :command (lambda (pred a) `(when ,pred ,@(make-command-block-inline a))))
 (defprim '(:ifelse :if-else)
  :command (lambda (pred a b)
-           `(if ,pred
-             ,@(make-command-block-inline a)
-             ,@(make-command-block-inline b))))
+           (let
+            ((then (make-command-block-inline a))
+             (else (make-command-block-inline b)))
+            `(if ,pred
+              ,@(if (= (length then) 1) then `((progn ,@then)))
+              ,@(if (= (length else) 1) else `((progn ,@else)))))))
 
 (defagentvalueprim :label)
 (defagentvalueprim :label-color)

@@ -38,6 +38,12 @@ DESCRIPTION:
 ; Don't want the setter for :who
 (defmethod agent-value-inner ((turtle turtle) (var (eql :who))) (turtle-who turtle))
 
+(defmethod agent-value-inner ((turtle turtle) (var (eql :pcolor)))
+ (patch-color (patch-at (turtle-xcor turtle) (turtle-ycor turtle))))
+
+(defmethod set-agent-value-inner ((turtle turtle) (var (eql :pcolor)) new-val)
+ (setf (patch-color (patch-at (turtle-xcor turtle) (turtle-ycor turtle))) new-val))
+
 (defagent-value patch :pcolor patch-color)
 
 (defagent-value turtle :color)

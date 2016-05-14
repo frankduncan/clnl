@@ -86,6 +86,8 @@ Polygon -7500403 true false 219 85 210 105 193 99 201 83
 
 @#$#@#$#@
 NetLogo 5.2.0""")
+} else if (input.length > 3 && input(3).length > 0) {
+  workspace.openFromSource(url2String("file:" + input(3)))
 } else {
   workspace.openFromSource(url2String("file:resources/empty.nlogo"))
 }

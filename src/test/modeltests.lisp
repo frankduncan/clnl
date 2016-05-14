@@ -122,3 +122,11 @@ to go
 end"
  "setup go go"
  "438848EF35C6B0D28D50961072C70FCC02BB4FD8")
+
+(defmodelfiletest "Wolf Sheep 1" "resources/models/Wolf Sheep Predation.nlogo"
+ "setup go go go go go go go go go go go go go go"
+ "9777CCF18935E52D8380C9C6DC02BFFBEE1F1149")
+
+(defmodelfiletest "Wolf Sheep 2" "resources/models/Wolf Sheep Predation.nlogo"
+ "set grass? not grass? setup go go go go go go go go go go go go go go"
+ "FC38F01DC0058C5EFF93F2228535ED7C616ECFF0")

@@ -117,6 +117,9 @@
 (defsimplecommandtest "die 2" "crt 10 ask turtles [ hatch 1 die hatch 1 ]"
  "DFB46C61ACB9A24004FF26B04DCB0AC32E90AA36")
 
+(defsimplecommandtest "die 3" "crt 5 ask turtles [ ask one-of turtles-here [ die ] hatch 1 ]"
+ "6D3B8351E71C03E479706C22172F6FACD2C558CE")
+
 (defreportertestwithsetup "any? 3" "crt 10 ask turtles [ die ]" "any? turtles" "false"
  "A665C1BF95E1F9CAAE9B9F8B2FBE3DAA45453136")
 
@@ -143,6 +146,12 @@
 
 (defsimplecommandtest "ifelse 2" "ifelse 5 = 4 [ crt 10 ] [ crt 5 ] if-else 5 = 4 [ crt 10 ] [ crt 5 ]"
  "A925E39EC022967568D238D31F70F0A375024A89")
+
+(defsimplecommandtest "ifelse 3" "ifelse 4 = 4 [ crt 5 crt 5 ] [ crt 10 crt 10 ]"
+ "A925E39EC022967568D238D31F70F0A375024A89")
+
+(defsimplecommandtest "ifelse 4" "ifelse 4 = 5 [ crt 5 crt 5 ] [ crt 10 crt 10 ]"
+ "2CF70DC9135754E77B64422C10E947E776E731E6")
 
 (defsimplecommandtest "not 1" "if not (5 = 5) [ crt 10 ]"
  "E1DE30F072D785E0D0B59F28B0F7853E3D3E0D8B")

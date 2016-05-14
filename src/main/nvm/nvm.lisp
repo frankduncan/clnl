@@ -59,10 +59,13 @@ DESCRIPTION:
                 :heading (if base-turtle
                           (turtle-heading base-turtle)
                           (coerce (clnl-random:next-int 360) 'double-float))
+                :label-color (if base-turtle (turtle-label-color base-turtle) 9.9d0)
+                :size (if base-turtle (turtle-size base-turtle) 1d0)
                 :breed breed
                 :shape (breed-default-shape breed)
                 :xcor (if base-turtle (turtle-xcor base-turtle) 0d0)
-                :ycor (if base-turtle (turtle-ycor base-turtle) 0d0))))
+                :ycor (if base-turtle (turtle-ycor base-turtle) 0d0)
+                :own-vars (when base-turtle (copy-list (turtle-own-vars base-turtle))))))
   (let
    ((patch (patch-at (turtle-xcor new-turtle) (turtle-ycor new-turtle))))
    (setf (patch-turtles patch) (nconc (patch-turtles patch) (list new-turtle))))
@@ -92,7 +95,10 @@ DESCRIPTION:
  (when (not (turtle-p *self*)) (error "Gotta call die in turtle scope, dude (~A)" *self*))
  (setf (turtle-who *self*) -1)
  (setf *turtles* (remove *self* *turtles*))
- (error (make-condition 'stop)))
+ (let
+  ((patch (patch-at (turtle-xcor *self*) (turtle-ycor *self*))))
+  (setf (patch-turtles patch) (remove *self* (patch-turtles patch))))
+ (error (make-condition 'death)))
 
 (defun patches ()
  "PATCHES => ALL-PATCHES
@@ -176,9 +182,10 @@ DESCRIPTION:
     (loop
      :for agent := (funcall iter)
      :while agent
-     :do (let ((*myself* *self*) (*self* agent)) (with-stop-handler (funcall fn))))))
+     :do (when (not (and (turtle-p agent) (= -1 (turtle-who agent))))
+          (let ((*myself* *self*) (*self* agent)) (with-stop-and-death-handler (funcall fn)))))))
   ((agent-p agent-or-agentset)
-   (let ((*myself* *self*) (*self* agent-or-agentset)) (with-stop-handler (funcall fn))))
+   (let ((*myself* *self*) (*self* agent-or-agentset)) (with-stop-and-death-handler (funcall fn))))
   (t
    (error "Ask requires an agentset or agent but got: ~A" agent-or-agentset))))
 
@@ -313,13 +320,14 @@ DESCRIPTION:
   ((copy (copy-list agentset-list))
    (i 0)
    (agent nil))
-  (flet
+  (labels
    ((fetch ()
      (let
       ((idx (when (< i (1- (length copy))) (+ i (clnl-random:next-int (- (length copy) i))))))
       (when idx (setf agent (nth idx copy)))
       (when idx (setf (nth idx copy) (nth i copy)))
-      (incf i))))
+      (incf i)
+      (when (and (<= i (length copy)) (turtle-p agent) (= -1 (turtle-who agent))) (fetch)))))
    (fetch) ; we pre-fetch because netlogo does, rng sync hype!
    (lambda ()
     (cond
@@ -843,24 +851,26 @@ DESCRIPTION:
   This is useful for serializing the current state of the engine in order
   to compare against NetLogo or to reimport later.  Contains everything needed
   to boot up a NetLogo instance in the exact same state."
- (format nil "~{~A~%~}"
-  (list
-   (format nil "~S" "RANDOM STATE")
-   (format nil "~S" (clnl-random:export))
-   ""
-   (format nil "~S" "GLOBALS")
-   (format nil "~A~A~{\"~A\"~^,~}"
-    "\"min-pxcor\",\"max-pxcor\",\"min-pycor\",\"max-pycor\",\"perspective\",\"subject\","
-    "\"nextIndex\",\"directed-links\",\"ticks\","
-    (mapcar #'string-downcase (mapcar #'car *globals*)))
-   (format nil "\"~A\",\"~A\",\"~A\",\"~A\",\"0\",\"nobody\",\"~A\",\"\"\"NEITHER\"\"\",\"~A\"~{,\"~A\"~}"
-    (min-pxcor) (max-pxcor) (min-pycor) (max-pycor) *current-id* (dump-object (or *ticks* -1d0))
-    (mapcar #'dump-object (mapcar #'funcall (mapcar #'cadr *globals*))))
-   ""
-   (format nil "~{~A~^~%~}" (export-turtles))
-   ""
-   (format nil "~{~A~^~%~}" (export-patches))
-   ""
-   (format nil "~S" "LINKS")
-   "\"end1\",\"end2\",\"color\",\"label\",\"label-color\",\"hidden?\",\"breed\",\"thickness\",\"shape\",\"tie-mode\""
-   "")))
+ (let
+  ((ordered-globals (sort (copy-list *globals*) #'string< :key (lambda (global) (symbol-name (car global))))))
+  (format nil "~{~A~%~}"
+   (list
+    (format nil "~S" "RANDOM STATE")
+    (format nil "~S" (clnl-random:export))
+    ""
+    (format nil "~S" "GLOBALS")
+    (format nil "~A~A~{\"~A\"~^,~}"
+     "\"min-pxcor\",\"max-pxcor\",\"min-pycor\",\"max-pycor\",\"perspective\",\"subject\","
+     "\"nextIndex\",\"directed-links\",\"ticks\","
+     (mapcar #'string-downcase (mapcar #'car ordered-globals)))
+    (format nil "\"~A\",\"~A\",\"~A\",\"~A\",\"0\",\"nobody\",\"~A\",\"\"\"NEITHER\"\"\",\"~A\"~{,\"~A\"~}"
+     (min-pxcor) (max-pxcor) (min-pycor) (max-pycor) *current-id* (dump-object (or *ticks* -1d0))
+     (mapcar #'dump-object (mapcar #'funcall (mapcar #'cadr ordered-globals))))
+    ""
+    (format nil "~{~A~^~%~}" (export-turtles))
+    ""
+    (format nil "~{~A~^~%~}" (export-patches))
+    ""
+    (format nil "~S" "LINKS")
+    "\"end1\",\"end2\",\"color\",\"label\",\"label-color\",\"hidden?\",\"breed\",\"thickness\",\"shape\",\"tie-mode\""
+    ""))))

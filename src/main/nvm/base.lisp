@@ -15,6 +15,7 @@
 (defvar *breeds* nil)
 
 (define-condition stop nil nil)
+(define-condition death nil nil)
 
 (defmacro with-stop-handler (&rest forms)
  "MACRO WITH-STOP-HANDLER &rest FORMS => HANDLED-FORM
@@ -31,7 +32,13 @@ DESCRIPTION:
   :stop is returned."
  `(handler-case (progn ,@forms) (stop (s) (declare (ignore s)) :stop)))
 
-(defstruct turtle who breed color heading xcor ycor (label "") (label-color 9.9d0) (size 1d0) shape own-vars)
+(defmacro with-stop-and-death-handler (&rest forms)
+ `(handler-case
+   (progn ,@forms)
+   (stop (s) (declare (ignore s)) :stop)
+   (death (d) (declare (ignore d)) :death)))
+
+(defstruct turtle who breed color heading xcor ycor (label "") label-color size shape own-vars)
 (defstruct patch color xcor ycor own-vars turtles)
 
 (defun agentset-list (agentset)

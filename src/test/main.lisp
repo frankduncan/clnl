@@ -166,6 +166,47 @@ GRAPHICS-WINDOW~%210~%10~%649~%470~%-1~%-1~%13.0~%1~%10~%1~%1~%1~%0~%1~%1~%1~%-1
 (defmacro defmodelreportertest (name model commands reporter value checksum)
  `(defmodeltest (format nil "Model Reporter - ~A" ,name) ,model ,commands ,reporter ,value ,checksum))
 
+(defmacro defmodelfiletest (name file commands checksum)
+ `(defsimpletest
+   ,(format nil "File Model - ~A" name)
+   (lambda ()
+    (let
+     ((model (with-open-file (str ,file) (clnl-model:read-from-nlogo str))))
+     (and
+      (let
+       ((callback nil))
+       (declaim (sb-ext:muffle-conditions cl:warning))
+       (eval (clnl:model->single-form-lisp model :netlogo-callback (lambda (f) (setf callback f))))
+       (when ,commands (funcall callback ,commands))
+       (checksum= ,checksum (checksum-world)))
+      (let*
+       ((pkg (make-package (gensym)))
+        (clnl:*model-package* pkg)
+        (prev-package *package*))
+       (eval
+        (cons
+         'progn
+         (clnl:model->multi-form-lisp model (intern "BOOT-ME" pkg)
+          :netlogo-callback-fn (intern "NETLOGO-CALLBACK" pkg))))
+       (eval `(in-package ,(package-name prev-package)))
+       (funcall (symbol-function (intern "BOOT-ME" pkg)))
+       (when ,commands (funcall (symbol-function (intern "NETLOGO-CALLBACK" pkg)) ,commands))
+       (checksum= ,checksum (checksum-world))))))
+   (lambda ()
+    (let
+     ((callback nil))
+     (declaim (sb-ext:muffle-conditions cl:warning))
+     (eval
+      (clnl:model->single-form-lisp
+       (with-open-file (str ,file) (clnl-model:read-from-nlogo str))
+       :netlogo-callback (lambda (f) (setf callback f))))
+     (when ,commands (funcall callback ,commands))
+     (format nil "~A~A"
+      (clnl-nvm:export-world)
+      (checksum-world))))
+   "bin/runcmd.scala"
+   (format nil "~A@#$#@#$#@@#$#@#$#@@#$#@#$#@~A" ,commands ,file)))
+
 (defmacro defviewtest (name commands checksum)
  `(defsimpletest
    (format nil "Simple View - ~A" ,name)

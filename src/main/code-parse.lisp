@@ -67,7 +67,7 @@ DESCRIPTION:
  (let*
   ((*dynamic-prims*
     (append
-     (mapcar #'global->prim external-globals)
+     (mapcar #'global->prim (mapcar #'car external-globals))
      (procedures->prims lexed-ast)))
    (parsed (parse-internal lexed-ast)))
   (values

@@ -132,28 +132,23 @@ DESCRIPTION:
   (let
    ((globals
      (append
-      (clnl-model:widget-globals model)
-      (clnl-code-parser:globals code-ast))))
-   `(prog ()
-     ; First declare is in case we don't use it, it shows up in export correctly
-     ,@(when (and (> (length globals) 0) netlogo-callback)
-        `((declare (special ,@(mapcar (lambda (pair) (intern (string-upcase (car pair)) *model-package*)) globals)))))
-     (let
-      ,(mapcar (lambda (pair) (list (intern (string-upcase (car pair)) *model-package*) (cadr pair))) globals)
-      ; We declare twice rather than once and doing a bunch of setfs
-      ,@(when (and (> (length globals) 0) netlogo-callback)
-         `((declare (special ,@(mapcar (lambda (pair) (intern (string-upcase (car pair)) *model-package*)) globals)))))
-      (labels
-       ,(mapcar
-         (lambda (proc) (create-proc-body proc prims))
-         (clnl-code-parser:procedures code-ast))
-       (clnl-random:set-seed ,seed)
-       ,(create-world-call model globals code-ast)
-       ,@(when netlogo-callback
-          `((funcall ,netlogo-callback
-             (lambda (,(intern "NETLOGO-CODE" *model-package*))
-              ,(netlogo-callback-body prims)))))
-       ,@(when initialize-interface `((clnl-interface:initialize :dims ',(clnl-model:world-dimensions model))))))))))
+      (clnl-code-parser:globals code-ast)
+      (clnl-model:widget-globals model))))
+   `(progn
+     ,@(mapcar
+        (lambda (pair) `(defparameter ,(intern (string-upcase (car pair)) *model-package*) ,(cadr pair)))
+        globals)
+     (labels
+      ,(mapcar
+        (lambda (proc) (create-proc-body proc prims))
+        (clnl-code-parser:procedures code-ast))
+      (clnl-random:set-seed ,seed)
+      ,(create-world-call model globals code-ast)
+      ,@(when netlogo-callback
+         `((funcall ,netlogo-callback
+            (lambda (,(intern "NETLOGO-CODE" *model-package*))
+             ,(netlogo-callback-body prims)))))
+      ,@(when initialize-interface `((clnl-interface:initialize :dims ',(clnl-model:world-dimensions model)))))))))
 
 (setf (documentation 'model->single-form-lisp 'function)
  "MODEL->SINGLE-FORM-LISP MODEL &key SEED INITIALIZE-INTERFACE NETLOGO-CALLBACK => FORM
