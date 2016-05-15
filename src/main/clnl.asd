@@ -5,6 +5,7 @@
  :author "Frank Duncan (frank@kank.com)"
  :components ((:file "package")
               (:file "base")
+              (:file "extensions")
               (:file "model")
               (:file "lex")
               (:file "parse")

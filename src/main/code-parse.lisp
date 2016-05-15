@@ -68,7 +68,8 @@ DESCRIPTION:
   ((*dynamic-prims*
     (append
      (mapcar #'global->prim (mapcar #'car external-globals))
-     (procedures->prims lexed-ast)))
+     (procedures->prims lexed-ast)
+     (clnl-extensions:load-extension :cli)))
    (parsed (parse-internal lexed-ast)))
   (values
    (butlast parsed)

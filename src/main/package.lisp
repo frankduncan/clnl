@@ -141,6 +141,22 @@ all of the sections, and subsections held within.  This package houses not only
 the code to read and write .nlogo files, but also the living state of the model
 as clnl runs."))
 
+(defpackage #:clnl-extensions
+ (:use :common-lisp)
+ (:export #:load-extension)
+ (:documentation
+  "CLNL Extensions
+
+The loading and handling of extensions to CLNL modeled after the way that
+NetLogo handles extensions.
+
+Extensions are defined as Common Lisp systems (under asdf) that export
+the primitive PRIMS.  The name of the asdf system is defined to be the
+name of the extension prepended by CLNL-EXTENSION-, such that for a hypothetical
+extension ARRAY, the name of the asdf system would be CLNL-EXTENSION-ARRAY
+and found through conventional asdf means.  The package that the required
+functions are symbols in should be the same as the asdf system."))
+
 (defpackage #:clnl-default-model-package
  (:use :common-lisp)
  (:shadow #:go))
