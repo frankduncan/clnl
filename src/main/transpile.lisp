@@ -143,6 +143,7 @@ DESCRIPTION:
   ((eql :command-block (car reporter)) (transpile-command-block reporter))
   ((eql :list-literal (car reporter)) (cons 'list (mapcar #'transpile-reporter (cdr reporter))))
   ((eql :reporter-block (car reporter)) (transpile-reporter-block reporter))
+  ((eql :token (car reporter)) (cadr reporter))
   ((and (symbolp (car reporter)) (find (car reporter) *local-variables*))
    (intern (symbol-name (car reporter)) clnl:*model-package*))
   ((not (find-prim (car reporter))) (error "Couldn't find the reporter for ~S" (car reporter)))

@@ -121,6 +121,17 @@ DESCRIPTION:
         :prev-item (coerce (car lexed-ast) 'double-float)
         :prev-remaining-arg (car remaining-args)
         :remaining-args (cdr remaining-args)))
+      ((and remaining-args
+        (or
+         (eql :token (car remaining-args))
+         (and
+          (listp (car remaining-args))
+          (find :token (car remaining-args))
+          (symbolp (car lexed-ast)))))
+       (parse-internal (cdr lexed-ast)
+        :prev-item (car lexed-ast)
+        :prev-remaining-arg (car remaining-args)
+        :remaining-args (cdr remaining-args)))
       ((eql (intern "(" :keyword) (car lexed-ast)) (parse-parened-expr (cdr lexed-ast) remaining-args))
       ((eql (intern ")" :keyword) (car lexed-ast)) (error "Closing parens has no opening parens"))
       ((eql :let (car lexed-ast)) (parse-let (cdr lexed-ast) remaining-args))
@@ -136,7 +147,7 @@ DESCRIPTION:
  (let*
   ((half-parsed-remainder (parse-internal (cdr lexed-ast) :remaining-args (list t :done-with-args))))
   (let
-   ((*dynamic-prims* (cons (list :name (car lexed-ast)) *dynamic-prims*)))
+   ((*dynamic-prims* (cons (list :name (car lexed-ast) :precedence 20) *dynamic-prims*)))
    (parse-internal
     (cdr half-parsed-remainder)
     :remaining-args (cdr remaining-args)
@@ -170,6 +181,15 @@ DESCRIPTION:
          following-args)))))))
 
 (defun parse-prim (prim lexed-ast prev-item prev-remaining-arg remaining-args)
+ (when (not (prim-precedence prim))
+  (error "Prim must have a precedence! ~A" prim))
+ (when (and (prim-is-infix prim) (eql :token (car (prim-args prim))))
+  (error "Can't have a prim that wants a token in the first position while being infix: ~A" prim))
+ (when
+  (and
+   (< (prim-precedence prim) 20)
+   (find-if (lambda (arg) (or (eql :token arg) (and (listp arg) (find :token arg)))) (prim-args prim)))
+  (error "Can't have a prim that wants a token and has a precedence of less than 20: ~A" prim))
  (let*
   ((args (if (prim-is-infix prim) (cdr (prim-args prim)) (prim-args prim)))
    (half-parsed-remainder (parse-internal (cdr lexed-ast) :remaining-args (append args (list :done-with-args))))
@@ -198,6 +218,8 @@ DESCRIPTION:
 (defun help-arg (arg arg-type)
  (cond
   ((not arg-type) arg)
+  ((eql arg-type :token) (list :arg (list :token arg)))
+  ((and (listp arg-type) (find :token arg-type) (symbolp arg)) (list :arg (list :token arg)))
   ((eql arg-type :command-block)
    (if (not (and (consp arg) (eql 'block (car arg))))
     (error "Required a block, but found a ~A" arg)
@@ -279,6 +301,7 @@ DESCRIPTION:
 ; - :agentset
 ; - :command-block
 ; - :boolean
+; - :token (suspends evaluation)
 ; - t - any type
 ;
 ; After the arguments, :infix denotes that it's an :infix operator
