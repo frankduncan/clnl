@@ -10,4 +10,9 @@ ARGUMENTS AND VALUES:
 DESCRIPTION:
 
   PRIMS returns the primitives used in the CLI extension."
- nil)
+ (list
+  (list :name :q :type :command :func #'shut-down)))
+
+(defun shut-down ()
+ (cl-charms/low-level:endwin)
+ (sb-ext:exit :abort t))

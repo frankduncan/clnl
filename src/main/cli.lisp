@@ -23,7 +23,6 @@ DESCRIPTION:
  (loop
   :for str := (cffi:with-foreign-pointer-as-string (str 255) (wgetnstr *cli* str 255))
   :while str
-  :while (and (string/= str "q") (string/= str "Q"))
   :do (print-command-and-response str (execute str)))
  (endwin)
  (sb-ext:exit :abort t))
@@ -85,7 +84,7 @@ DESCRIPTION:
   implementation of NetLogo.
   
   You can enter in various netlogo commands below,
-  or use q to quit the program.
+  or use :q to quit the program.
   
   See http://github.com/frankduncan/clnl for more
   information about CLNL and to keep apprised of

@@ -29,6 +29,8 @@ DESCRIPTION:
  (sb-thread:make-thread #'clnl-cli:run)
  (clnl-interface:run))
 
+(defvar *callback* nil)
+
 (defun boot (&optional file headless-mode)
  "BOOT &optional FILE HEADLESS-MODE => RESULT
 
@@ -51,7 +53,8 @@ DESCRIPTION:
   ((netlogoed-lisp
     (model->single-form-lisp
      (if file (with-open-file (str file) (clnl-model:read-from-nlogo str)) (clnl-model:default-model))
-     :initialize-interface (not headless-mode)))
+     :initialize-interface (not headless-mode)
+     :netlogo-callback (lambda (f) (setf *callback* f))))
    (*package* *model-package*))
   (eval netlogoed-lisp)))
 
@@ -67,7 +70,8 @@ DESCRIPTION:
 
   RUN-COMMANDS will take NetLogo commands, put them through the various
   stages need to turn them into Common Lisp code, and run it."
- (clnl-nvm:with-stop-handler (eval (clnl-transpiler:transpile (clnl-parser:parse (clnl-lexer:lex cmds))))))
+ (clnl-nvm:with-stop-handler
+  (funcall *callback* cmds)))
 
 (defun run-reporter (reporter)
  "RUN-REPORTER REPORTER => RESULT
