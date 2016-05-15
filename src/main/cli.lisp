@@ -31,7 +31,7 @@ DESCRIPTION:
  (handler-case
   (with-output-to-string (*standard-output*)
    (clnl:run-commands str))
-  (error (e) (format nil "Ok, something went wrong: ~A" e))))
+  (error (e) (format nil "Ok, something went wrong: ~A~%Try :help" e))))
 
 ; for ui, we need to do at a minimum:
 ; - cli, first pass, read things in, bottom of the screen,
