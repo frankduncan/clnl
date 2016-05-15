@@ -11,6 +11,7 @@ sbcl --eval "(asdf:load-system :clnl-test)" --eval "(quit)" &> /dev/null
 runtestfn() {
   sbcl \
     --noinform --disable-ldb --lose-on-corruption --end-runtime-options \
+    --eval "(asdf:initialize-source-registry \`(:source-registry (:tree ,(car (directory \"src\"))) :INHERIT-CONFIGURATION))" \
     --eval "(asdf:load-system :clnl-test)" \
     --eval "(clnl-test::$1 \"$TEST\")" \
     --eval "(quit)" 2> /dev/null | sed -n '/^----$/,$p' | tail -n +2

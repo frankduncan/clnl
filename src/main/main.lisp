@@ -24,7 +24,6 @@ ARGUMENTS AND VALUES:
 DESCRIPTION:
 
   RUN starts up the CLNL system."
-
  (boot)
  (sb-thread:make-thread #'clnl-cli:run)
  (clnl-interface:run))

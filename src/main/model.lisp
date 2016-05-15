@@ -29,7 +29,7 @@ DESCRIPTION:
  (make-model
   :code ""
   :interface (list
-              (make-view :min-pxcor -5 :max-pxcor 5 :min-pycor -5 :max-pycor 5))))
+              (make-view :min-pxcor -5 :max-pxcor 5 :min-pycor -5 :max-pycor 5 :patch-size 13d0))))
 
 (defun read-from-nlogo (str)
  "READ-FROM-NLOGO STR => MODEL
@@ -221,7 +221,8 @@ DESCRIPTION:
    :xmin (view-min-pxcor view)
    :xmax (view-max-pxcor view)
    :ymin (view-min-pycor view)
-   :ymax (view-max-pycor view))))
+   :ymax (view-max-pycor view)
+   :patch-size (view-patch-size view))))
 
 (defun widget-globals (model)
  "WIDGET-GLOBALS MODEL => GLOBALS

@@ -1,7 +1,5 @@
 (in-package #:clnl-interface)
 
-(defvar *patch-size* 13d0)
-
 (defvar *turtle-list* nil)
 (defvar *patch-list* nil)
 
@@ -38,7 +36,12 @@
  (gl:clear :color-buffer-bit :depth-buffer-bit)
  (gl:matrix-mode :projection)
  (gl:load-identity)
- (gl:ortho -71 71 -71 71 1 5000)
+ (gl:ortho
+  (floor (* (- (getf *dimensions* :xmin) 0.5) (patch-size)))
+  (floor (* (+ (getf *dimensions* :xmax) 0.5) (patch-size)))
+  (floor (* (- (getf *dimensions* :ymin) 0.5) (patch-size)))
+  (floor (* (+ (getf *dimensions* :ymax) 0.5) (patch-size)))
+  0 5000)
  (gl:matrix-mode :modelview)
  (gl:load-identity)
  (destructuring-bind (turtles patches) (clnl-nvm:current-state)
@@ -48,9 +51,9 @@
      ((color (nl-color->rgb (getf patch :color))))
      (gl:color (car color) (cadr color) (caddr color)))
     (gl:with-pushed-matrix
-     (gl:translate (* (getf patch :xcor) *patch-size*) (* (getf patch :ycor) *patch-size*) 0)
-     (gl:translate (floor (* -.5d0 *patch-size*)) (floor (* -.5d0 *patch-size*)) 0)
-     (gl:scale *patch-size* *patch-size* 1)
+     (gl:translate (* (getf patch :xcor) (patch-size)) (* (getf patch :ycor) (patch-size)) 0)
+     (gl:translate (floor (* -.5d0 (patch-size))) (floor (* -.5d0 (patch-size))) 0)
+     (gl:scale (patch-size) (patch-size) 1)
      (gl:call-list *patch-list*)))
    patches)
   (mapcar
@@ -61,10 +64,10 @@
     (mapcar
      (lambda (x-modification y-modification)
       (gl:with-pushed-matrix
-       (gl:translate (* (getf turtle :xcor) *patch-size*) (* (getf turtle :ycor) *patch-size*) 0)
+       (gl:translate (* (getf turtle :xcor) (patch-size)) (* (getf turtle :ycor) (patch-size)) 0)
        (gl:translate x-modification y-modification 0)
        (gl:rotate (getf turtle :heading) 0 0 -1)
-       (gl:scale *patch-size* *patch-size* 1)
+       (gl:scale (patch-size) (patch-size) 1)
        (gl:scale (getf turtle :size) (getf turtle :size) 1)
        (gl:call-list *turtle-list*)))
      (list 0 (1- (world-width-in-pixels)) (- (1- (world-width-in-pixels))) 0 0)
@@ -95,8 +98,8 @@
  (setf *turtle-list* (gl:gen-lists 1))
  (gl:with-new-list (*turtle-list* :compile)
   (gl:rotate 180 0 0 -1)
-  (gl:scale (/ 1d0 300d0) (/ 1d0 300d0) 1)
-  (gl:translate -150 -150 -4.0)
+  (gl:scale (/ 1 300d0) (/ 1d0 300d0) 1)
+  (gl:translate -150 -150 -0.0)
   (gl:begin :polygon)
   (gl:vertex 150 5 0)
   (gl:vertex 40 250 0)
@@ -107,7 +110,6 @@
 (defun set-patch-list ()
  (setf *patch-list* (gl:gen-lists 1))
  (gl:with-new-list (*patch-list* :compile)
-  (gl:translate 0d0 0d0 -4.0)
   (gl:begin :polygon)
   (gl:vertex 0 0 0)
   (gl:vertex 0 1 0)
@@ -118,7 +120,7 @@
 (defun initialize (&key dims)
  "INITIALIZE &key DIMS => RESULT
 
-  DIMS: (:xmin XMIN :xmax XMAX :ymin YMIN :ymax YMAX)
+  DIMS: (:xmin XMIN :xmax XMAX :ymin YMIN :ymax YMAX :patch-size PATCH-SIZE)
 
 ARGUMENTS AND VALUES:
 
@@ -127,6 +129,7 @@ ARGUMENTS AND VALUES:
   XMAX: An integer representing the maximum patch coord in X
   YMIN: An integer representing the minimum patch coord in Y
   YMAX: An integer representing the maximum patch coord in Y
+  PATCH-SIZE: A double representing the size of the patches in pixels
 
 DESCRIPTION:
 
@@ -134,7 +137,9 @@ DESCRIPTION:
   the interface lives.  From here, one can go into headless or running
   mode, but for certain things this interface will still need to act,
   and also allows for bringing up and taking down of visual elements."
- (setf *dimensions* dims))
+ (setf *dimensions* dims)
+ (when *glut-window-opened*
+  (cl-glut:reshape-window (world-width-in-pixels) (world-height-in-pixels))))
 
 (defun run ()
  "RUN => RESULT
@@ -169,11 +174,13 @@ DESCRIPTION:
   (set-patch-list)
   (cl-glut:main-loop)))
 
+(defun patch-size () (getf *dimensions* :patch-size))
+
 (defun world-width-in-pixels ()
- (floor (* *patch-size* (1+ (- (getf *dimensions* :xmax) (getf *dimensions* :xmin))))))
+ (floor (* (patch-size) (1+ (- (getf *dimensions* :xmax) (getf *dimensions* :xmin))))))
 
 (defun world-height-in-pixels ()
- (floor (* *patch-size* (1+ (- (getf *dimensions* :ymax) (getf *dimensions* :ymin))))))
+ (floor (* (patch-size) (1+ (- (getf *dimensions* :ymax) (getf *dimensions* :ymin))))))
 
 (defun export-view ()
  "EXPORT-VIEW => IMAGE-DATA
@@ -205,12 +212,12 @@ DESCRIPTION:
    ((fbo (first (gl:gen-framebuffers 1)))
     (render-buf (first (gl:gen-renderbuffers 1)))
    ;(width
-   ; (floor (* *patch-size* (1+ (-
+   ; (floor (* (patch-size) (1+ (-
    ;                             (getf *dimensions* :ymax)
    ;                             (getf *dimensions* :ymin))))))
    ;(height
-   ; (floor (* *patch-size* (1+ (- (getf *world-dims* :xmax) (getf *world-dims* :xmin))))))
-   ; (floor (* *patch-size* (1+ (-
+   ; (floor (* (patch-size) (1+ (- (getf *world-dims* :xmax) (getf *world-dims* :xmin))))))
+   ; (floor (* (patch-size) (1+ (-
    ;                            (getf *dimensions* :xmax)
    ;                            (getf *dimensions* :xmin)))))
     (width (world-width-in-pixels))  ; Hard coded for now, yay v1 (if you see this comment in a year, please cry for me)
