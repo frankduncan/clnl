@@ -785,6 +785,7 @@ DESCRIPTION:
      :xcor (turtle-xcor turtle)
      :ycor (turtle-ycor turtle)
      :heading (turtle-heading turtle)
+     :shape (turtle-shape turtle)
      :size (turtle-size turtle)))
    *turtles*)
   (mapcar
