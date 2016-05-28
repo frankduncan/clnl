@@ -46,7 +46,7 @@
   ((parse-points (sections)
     (when sections
      (cons
-      (list (parse-integer (car sections)) (parse-integer (cadr sections)))
+      (list (- 300 (parse-integer (car sections))) (parse-integer (cadr sections)))
       (parse-points (cddr sections))))))
   (list
    :polygon
@@ -131,30 +131,30 @@
       (t (triangulate (append (cdr points) (list (car points))) ccw))))))))
 
 (defun element->gl-list (shape)
- (case (car shape)
-  (:polygon
-   (progn
-    (gl:begin :triangles)
+ (progn
+  (when (not (getf (cdr shape) :marked))
+   (gl:push-attrib :all-attrib-bits)
+   (gl:color
+    (/ (ash (ldb (byte 24 0) (getf (cdr shape) :color)) -16) 255)
+    (/ (ash (ldb (byte 16 0) (getf (cdr shape) :color)) -8) 255)
+    (/ (ldb (byte 8 0) (getf (cdr shape) :color)) 255)))
+  (gl:begin :triangles)
+  (case (car shape)
+   (:polygon
     (mapcar
      (lambda (point) (gl:vertex (car point) (cadr point) 0))
-     (apply #'append (triangulate (getf (cdr shape) :coords))))
-    (gl:end)))
-  (:rectangle
-   (progn
-    (gl:begin :triangles)
+     (apply #'append (triangulate (getf (cdr shape) :coords)))))
+   (:rectangle
     (mapcar
      (lambda (point) (gl:vertex (car point) (cadr point) 0))
      (apply #'append
       (triangulate
        (list
-        (list (getf (cdr shape) :left) (getf (cdr shape) :top))
-        (list (getf (cdr shape) :right) (getf (cdr shape) :top))
-        (list (getf (cdr shape) :right) (getf (cdr shape) :bottom))
-        (list (getf (cdr shape) :left) (getf (cdr shape) :bottom))))))
-    (gl:end)))
-  (:circle
-   (progn
-    (gl:begin :triangles)
+        (list (- 300 (getf (cdr shape) :left)) (getf (cdr shape) :top))
+        (list (- 300 (getf (cdr shape) :right)) (getf (cdr shape) :top))
+        (list (- 300 (getf (cdr shape) :right)) (getf (cdr shape) :bottom))
+        (list (- 300 (getf (cdr shape) :left)) (getf (cdr shape) :bottom)))))))
+   (:circle
     (mapcar
      (lambda (point) (gl:vertex (car point) (cadr point) 0))
      (apply #'append
@@ -169,8 +169,10 @@
         :for n := 0 :then x
         :for x := r :then (- (* c x) (* s y))
         :for y := 0 :then (+ (* s n) (* c y))
-        :collect (list (+ (+ x left) r) (+ (+ y top) r))))))
-    (gl:end)))))
+        :collect (list (- 300 (+ (+ x left) r)) (+ (+ y top) r))))))))
+  (gl:end)
+  (when (not (getf (cdr shape) :marked))
+   (gl:pop-attrib))))
 
 (defun parse-shapes (str)
  (let

@@ -26,3 +26,9 @@
 
 (defviewtest "size" "crt 10 ask turtles [ fd 2 set size 3 ] "
  '("E71BD61118B3B735DE4ADD2EF7897465084DD372" "6A4D9F29F10EAFCF5AB6156CCB35680EF4E41677"))
+
+(defviewtest "sheep" "set-default-shape turtles \"sheep\" crt 10 ask turtles [ fd 2 set size 3 ] "
+ '("6D86C178B84836F064C0084E9A0BDE3BACCA28A2" "33DD3FA4103731FA6A2EA675104CEEFCE16ADF54"))
+
+(defviewtest "wolves" "set-default-shape turtles \"wolf\" crt 10 ask turtles [ fd 2 set size 3 ] "
+ '("D455A70DBAD3195F23328B58B4D123934FEA0DC0" "4C108D1B2ED37A9C2152BE816E2B8947861333DE"))
