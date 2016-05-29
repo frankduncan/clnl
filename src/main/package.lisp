@@ -64,44 +64,6 @@ the nvm in the same way that comes out of this transpiler
 All the code to convert the list of tokens coming from the lexer
 into an ast that can be transpiled later."))
 
-(defpackage #:clnl-nvm
- (:use :common-lisp)
- (:shadow #:random #:count)
- (:export #:export-world #:create-world #:current-state #:with-stop-handler
-  ; API as used by transpiled NetLogo programs
-  #:agent-value
-  #:ask
-  #:clear-all
-  #:count
-  #:create-turtles
-  #:die
-  #:display
-  #:hatch
-  #:of
-  #:forward
-  #:lookup-color
-  #:one-of
-  #:patches
-  #:reset-ticks
-  #:random
-  #:random-float
-  #:random-xcor
-  #:random-ycor
-  #:set-default-shape
-  #:setxy
-  #:show
-  #:stop
-  #:turtles
-  #:turtles-here
-  #:tick
-  #:ticks
-  #:turn-right #:turn-left
-  #:with)
- (:documentation
-  "CLNL NVM
-
-NetLogo Virtual Machine: the simulation engine."))
-
 (defpackage #:clnl-lexer
  (:use :common-lisp)
  (:export #:lex)

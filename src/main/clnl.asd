@@ -4,6 +4,7 @@
  :maintainer "Frank Duncan (frank@kank.com)"
  :author "Frank Duncan (frank@kank.com)"
  :components ((:file "package")
+              (:file "nvm/package")
               (:file "base")
               (:file "extensions")
               (:file "model")
@@ -14,6 +15,12 @@
               (:file "nvm/utils")
               (:file "nvm/agent")
               (:file "nvm/nvm")
+              (:file "nvm/agentset")
+              (:file "nvm/controlflow")
+              (:file "nvm/inout")
+              (:file "nvm/math")
+              (:file "nvm/turtles")
+              (:file "nvm/world")
               (:file "nvm/topology")
               (:file "transpile")
               (:file "random")

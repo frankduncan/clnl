@@ -21,7 +21,6 @@
 (defun breed->prims (breed-list)
  (let*
   ((plural (car breed-list))
-   (singular (cadr breed-list))
    (plural-name (symbol-name plural)))
   (list
    (list :name plural :type :reporter :precedence 10 :macro `(lambda () ,plural))
