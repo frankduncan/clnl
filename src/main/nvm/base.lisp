@@ -38,6 +38,9 @@ DESCRIPTION:
    (stop (s) (declare (ignore s)) :stop)
    (death (d) (declare (ignore d)) :death)))
 
+(defmacro defcommand (name args docstring &rest body)
+ `(defun ,name ,args ,docstring ,@body :undefined))
+
 (defstruct turtle who breed color heading xcor ycor (label "") label-color size shape own-vars)
 (defstruct patch color xcor ycor own-vars turtles)
 

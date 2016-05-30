@@ -126,7 +126,8 @@ DESCRIPTION:
           (if (getf prim :macro) ; The reason we do this is because with macros, we want to evaluate them in
                                  ; this scope while preserving them for the generational purposes below
            (append (list :macro (eval (getf prim :macro))) prim)
-           prim)) prims))))))
+           prim)) prims)))
+    :undefined)))
 
 (defun model->single-form-lisp (model &key (seed 15) initialize-interface netlogo-callback)
  (multiple-value-bind

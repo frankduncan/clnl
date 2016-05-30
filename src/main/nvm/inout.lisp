@@ -80,13 +80,14 @@ DESCRIPTION:
     "\"end1\",\"end2\",\"color\",\"label\",\"label-color\",\"hidden?\",\"breed\",\"thickness\",\"shape\",\"tie-mode\""
     ""))))
 
-(defun show (value)
+(defcommand show (value)
  "SHOW VALUE => RESULT
+
+  RESULT: :undefined
 
 ARGUMENTS AND VALUES:
 
   VALUE: a NetLogo value
-  RESULT: undefined
 
 DESCRIPTION:
 

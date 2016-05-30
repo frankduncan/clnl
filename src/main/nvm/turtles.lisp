@@ -1,14 +1,15 @@
 (in-package #:clnl-nvm)
 
-(defun create-turtles (n &optional breed fn)
+(defcommand create-turtles (n &optional breed fn)
  "CREATE-TURTLES N &optional BREED FN => RESULT
+
+  RESULT: :undefined
 
 ARGUMENTS AND VALUES:
 
   N: an integer, the numbers of turtles to create
   BREED: a breed
   FN: A function, applied to each turtle after creation
-  RESULT: undefined
 
 DESCRIPTION:
 
@@ -24,12 +25,10 @@ DESCRIPTION:
   ((new-turtles (loop :repeat n :collect (create-turtle breed))))
   (when fn (ask (list->agentset new-turtles :turtles) fn))))
 
-(defun die ()
+(defcommand die ()
  "DIE => RESULT
 
-ARGUMENTS AND VALUES:
-
-  RESULT: undefined, commands don't return
+  RESULT: :undefined
 
 DESCRIPTION:
 
@@ -51,14 +50,15 @@ DESCRIPTION:
   (setf (patch-turtles patch) (remove *self* (patch-turtles patch))))
  (error (make-condition 'death)))
 
-(defun hatch (n &optional fn)
+(defcommand hatch (n &optional fn)
  "HATCH N &optional FN => RESULT
+
+  RESULT: :undefined
 
 ARGUMENTS AND VALUES:
 
   N: an integer, the numbers of turtles to hatch
   FN: A function, applied to each turtle after creation
-  RESULT: undefined
 
 DESCRIPTION:
 
@@ -73,13 +73,14 @@ DESCRIPTION:
   ((new-turtles (loop :repeat n :collect (create-turtle nil *self*))))
   (when fn (ask (list->agentset new-turtles :turtles) fn))))
 
-(defun forward (n)
+(defcommand forward (n)
  "FORWARD N => RESULT
+
+  RESULT: :undefined
 
 ARGUMENTS AND VALUES:
 
   N: a double, the amount the turtle moves forward
-  RESULT: undefined
 
 DESCRIPTION:
 
@@ -153,14 +154,15 @@ DESCRIPTION:
    (max (+ (max-pycor) 0.5d0)))
   (+ min (clnl-random:next-double (- max min)))))
 
-(defun set-default-shape (breed shape)
+(defcommand set-default-shape (breed shape)
  "SET-DEFAULT-SHAPE BREED SHAPE => RESULT
+
+  RESULT: :undefined
 
 ARGUMENTS AND VALUES:
 
   BREED: a valid breed
   SHAPE: a string
-  RESULT: undefined
 
 DESCRIPTION:
 
@@ -173,14 +175,15 @@ DESCRIPTION:
  (when (not (breed-p breed)) (error "Need a valid breed"))
  (setf (breed-default-shape breed) shape))
 
-(defun setxy (x y)
+(defcommand setxy (x y)
  "SETXY X Y => RESULT
+
+  RESULT: :undefined
 
 ARGUMENTS AND VALUES:
 
   X: a double
   Y: a double
-  RESULT: undefined
 
 DESCRIPTION:
 
@@ -212,13 +215,14 @@ DESCRIPTION:
    (if breed (remove breed patch-turtles :key #'turtle-breed :test-not #'eql) patch-turtles)
    (or breed :turtles))))
 
-(defun turn-right (n)
+(defcommand turn-right (n)
  "TURN-RIGHT N => RESULT
+
+  RESULT: :undefined
 
 ARGUMENTS AND VALUES:
 
   N: a double, the amount the turtle turns
-  RESULT: undefined
 
 DESCRIPTION:
 
@@ -234,13 +238,14 @@ DESCRIPTION:
     ((>= new-heading 360) (mod new-heading 360))
     (t new-heading)))))
 
-(defun turn-left (n)
+(defcommand turn-left (n)
  "TURN-LEFT N => RESULT
+
+  RESULT: :undefined
 
 ARGUMENTS AND VALUES:
 
   N: a double, the amount the turtle turns
-  RESULT: undefined
 
 DESCRIPTION:
 

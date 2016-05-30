@@ -1,14 +1,14 @@
 (in-package #:clnl-nvm)
 
-(defun ask (agent-or-agentset fn)
+(defcommand ask (agent-or-agentset fn)
  "ASK AGENT-OR-AGENTSET FN => RESULT
 
   AGENT-OR-AGENTSET: AGENT | AGENTSET
+  RESULT: :undefined
 
 ARGUMENTS AND VALUES:
 
   FN: a function, run on each agent
-  RESULT: undefined, commands don't return
   AGENT: a NetLogo agent
   AGENTSET: a NetLogo agentset
 
@@ -35,12 +35,10 @@ DESCRIPTION:
   (t
    (error "Ask requires an agentset or agent but got: ~A" agent-or-agentset))))
 
-(defun stop ()
+(defcommand stop ()
  "STOP => RESULT
 
-ARGUMENTS AND VALUES:
-
-  RESULT: undefined
+  RESULT: :undefined
 
 DESCRIPTION:
 

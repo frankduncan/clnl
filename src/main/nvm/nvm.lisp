@@ -76,7 +76,7 @@ DESCRIPTION:
      ((= i (length copy)) (incf i) (car (last copy)))
      (t (let ((result agent)) (fetch) result)))))))
 
-(defun create-world (&key dims globals turtles-own-vars patches-own-vars breeds)
+(defcommand create-world (&key dims globals turtles-own-vars patches-own-vars breeds)
  "CREATE-WORLD &key DIMS GLOBALS TURTLES-OWN-VARS PATCHES-OWN-VARS BREEDS => RESULT
 
   DIMS: (:xmin XMIN :xmax XMAX :ymin YMIN :ymax YMAX)
@@ -84,11 +84,11 @@ DESCRIPTION:
   TURTLES-OWN-VARS: TURTLES-OWN-VAR*
   PATCHES-OWN-VARS: PATCHES-OWN-VAR*
   BREEDS: BREED*
+  RESULT: :undefined
   GLOBAL: (GLOBAL-NAME GLOBAL-ACCESS-FUNC)
 
 ARGUMENTS AND VALUES:
 
-  RESULT: undefined
   XMIN: An integer representing the minimum patch coord in X
   XMAX: An integer representing the maximum patch coord in X
   YMIN: An integer representing the minimum patch coord in Y

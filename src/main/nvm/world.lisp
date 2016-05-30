@@ -19,12 +19,10 @@
 (defun clear-ticks ()
  (setf *ticks* nil))
 
-(defun clear-all ()
+(defcommand clear-all ()
  "CLEAR-ALL => RESULT
 
-ARGUMENTS AND VALUES:
-
-  RESULT: undefined
+  RESULT: :undefined
 
 DESCRIPTION:
 
@@ -35,12 +33,10 @@ DESCRIPTION:
  (clear-patches)
  (clear-ticks))
 
-(defun display ()
+(defcommand display ()
  "DISPLAY => RESULT
 
-ARGUMENTS AND VALUES:
-
-  RESULT: undefined
+  RESULT: :undefined
 
 DESCRIPTION:
 
@@ -50,12 +46,10 @@ DESCRIPTION:
   See http://ccl.northwestern.edu/netlogo/docs/dictionary.html#display"
  nil)
 
-(defun reset-ticks ()
+(defcommand reset-ticks ()
  "RESET-TICKS => RESULT
 
-ARGUMENTS AND VALUES:
-
-  RESULT: undefined
+  RESULT: :undefined
 
 DESCRIPTION:
 
@@ -64,12 +58,10 @@ DESCRIPTION:
   See http://ccl.northwestern.edu/netlogo/docs/dictionary.html#reset-ticks"
  (setf *ticks* 0d0))
 
-(defun tick ()
+(defcommand tick ()
  "RESET-TICKS => RESULT
 
-ARGUMENTS AND VALUES:
-
-  RESULT: undefined
+  RESULT: :undefined
 
 DESCRIPTION:
 
