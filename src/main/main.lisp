@@ -129,6 +129,64 @@ DESCRIPTION:
            prim)) prims)))
     :undefined)))
 
+(defun nlogo->lisp (str pkg-symb boot-fn &key (seed 15) initialize-interface netlogo-callback-fn)
+ (let*
+  ((model (clnl-model:read-from-nlogo str))
+   (shadow-symbs
+    (remove nil
+     (mapcar
+      (lambda (proc-symb)
+       (multiple-value-bind (found external) (find-symbol (symbol-name proc-symb) :cl)
+        (when (and found (eql :external external)) proc-symb)))
+      (mapcar #'car
+       (clnl-code-parser:procedures
+        (clnl-code-parser:parse
+         (clnl-lexer:lex (clnl-model:code model))
+         (clnl-model:widget-globals model))))))))
+  (eval
+   `(progn
+     (defpackage ,pkg-symb (:use :common-lisp) (:shadow ,@shadow-symbs))
+     (,(intern "IN-PACKAGE" :cl) ,pkg-symb) ; intern because of style check
+     (cons
+      `(defpackage ,,pkg-symb (:use :common-lisp) (:shadow ,,@shadow-symbs))
+      (let
+       ((clnl:*model-package* (find-package ,pkg-symb)))
+       (clnl:model->multi-form-lisp
+        ,model
+        (intern (symbol-name ',boot-fn) ,pkg-symb)
+        :seed ,seed
+        :initialize-interface ,initialize-interface
+        :netlogo-callback-fn ,netlogo-callback-fn)))))))
+
+(setf (documentation 'nlogo->lisp 'function)
+ "NLOGO->LISP STR PKG-SYMB BOOT-FN &key SEED INITIALIZE-INTERFACE NETLOGO-CALLBACK-FN => FORMS
+
+ARGUMENTS AND VALUES:
+
+  STR: A stream holding an nlogo file
+  PKG-SYMB: A symbol for the generated package
+  BOOT-FN: A function name
+  SEED: An integer, defaults to 15
+  INITIALIZE-INTERFACE: A boolean
+  NETLOGO-CALLBACK-FN: a symbol
+  FORMS: A list of common lisp form
+
+DESCRIPTION:
+
+  NLOGO->LISP takes a stream STR and returns a multi form lisp program,
+  that when executed, sets up the model.  See MODEL->MULTI-FORM-LISP for
+  more information.
+
+  NLOGO->LISP does extra work of setting up the package to be named by
+  PKG-SYMB in order to correctly shadow common lisp functions.
+
+  It will also change the current package to the one created for the model
+  named by PKG-SYMB.
+
+EXAMPLES:
+
+  (with-open-file (str \"Wolf Sheep Predation.nlogo\") (nlogo->lisp str :wolfsheep 'boot)) => (forms)")
+
 (defun model->single-form-lisp (model &key (seed 15) initialize-interface netlogo-callback)
  (multiple-value-bind
   (code-ast prims)

@@ -31,5 +31,5 @@ DESCRIPTION:
     (:|:LOAD|
      (concatenate 'string
       ":load <filename> loads up a model into the current clnl instance."
-      " Try :load \"resources/models/Wolf Sheep Predation.nlogo\""))
+      " Try :load \"Wolf Sheep Predation.nlogo\""))
     (t (format nil "Don't have help for ~S" token))))))

@@ -1,7 +1,8 @@
 (defpackage #:clnl (:use :common-lisp)
  (:export
   #:run #:boot #:run-commands #:run-reporter #:*model-package*
-  #:model->multi-form-lisp #:model->single-form-lisp)
+  #:model->multi-form-lisp #:model->single-form-lisp
+  #:nlogo->lisp)
  (:documentation
   "Main CLNL package
 
