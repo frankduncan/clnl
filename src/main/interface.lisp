@@ -6,6 +6,8 @@
 (defvar *glut-window-opened* nil)
 (defvar *dimensions* nil)
 
+(defvar *default-shapes* nil)
+
 ; For now, shapes can live in here
 ; header is
 ; * name <like default>
@@ -182,6 +184,10 @@
 (defun default-shapes ()
  (with-open-file (str "resources/defaultshapes") (parse-shapes str)))
 
+(eval-when (:load-toplevel)
+ (when (probe-file "resources/defaultshapes")
+  (setf *default-shapes* (default-shapes))))
+
 (defvar *colors*
  '((140 140 140) ; gray       (5)
    (215 48 39) ; red       (15)
@@ -290,7 +296,7 @@
       (gl:translate -150d0 -150d0 -0.0d0)
       (mapcar #'element->gl-list (getf shape :elements)))
      turtle-list))
-   (default-shapes))))
+   (or *default-shapes* (default-shapes)))))
 
 (defun set-patch-list ()
  (setf *patch-list* (gl:gen-lists 1))

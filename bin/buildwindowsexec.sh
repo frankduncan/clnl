@@ -45,8 +45,9 @@ escaped_cur_dir=${cur_dir//\\/\\\\}
 
 sbcl --no-sysinit --no-userinit \
   --eval "(require 'asdf)" \
-  --eval "(asdf:initialize-source-registry '(:source-registry (:tree \"${escaped_cur_dir}\\\\tmp\\\\deps\") (:directory \"${escaped_cur_dir}\\\\src\\\\main\") :IGNORE-INHERITED-CONFIGURATION))" \
+  --eval "(asdf:initialize-source-registry '(:source-registry (:tree \"${escaped_cur_dir}\\\\tmp\\\\deps\") (:tree \"${escaped_cur_dir}\\\\src\\\\main\") :IGNORE-INHERITED-CONFIGURATION))" \
   --eval "(asdf:load-system :clnl)" \
+  --eval "(asdf:load-system :clnl-extension-cli)" \
   --eval "(asdf:clear-output-translations)" \
   --eval '(sb-ext:save-lisp-and-die "clnl.exe" :executable t :toplevel (function clnl:run))'
 

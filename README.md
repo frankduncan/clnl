@@ -4,11 +4,18 @@ This is an experiment at creating an alternate implementation of NetLogo in Comm
 
 See the [wiki](https://github.com/frankduncan/clnl/wiki) for more information.
 
+# Using standalone executables
+
+Find the latest version, [0.1.0](https://github.com/frankduncan/clnl/releases/tag/v0.1.0) on the [releases page](https://github.com/frankduncan/clnl/releases):
+* [linux](https://github.com/frankduncan/clnl/releases/download/v0.1.0/clnl)
+* [windows](https://github.com/frankduncan/clnl/releases/download/v0.1.0/clnl.exe)
+* [mac](https://github.com/frankduncan/clnl/releases/download/v0.1.0/CLNL.dmg)
+
 # Running from source
 
 If you'd like to run it from source, you're going to need a few things:
 
-* A copy of the clnl source (either from the [releases page](https://github.com/frankduncan/clnl/releases) or via cloning)
+* A copy of the clnl source (either from the [releases page](https://github.com/frankduncan/clnl/releases), version [0.1.0](https://github.com/frankduncan/clnl/releases/download/v0.1.0/clnl_0.1.0.tar.gz) or via cloning)
 * An implementation of sbcl with threads enabled
 * The following common lisp libraries (included in [deps/common-lisp](deps/common-lisp) folder)
   * alexandria
@@ -49,7 +56,3 @@ If you'd like to run using your own sbcl instance, you can attach the clnl.asd f
 (asdf:load-system :clnl)
 (clnl:run)
 ```
-
-# Using standalone executables
-
-See the [releases page](https://github.com/frankduncan/clnl/releases) for the most recent release.

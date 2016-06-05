@@ -35,8 +35,9 @@ mkdir -p tmp/deps/
 
 SBCL_HOME="" tmp/sbcl/bin/sbcl --core tmp/sbcl/lib/sbcl/sbcl.core --no-sysinit --no-userinit \
   --eval "(require 'asdf)" \
-  --eval "(asdf:initialize-source-registry '(:source-registry (:tree \"${PWD}/tmp/deps\") (:directory \"${PWD}/src/main\") :IGNORE-INHERITED-CONFIGURATION))" \
+  --eval "(asdf:initialize-source-registry '(:source-registry (:tree \"${PWD}/tmp/deps\") (:tree \"${PWD}/src/main\") :IGNORE-INHERITED-CONFIGURATION))" \
   --eval "(asdf:load-system :clnl)" \
+  --eval "(asdf:load-system :clnl-extension-cli)" \
   --eval "(asdf:clear-output-translations)" \
   --eval '(sb-ext:save-lisp-and-die "osxsbcl" :executable t :toplevel (function clnl:run))' \
 

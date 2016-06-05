@@ -17,5 +17,6 @@ generatedoc :clnl-cli > wiki/DocsOtherPackages.md
 generatedoc :clnl-lexer >> wiki/DocsOtherPackages.md
 generatedoc :clnl-parser >> wiki/DocsOtherPackages.md
 generatedoc :clnl-transpiler >> wiki/DocsOtherPackages.md
-generatedoc :clnl-random >> wiki/DocsOtherPackages.md
+generatedoc :clnl-code-parser >> wiki/DocsOtherPackages.md
 generatedoc :clnl-model >> wiki/DocsOtherPackages.md
+generatedoc :clnl-random >> wiki/DocsOtherPackages.md

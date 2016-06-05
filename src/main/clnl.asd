@@ -1,6 +1,6 @@
 (asdf:defsystem clnl
  :name "Experiment"
- :version "0.0.0"
+ :version "0.1.0"
  :maintainer "Frank Duncan (frank@kank.com)"
  :author "Frank Duncan (frank@kank.com)"
  :components ((:file "package")
