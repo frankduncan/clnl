@@ -130,3 +130,8 @@ end"
 (defmodelfiletest "Wolf Sheep 2" "resources/models/Wolf Sheep Predation.nlogo"
  "set grass? not grass? setup go go go go go go go go go go go go go go"
  "FC38F01DC0058C5EFF93F2228535ED7C616ECFF0")
+
+(defmodelfiletest "Fire 1" "resources/models/Fire.nlogo"
+ "setup go go go go go go go go go go go go go go"
+ "EDFD37E1EDC7B32499040274980756B68897F9FA")
+
