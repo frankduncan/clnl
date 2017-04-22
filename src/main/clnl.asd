@@ -25,6 +25,5 @@
               (:file "transpile")
               (:file "random")
               (:file "interface")
-              (:file "cli")
               (:file "main"))
- :depends-on #-travis(:cl-ppcre :mt19937 :cl-opengl :cl-glu :cl-glut :cl-charms :ieee-floats :strictmath) #+travis nil)
+ :depends-on #-travis(:cl-ppcre :mt19937 :cl-opengl :cl-glu :cl-glut :ieee-floats :strictmath :clnl-gltk) #+travis nil)

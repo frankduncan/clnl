@@ -13,7 +13,6 @@ generatedoc() {
 generatedoc :clnl > wiki/DocsMain.md
 generatedoc :clnl-nvm > wiki/DocsNvm.md
 generatedoc :clnl-interface > wiki/DocsOtherPackages.md
-generatedoc :clnl-cli > wiki/DocsOtherPackages.md
 generatedoc :clnl-lexer >> wiki/DocsOtherPackages.md
 generatedoc :clnl-parser >> wiki/DocsOtherPackages.md
 generatedoc :clnl-transpiler >> wiki/DocsOtherPackages.md

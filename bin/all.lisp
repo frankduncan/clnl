@@ -19,16 +19,20 @@
  (sb-ext:exit :code 1))
 (format t "~c[1;32m- Style Passed!~c[0m~%" #\Esc #\Esc)
 
+(sb-ext:gc :full t)
+
 (when (not (find-package :docgen)) (asdf:load-system :docgen))
 (format t "~%~c[1;33mChecking Docs~c[0m~%" #\Esc #\Esc)
 (when (not (docgen:pretty-print-validate-packages
             :clnl :clnl-parser :clnl-random :clnl-transpiler :clnl-nvm
-            :clnl-lexer :clnl-interface :clnl-cli :clnl-model :clnl-code-parser
+            :clnl-lexer :clnl-interface :clnl-model :clnl-code-parser
             :clnl-extensions
             :clnl-extension-cli))
  (format t "~c[1;31mFailed doc check!~c[0m~%" #\Esc #\Esc)
  (sb-ext:exit :code 1))
 (format t "~c[1;32m- Doc Check Passed!~c[0m~%" #\Esc #\Esc)
+
+(sb-ext:gc :full t)
 
 (format t "~c[1;30m--------------~c[0m~%" #\Esc #\Esc)
 (format t "~c[1;32mBuild Success!~c[0m~%" #\Esc #\Esc)

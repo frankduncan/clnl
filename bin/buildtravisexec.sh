@@ -24,8 +24,8 @@ mkdir -p tmp/deps/
   tar zxf ../../deps/common-lisp/mt19937-latest.tar.gz &&
   tar zxf ../../deps/common-lisp/nibbles-v0.12.tar.gz &&
   tar zxf ../../deps/common-lisp/trivial-features_0.8.tar.gz &&
-  tar zxf ../../deps/common-lisp/cl-charms-9bb94ef.tar.gz &&
   tar zxf ../../deps/common-lisp/style-checker_0.1.tar.gz &&
+  tar zxf ../../deps/common-lisp/clnl-gltk_0.1.tar.gz &&
   tar zxf ../../deps/common-lisp/docgen_0.3.tar.gz &&
   tar zxf ../../deps/common-lisp/ieee-floats-92e481a.tar.gz &&
   tar zxf ../../deps/common-lisp/strictmath_0.1.tar.gz
@@ -38,9 +38,9 @@ SBCL_HOME="" tmp/sbcl/bin/sbcl --core tmp/sbcl/lib/sbcl/sbcl.core \
   --eval "(asdf:load-system :cl-ppcre)" \
   --eval "(asdf:load-system :mt19937)" \
   --eval "(asdf:load-system :ironclad)" \
+  --eval "(asdf:load-system :clnl-gltk)" \
   --eval "(asdf:load-system :cl-opengl)" \
   --eval "(asdf:load-system :cl-glut)" \
-  --eval "(asdf:load-system :cl-charms)" \
   --eval "(asdf:load-system :style-checker)" \
   --eval "(asdf:load-system :docgen)" \
   --eval "(asdf:load-system :strictmath)" \

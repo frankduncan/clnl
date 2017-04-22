@@ -21,7 +21,7 @@ If you'd like to run it from source, you're going to need a few things:
   * alexandria
   * babel
   * cffi
-  * cl-charms
+  * clnl-gltk
   * cl-opengl
   * cl-ppcre
   * ironclad
@@ -31,7 +31,7 @@ If you'd like to run it from source, you're going to need a few things:
   * strictmath
   * ieee-floats
 
-[bin/nl](bin/nl) and [bin/run.lisp](bin/run.lisp) have been added for convenience to run the netlogo instance.  It boots up the ncurses command line with an opengl view.  Not very many commands are implemented, but it should alert you to that.  A good test is
+[bin/nl](bin/nl) and [bin/run.lisp](bin/run.lisp) have been added for convenience to run the netlogo instance.  Not very many commands are implemented, but it should alert you to that.  A good test is
 
 ```
 crt 10
@@ -46,7 +46,7 @@ In order to run on OSX, you may have to build your own sbcl instance with thread
 
 ## Running on Windows
 
-In order to run on Windows, you will need to install a copy of 32bit sbcl with threads enabled, as well as putting a copy of freeglut and pdcurses in that directory.  See [bin/buildwindowsexec.sh](bin/buildwindowsexec.sh) for how it's done when releasing/testing.
+In order to run on Windows, you will need to install a copy of 32bit sbcl with threads enabled, as well as putting a copy of freeglut in that directory.  See [bin/buildwindowsexec.sh](bin/buildwindowsexec.sh) for how it's done when releasing/testing.
 
 # Running in a common lisp instance
 

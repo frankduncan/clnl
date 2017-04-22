@@ -16,7 +16,6 @@ DESCRIPTION:
   (list :name :help :type :command :args '((:token :optional)) :precedence 20 :func #'help)))
 
 (defun shut-down ()
- (cl-charms/low-level:endwin)
  (sb-ext:exit :abort t))
 
 (defun load-file (file)

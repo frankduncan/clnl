@@ -18,14 +18,10 @@ if [ ! -e "$sbcl_dir/freeglut.dll" ] ; then
   exit 1
 fi
 
-if [ ! -e "$sbcl_dir/pdcurses.dll" ] ; then
-  echo "Please copy deps/windows/pdcurses.dll into $sbcl_dir"
-  exit 1
-fi
-
 mkdir -p tmp/deps/
 
 ( cd tmp/deps &&
+  tar zxf ../../deps/common-lisp/clnl-gltk_0.1.tar.gz &&
   tar zxf ../../deps/common-lisp/3b-cl-opengl-993d627.tar.gz &&
   tar zxf ../../deps/common-lisp/alexandria-b1c6ee0.tar.gz &&
   tar zxf ../../deps/common-lisp/babel_0.5.0.tar.gz &&
@@ -35,7 +31,6 @@ mkdir -p tmp/deps/
   tar zxf ../../deps/common-lisp/mt19937-latest.tar.gz &&
   tar zxf ../../deps/common-lisp/nibbles-v0.12.tar.gz &&
   tar zxf ../../deps/common-lisp/trivial-features_0.8.tar.gz &&
-  tar zxf ../../deps/common-lisp/cl-charms-9bb94ef.tar.gz &&
   tar zxf ../../deps/common-lisp/ieee-floats-92e481a.tar.gz &&
   tar zxf ../../deps/common-lisp/strictmath_0.1.tar.gz
 )

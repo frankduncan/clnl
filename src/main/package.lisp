@@ -83,16 +83,6 @@ The NetLogo view interface using opengl.  This is responsible for taking the
 current state of the enging and displaying it.  Will not house any interface
 components."))
 
-(defpackage #:clnl-cli
- (:use :common-lisp :cl-charms/low-level)
- (:export #:run)
- (:documentation
-  "CLNL CLI
-
-The main NetLogo interface for interacting with the program.  Since CLNL is
-a command line interface program with a view for display purposes only, this
-is where all the features that the traditional NetLogo UI lives."))
-
 (defpackage #:clnl-model
  (:use :common-lisp)
  (:export #:default-model #:read-from-nlogo #:world-dimensions #:widget-globals #:code)

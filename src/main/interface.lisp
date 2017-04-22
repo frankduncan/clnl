@@ -5,8 +5,13 @@
 
 (defvar *glut-window-opened* nil)
 (defvar *dimensions* nil)
+(defvar *window-width* 1024)
+(defvar *window-height* 768)
 
 (defvar *default-shapes* nil)
+
+(defvar *textbox* nil)
+(defvar *inputbox* nil)
 
 ; For now, shapes can live in here
 ; header is
@@ -214,70 +219,130 @@
    (nth (floor color 10) *colors*))))
 
 (defun render-scene ()
- (gl:clear :color-buffer-bit :depth-buffer-bit)
  (gl:matrix-mode :projection)
- (gl:load-identity)
- (gl:ortho
-  (floor (* (- (getf *dimensions* :xmin) 0.5) (patch-size)))
-  (floor (* (+ (getf *dimensions* :xmax) 0.5) (patch-size)))
-  (floor (* (- (getf *dimensions* :ymin) 0.5) (patch-size)))
-  (floor (* (+ (getf *dimensions* :ymax) 0.5) (patch-size)))
-  0 5000)
- (gl:matrix-mode :modelview)
- (gl:load-identity)
- (destructuring-bind (turtles patches) (clnl-nvm:current-state)
-  (mapcar
-   (lambda (patch)
-    (let
-     ((color (nl-color->rgb (getf patch :color))))
-     (gl:color (car color) (cadr color) (caddr color)))
-    (gl:with-pushed-matrix
-     (gl:translate (* (getf patch :xcor) (patch-size)) (* (getf patch :ycor) (patch-size)) 0)
-     (gl:translate (floor (* -.5d0 (patch-size))) (floor (* -.5d0 (patch-size))) 0)
-     (gl:scale (patch-size) (patch-size) 1)
-     (gl:call-list *patch-list*)))
-   patches)
-  (mapcar
-   (lambda (turtle)
-    (let
-     ((color (nl-color->rgb (getf turtle :color))))
-     (gl:color (car color) (cadr color) (caddr color)))
+ (gl:with-pushed-matrix
+  (gl:load-identity)
+  (gl:ortho
+   (floor (* (- (getf *dimensions* :xmin) 0.5) (patch-size)))
+   (floor (* (+ (getf *dimensions* :xmax) 0.5) (patch-size)))
+   (floor (* (- (getf *dimensions* :ymin) 0.5) (patch-size)))
+   (floor (* (+ (getf *dimensions* :ymax) 0.5) (patch-size)))
+   0 5000)
+  (gl:matrix-mode :modelview)
+  (gl:with-pushed-matrix
+   (gl:load-identity)
+   (destructuring-bind (turtles patches) (clnl-nvm:current-state)
     (mapcar
-     (lambda (x-modification y-modification)
+     (lambda (patch)
+      (let
+       ((color (nl-color->rgb (getf patch :color))))
+       (gl:color (car color) (cadr color) (caddr color)))
       (gl:with-pushed-matrix
-       (gl:translate (* (getf turtle :xcor) (patch-size)) (* (getf turtle :ycor) (patch-size)) 0)
-       (gl:translate x-modification y-modification 0)
-       (let
-        ((turtle-list (find (getf turtle :shape) *turtle-lists* :test #'string= :key #'car)))
-        (when turtle-list
-         (when (second turtle-list)
-          (gl:rotate (getf turtle :heading) 0 0 -1))
-         (gl:scale (patch-size) (patch-size) 1)
-         (gl:scale (getf turtle :size) (getf turtle :size) 1)
-         (gl:call-list (third turtle-list))))))
-     (list 0 (1- (world-width-in-pixels)) (- (1- (world-width-in-pixels))) 0 0)
-     (list 0 0 0 (1- (world-height-in-pixels)) (- (1- (world-height-in-pixels))))))
-   turtles))
+       (gl:translate (* (getf patch :xcor) (patch-size)) (* (getf patch :ycor) (patch-size)) 0)
+       (gl:translate (floor (* -.5d0 (patch-size))) (floor (* -.5d0 (patch-size))) 0)
+       (gl:scale (patch-size) (patch-size) 1)
+       (gl:call-list *patch-list*)))
+     patches)
+    (mapcar
+     (lambda (turtle)
+      (let
+       ((color (nl-color->rgb (getf turtle :color))))
+       (gl:color (car color) (cadr color) (caddr color)))
+      (mapcar
+       (lambda (x-modification y-modification)
+        (gl:with-pushed-matrix
+         (gl:translate (* (getf turtle :xcor) (patch-size)) (* (getf turtle :ycor) (patch-size)) 0)
+         (gl:translate x-modification y-modification 0)
+         (let
+          ((turtle-list (find (getf turtle :shape) *turtle-lists* :test #'string= :key #'car)))
+          (when turtle-list
+           (when (second turtle-list)
+            (gl:rotate (getf turtle :heading) 0 0 -1))
+           (gl:scale (patch-size) (patch-size) 1)
+           (gl:scale (getf turtle :size) (getf turtle :size) 1)
+           (gl:call-list (third turtle-list))))))
+       (list 0 (1- (world-width-in-pixels)) (- (1- (world-width-in-pixels))) 0 0)
+       (list 0 0 0 (1- (world-height-in-pixels)) (- (1- (world-height-in-pixels))))))
+     turtles)))
+  (gl:matrix-mode :projection))
  (gl:flush))
 
+(defun render-widgets ()
+ (clnl-gltk:render *textbox*)
+ (clnl-gltk:render *inputbox*))
+
+(defun render ()
+ (gl:clear :color-buffer-bit :depth-buffer-bit)
+ (let
+  ((width (world-width-in-pixels))
+   (height (world-height-in-pixels)))
+  (gl:viewport 0 0 *window-width* *window-height*)
+
+  (gl:matrix-mode :projection)
+  (gl:with-pushed-matrix
+   (gl:load-identity)
+   (gl:ortho 0 *window-width* 0 *window-height* 0 5000)
+   (render-widgets)
+
+   (gl:begin :lines)
+   (gl:vertex (- *window-width* width 10) (- *window-height* height 10))
+   (gl:vertex (- *window-width* width 10) (- *window-height* 9))
+
+   (gl:vertex (- *window-width* width 10) (- *window-height* 9))
+   (gl:vertex (- *window-width* 9) (- *window-height* 9))
+
+   (gl:vertex (- *window-width* 9) (- *window-height* 9))
+   (gl:vertex (- *window-width* 9) (- *window-height* height 10))
+
+   (gl:vertex (- *window-width* 9) (- *window-height* height 10))
+   (gl:vertex (- *window-width* width 10) (- *window-height* height 10))
+   (gl:end))
+
+  (gl:viewport (- *window-width* width 10) (- *window-height* height 10) width height)
+  (render-scene)))
+
 (defun display ()
- (render-scene)
+ (render)
  (cl-glut:swap-buffers))
 
 (defun idle ()
  (cl-glut:post-redisplay))
 
 (defun close-func ()
+ ;(glut:leave-main-loop)
  (sb-ext:exit :abort t))
 
 (defun reshape (width height)
  (when (and (/= 0 width) (/= 0 height))
-  (gl:viewport 0 0 width height)))
+  (setf *window-width* width)
+  (setf *window-height* height)
+  (let
+   ((box-width (truncate (- width 12) clnl-gltk:*font-width*)))
+   (clnl-gltk:resize *textbox* box-width 12)
+   (clnl-gltk:resize *inputbox* box-width 1))))
+
+(defun execute (str)
+ (handler-case
+  (with-output-to-string (*standard-output*)
+   (clnl:run-commands str))
+  (error (e) (format nil "Ok, something went wrong: ~A~%Try :help" e))))
+
+(defun key-pressed (key x y)
+ (declare (ignore x y))
+ (if (eql key 13)
+  (let*
+   ((cmd (clnl-gltk:value *inputbox*))
+    (resp (execute cmd)))
+   (setf (clnl-gltk:textbox-text *textbox*) (format nil "> ~A~%~%~A" cmd resp))
+   (clnl-gltk:clear *inputbox*))
+  (clnl-gltk:key-pressed *inputbox* key)))
 
 (cffi:defcallback display :void () (display))
 (cffi:defcallback idle :void () (idle))
 (cffi:defcallback close-func :void () (close-func))
 (cffi:defcallback reshape :void ((width :int) (height :int)) (reshape width height))
+(cffi:defcallback key-pressed :void ((key :uchar) (x :int) (y :int)) (key-pressed key x y))
+(cffi:defcallback special-key-pressed :void ((key glut:special-keys) (x :int) (y :int)) (key-pressed key x y))
 
 (defun set-turtle-lists ()
  (setf
@@ -308,6 +373,20 @@
   (gl:vertex 1 0 0)
   (gl:end)))
 
+(defvar *initial-banner*
+ "
+     / \\
+    /   \\     Welcome to CLNL version ~A!
+   /     \\
+  /_______\\
+
+CLNL is an experiment at creating an alternate implementation of NetLogo.
+
+You can enter in various netlogo commands below, or use :q to quit the program.
+
+See http://github.com/frankduncan/clnl for more information about CLNL and to
+keep apprised of any updates that may happen.")
+
 (defun initialize (&key dims)
  "INITIALIZE &key DIMS => RESULT
 
@@ -328,9 +407,7 @@ DESCRIPTION:
   the interface lives.  From here, one can go into headless or running
   mode, but for certain things this interface will still need to act,
   and also allows for bringing up and taking down of visual elements."
- (setf *dimensions* dims)
- (when *glut-window-opened*
-  (cl-glut:reshape-window (world-width-in-pixels) (world-height-in-pixels))))
+ (setf *dimensions* dims))
 
 (defun run ()
  "RUN => RESULT
@@ -350,9 +427,7 @@ DESCRIPTION:
  ; want to investigate until simply ignoring them becomes a problem.
  (sb-int:with-float-traps-masked (:invalid :inexact :divide-by-zero :overflow :underflow)
   (cl-glut:init)
-  (cl-glut:init-window-size
-   (world-width-in-pixels)
-   (world-height-in-pixels))
+  (cl-glut:init-window-size *window-width* *window-height*)
   (cl-glut:init-display-mode :double :rgba)
   (cl-glut:create-window "CLNL Test Window")
   (setf *glut-window-opened* t)
@@ -361,8 +436,20 @@ DESCRIPTION:
   (glut:reshape-func (cffi:callback reshape))
   (cl-glut:idle-func (cffi:get-callback 'idle))
   (cl-glut:close-func (cffi:get-callback 'close-func))
+  (cl-glut:keyboard-func (cffi:get-callback 'key-pressed))
+  (cl-glut:special-func (cffi:get-callback 'special-key-pressed))
+  (gl:depth-func :lequal)
+  (gl:blend-func :src-alpha :one-minus-src-alpha)
+  (gl:enable :blend)
   (set-turtle-lists)
   (set-patch-list)
+  (clnl-gltk:setup)
+  (setf *textbox*
+   (clnl-gltk:textbox
+    5 (+ clnl-gltk:*font-height* 14)
+    10 12
+    (format nil *initial-banner* (asdf:component-version (asdf:find-system :clnl)))))
+  (setf *inputbox* (clnl-gltk:inputbox 5 5 10))
   (cl-glut:main-loop)))
 
 (defun patch-size () (getf *dimensions* :patch-size))
@@ -402,16 +489,7 @@ DESCRIPTION:
   (let
    ((fbo (first (gl:gen-framebuffers 1)))
     (render-buf (first (gl:gen-renderbuffers 1)))
-   ;(width
-   ; (floor (* (patch-size) (1+ (-
-   ;                             (getf *dimensions* :ymax)
-   ;                             (getf *dimensions* :ymin))))))
-   ;(height
-   ; (floor (* (patch-size) (1+ (- (getf *world-dims* :xmax) (getf *world-dims* :xmin))))))
-   ; (floor (* (patch-size) (1+ (-
-   ;                            (getf *dimensions* :xmax)
-   ;                            (getf *dimensions* :xmin)))))
-    (width (world-width-in-pixels))  ; Hard coded for now, yay v1 (if you see this comment in a year, please cry for me)
+    (width (world-width-in-pixels))
     (height (world-height-in-pixels)))
    (gl:bind-framebuffer :framebuffer fbo)
    (gl:bind-renderbuffer :renderbuffer render-buf)
