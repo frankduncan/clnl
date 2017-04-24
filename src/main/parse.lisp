@@ -68,7 +68,8 @@ DESCRIPTION:
   lowest precedence, and all reporters should have 10 as the precedence.
 
   The possible values for ARG are :agentset, :boolean, :number, :command-block,
-  or t for wildcard.
+  :string, or t for wildcard.  For optional arguments, ARG can be a list of the form
+  (ARG :optional) where ARG is one of the aforementioned values.
 
   The need for a parser between the lexer and the transpiler is because NetLogo
   needs two passes to turn into something that can be used.  This is the only entry

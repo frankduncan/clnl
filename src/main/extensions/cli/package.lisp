@@ -1,6 +1,5 @@
 (defpackage #:clnl-extension-cli
  (:use :common-lisp)
- (:export #:prims)
  (:documentation
   "CLI Extension
 

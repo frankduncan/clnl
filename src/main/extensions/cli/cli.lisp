@@ -1,19 +1,13 @@
 (in-package #:clnl-extension-cli)
 
-(defun prims ()
- "PRIMS => PRIMS
-
-ARGUMENTS AND VALUES:
-
-  PRIMS: Primitives defined for this extension
-
-DESCRIPTION:
-
-  PRIMS returns the primitives used in the CLI extension."
+(defmethod clnl-extensions:prims ((extension (eql :cli)))
  (list
   (list :name :q :type :command :func #'shut-down)
   (list :name :load :type :command :args '(t) :func #'load-file)
-  (list :name :help :type :command :args '((:token :optional)) :precedence 20 :func #'help)))
+  (list :name :help :type :command :args '((:token :optional)) :precedence 20 :func #'help)
+  (list
+   :name :button :type :command :args '(:string (:optional :number))
+   :precedence 20 :func #'clnl-model:execute-button)))
 
 (defun shut-down ()
  (sb-ext:exit :abort t))

@@ -85,7 +85,7 @@ components."))
 
 (defpackage #:clnl-model
  (:use :common-lisp)
- (:export #:default-model #:read-from-nlogo #:world-dimensions #:widget-globals #:code)
+ (:export #:execute-button #:default-model #:read-from-nlogo #:world-dimensions #:widget-globals #:code)
  (:documentation
   "CLNL Model
 
@@ -96,7 +96,7 @@ as clnl runs."))
 
 (defpackage #:clnl-extensions
  (:use :common-lisp)
- (:export #:load-extension)
+ (:export #:load-extension #:prims)
  (:documentation
   "CLNL Extensions
 

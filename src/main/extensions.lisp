@@ -1,5 +1,27 @@
 (in-package #:clnl-extensions)
 
+(defgeneric prims (extension)
+ (:documentation
+  "PRIMS EXTENSION => PRIMS
+
+  PRIMS: PRIM*
+  PRIM: (:name NAME :type TYPE :args ARGS :func FUNC)
+  TYPE: :command | :reporter
+  ARGS: ARG*
+
+ARGUMENTS AND VALUES:
+
+  EXTENSION: a symbol in the keyword package representing this extension
+  NAME: a symbol in the keyword package
+  FUNC: the function to call
+  ARG: a list of symbols denoting the type of argument
+
+DESCRIPTION:
+
+  PRIMS returns the primitives used in the extension passed in.
+
+  See CLNL-PARSER:PARSE for more information on the PRIM returned."))
+
 (defun load-extension (extension)
  "LOAD-EXTENSION EXTENSION => PRIMS
 
@@ -22,28 +44,25 @@ DESCRIPTION:
   (let
    ((pkg (find-package name)))
    (when (or (not pkg)) (error "Can't find package with extension name: ~A" name))
-   (multiple-value-bind (symb status) (find-symbol "PRIMS" pkg)
-    (when (not symb) (error "Can't find PRIMS function within extension: ~A" name))
-    (when (not (eql status :external)) (error "PRIMS function is not external in extension: ~A" name))
-    (when (not (and (fboundp symb) (not (macro-function symb)) (not (special-operator-p symb))))
-     (error "PRIMS is not a function in ~A" name))
-    (mapcar
-     (lambda (prim)
-      (when (not (getf prim :name)) (error "Prim requires a name: ~A ~A" name prim))
-      (let
-       ((type (getf prim :type)))
-       (when (or (not type) (not (find type '(:reporter :command))))
-        (error "Prim type invalid, needs to be :reporter or :command: ~A ~A ~A" name prim type)))
-      (when (not (getf prim :func))
-       (error "Prim needs a func: ~A ~A" name prim))
-      (list
-       :name (intern
-              (format nil "~A:~A"
-               (if (eql extension :cli) "" (string-upcase extension))
-               (string-upcase (getf prim :name)))
-              :keyword)
-       :type (getf prim :type)
-       :precedence (or (getf prim :precedence) (if (eql :reporter (getf prim :type)) 10 0))
-       :args (getf prim :args)
-       :func (getf prim :func)))
-     (funcall (symbol-function symb)))))))
+   (when (not (compute-applicable-methods #'prims (list extension)))
+    (error "Can't find implemented PRIMS method within extension: ~A" name))
+   (mapcar
+    (lambda (prim)
+     (when (not (getf prim :name)) (error "Prim requires a name: ~A ~A" name prim))
+     (let
+      ((type (getf prim :type)))
+      (when (or (not type) (not (find type '(:reporter :command))))
+       (error "Prim type invalid, needs to be :reporter or :command: ~A ~A ~A" name prim type)))
+     (when (not (getf prim :func))
+      (error "Prim needs a func: ~A ~A" name prim))
+     (list
+      :name (intern
+             (format nil "~A:~A"
+              (if (eql extension :cli) "" (string-upcase extension))
+              (string-upcase (getf prim :name)))
+             :keyword)
+      :type (getf prim :type)
+      :precedence (or (getf prim :precedence) (if (eql :reporter (getf prim :type)) 10 0))
+      :args (getf prim :args)
+      :func (getf prim :func)))
+    (prims extension)))))

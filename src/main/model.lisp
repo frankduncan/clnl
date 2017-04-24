@@ -196,6 +196,29 @@ DESCRIPTION:
       (when parser (funcall (cadr parser) widget-as-strings))))
     widgets-as-strings))))
 
+; With authoring, idx here needs to be looked at again.
+(defun execute-button (name &optional (idx 0))
+ "EXECUTE-BUTTON NAME &optional IDX => RESULT
+
+ARGUMENTS AND VALUES:
+
+  NAME: the name of the button
+  IDX: the instance of the button, defaults to 0
+  RESULT: undefined
+
+DESCRIPTION:
+
+  Executes the code in the button referenced by NAME and IDX.
+
+  NAME refers to the display name for the button, which is usually
+  set by the model, but sometimes defaults to the code inside.
+
+  Because NAME is not guaranteed to be unique, IDX is available
+  as a specifier.  The index is in the order that the buttons are
+  loaded, and cannot be guaranteed to be stable from run to run."
+ (declare (ignore name idx))
+ nil)
+
 ;; INFORMATION ABOUT MODEL
 
 (defun world-dimensions (model)
