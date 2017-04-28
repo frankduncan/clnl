@@ -193,21 +193,33 @@ DESCRIPTION:
   (error "Can't have a prim that wants a token and has a precedence of less than 20: ~A" prim))
  (let*
   ((args (if (prim-is-infix prim) (cdr (prim-args prim)) (prim-args prim)))
-   (half-parsed-remainder (parse-internal (cdr lexed-ast) :remaining-args (append args (list :done-with-args))))
+   (half-parsed-remainder
+    (parse-internal (cdr lexed-ast) :remaining-args (append args (list :done-with-args))))
    (breakpoint (or
                 (position-if (lambda (form) (or (not (listp form)) (not (eql :arg (car form))))) half-parsed-remainder)
                 (length half-parsed-remainder)))
    (already-parsed-limbo-forms
     (subseq half-parsed-remainder breakpoint (min (length args) (length half-parsed-remainder))))
+   (num-optional-forms (- (length args) breakpoint))
    (middle-forms
     (cons
      (if
       (prim-is-infix prim)
-      (reconfigure-due-to-precedence prev-item prim (mapcar #'cadr (subseq half-parsed-remainder 0 breakpoint)))
+      ; There's a potential bug here about infix operators with optional forms, where the first item is optional
+      ; I don't consider that super likely though...
+      (append
+       (reconfigure-due-to-precedence prev-item prim (mapcar #'cadr (subseq half-parsed-remainder 0 breakpoint)))
+       (loop :repeat num-optional-forms :collect :optional))
       (cons
        (prim-name prim)
-       (mapcar #'cadr (subseq half-parsed-remainder 0 breakpoint))))
-     already-parsed-limbo-forms)))
+       (append
+        (mapcar #'cadr (subseq half-parsed-remainder 0 breakpoint))
+        (loop :repeat num-optional-forms :collect :optional)))) ; we save the place for optionals for the transpiler
+     already-parsed-limbo-forms)));)
+  (let
+   ((arg-at-bp (nth breakpoint args)))
+   (when (and arg-at-bp (or (not (listp arg-at-bp)) (not (find :optional arg-at-bp))))
+    (error "Stopped collecting arguments, but non optional arguments remain")))
   (append
    (butlast middle-forms)
    (parse-internal

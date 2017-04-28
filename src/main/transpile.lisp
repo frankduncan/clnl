@@ -49,7 +49,6 @@ DESCRIPTION:
 
   Calling eval on that code should work correctly as long as you have a
   running engine."
-
  (let
   ((*dynamic-prims*
     (mapcar
@@ -58,11 +57,13 @@ DESCRIPTION:
        (append (list :func (getf prim :macro)) prim)
        (append (list :func (lambda (&rest args) `(funcall ,(getf prim :func) ,@args))) prim)))
      dynamic-prims)))
-  (cond
-   ((command-list-p parsed-ast) (transpile-commands parsed-ast))
-   ((and (listp parsed-ast) (= 1 (length parsed-ast)) (reporter-p (car parsed-ast)))
-    (transpile-reporter (car parsed-ast)))
-   (t (error "Is neither a list of commands nor a reporter: ~S" parsed-ast)))))
+  (let
+   ((deoptionalized-ast (deoptionalize parsed-ast)))
+   (cond
+    ((command-list-p deoptionalized-ast) (transpile-commands deoptionalized-ast))
+    ((and (listp deoptionalized-ast) (= 1 (length deoptionalized-ast)) (reporter-p (car deoptionalized-ast)))
+     (transpile-reporter (car deoptionalized-ast)))
+    (t (error "Is neither a list of commands nor a reporter: ~S" deoptionalized-ast))))))
 
 (defun command-list-p (parsed-ast)
  "COMMAND-LIST-P PARSED-AST => RESULT
@@ -76,9 +77,12 @@ DESCRIPTION:
 
   COMMAND-LIST-P returns whether the parsed-ast is a valid list
   of commands."
+ (every #'command-p parsed-ast))
+
+(defun command-p (parsed-ast)
  (and
-  (every #'listp parsed-ast)
-  (every #'prim-command-p (mapcar #'find-prim (mapcar #'car parsed-ast)))))
+  (listp parsed-ast)
+  (prim-command-p (find-prim (car parsed-ast)))))
 
 (defun reporter-p (parsed-ast)
  "REPORTER-P PARSED-AST => RESULT
@@ -92,6 +96,7 @@ DESCRIPTION:
 
   REPORTER-P returns whether the parsed-ast is a valid reporter."
  (and
+  (listp parsed-ast)
   (symbolp (car parsed-ast))
   (prim-reporter-p (find-prim (car parsed-ast)))))
 
@@ -100,6 +105,51 @@ DESCRIPTION:
 (defun transpile-commands (parsed-ast)
  `(progn
    ,@(transpile-commands-inner parsed-ast)))
+
+; This makes some assumptions about the precedence of optionality
+; Consider the following:
+; - command-1 <optional> <optional>
+; - reporter-1 <optional>
+;
+; And consider:
+; - command-1 reporter-1 "foo"
+;
+; Does the "foo" belong to command-1 or reporter-1?
+;
+; I'm not sure how netlogo answers this at this time, but for the purposes
+; of this deoptionalizer, "foo" belongs to reporter-1.  In the case that the
+; language tests treat this as incorrect, I'll fix it.  I'm not sure if this
+; case exists in the base netlogo language, and I don't feel like creating
+; a specific test case at this time to find out.
+(defun deoptionalize (parsed-ast)
+ (let
+  ((first-thing (car parsed-ast)))
+  (cond
+   ((not parsed-ast) nil)
+   ((not (listp first-thing)) (cons first-thing (deoptionalize (cdr parsed-ast))))
+   ((and
+     (find :optional first-thing)
+     (cadr parsed-ast)
+     (not (command-p (cadr parsed-ast))))
+    (let
+     ((deoptionalized-rest (deoptionalize (cdr parsed-ast)))
+      (optional-pos (position :optional first-thing)))
+     (deoptionalize
+      (cons
+       (append
+        (subseq first-thing 0 optional-pos)
+        (list (car deoptionalized-rest))
+        (subseq first-thing (1+ optional-pos)))
+       (cdr deoptionalized-rest)))))
+   ((find :optional first-thing)
+    (deoptionalize
+     (cons
+      (subseq first-thing 0 (position :optional first-thing))
+      (cdr parsed-ast))))
+   (t
+    (cons
+     (deoptionalize first-thing)
+     (deoptionalize (cdr parsed-ast)))))))
 
 (defun transpile-commands-inner (parsed-ast)
  (cond
