@@ -35,6 +35,9 @@
 (defun test-scala-prog (name) (format t "----~%~A~%" (fourth (find-test name))))
 (defun test-scala-input (name) (format t "----~%~A~%" (fifth (find-test name))))
 
+(defun clnl-commands (commands) (if (listp commands) (car commands) commands))
+(defun scala-commands (commands) (if (listp commands) (cadr commands) commands))
+
 (defmacro defsimpletest (name test-fn debug-fn scala-prog scala-input)
  `(progn
    ;(when (find-test ,name) (error "Test with name ~S already exists, abort, abort" ,name))
@@ -177,7 +180,7 @@ GRAPHICS-WINDOW~%210~%10~%649~%470~%-1~%-1~%13.0~%1~%10~%1~%1~%1~%0~%1~%1~%1~%-1
        ((callback nil))
        (declaim (sb-ext:muffle-conditions cl:warning))
        (eval (clnl:model->single-form-lisp model :netlogo-callback (lambda (f) (setf callback f))))
-       (when ,commands (funcall callback ,commands))
+       (when ,(clnl-commands commands) (funcall callback ,(clnl-commands commands)))
        (checksum= ,checksum (checksum-world)))
       (let*
        ((pkg (make-package (gensym)))
@@ -190,7 +193,8 @@ GRAPHICS-WINDOW~%210~%10~%649~%470~%-1~%-1~%13.0~%1~%10~%1~%1~%1~%0~%1~%1~%1~%-1
           :netlogo-callback-fn (intern "NETLOGO-CALLBACK" pkg))))
        (eval `(in-package ,(package-name prev-package)))
        (funcall (symbol-function (intern "BOOT-ME" pkg)))
-       (when ,commands (funcall (symbol-function (intern "NETLOGO-CALLBACK" pkg)) ,commands))
+       (when ,(clnl-commands commands)
+        (funcall (symbol-function (intern "NETLOGO-CALLBACK" pkg)) ,(clnl-commands commands)))
        (checksum= ,checksum (checksum-world))))))
    (lambda ()
     (let
@@ -200,12 +204,12 @@ GRAPHICS-WINDOW~%210~%10~%649~%470~%-1~%-1~%13.0~%1~%10~%1~%1~%1~%0~%1~%1~%1~%-1
       (clnl:model->single-form-lisp
        (with-open-file (str ,file) (clnl-model:read-from-nlogo str))
        :netlogo-callback (lambda (f) (setf callback f))))
-     (when ,commands (funcall callback ,commands))
+     (when ,(clnl-commands commands) (funcall callback ,(clnl-commands commands)))
      (format nil "~A~A"
       (clnl-nvm:export-world)
       (checksum-world))))
    "bin/runcmd.scala"
-   (format nil "~A@#$#@#$#@@#$#@#$#@@#$#@#$#@~A" ,commands ,file)))
+   (format nil "~A@#$#@#$#@@#$#@#$#@@#$#@#$#@~A" ,(scala-commands commands) ,file)))
 
 (defmacro defviewtest (name commands checksum)
  `(defsimpletest
@@ -261,4 +265,9 @@ GRAPHICS-WINDOW~%210~%10~%649~%470~%-1~%-1~%13.0~%1~%10~%1~%1~%1~%0~%1~%1~%1~%-1
  (loop
   :for str := (progn (format t "> ") (force-output) (read-line))
   :while str
-  :do (progn (asdf:load-system :clnl-test) (run-tests-matching str))))
+  :do
+  (handler-case
+   (progn
+    (asdf:load-system :clnl-test)
+    (run-tests-matching str))
+   (error (e) (format t "Ok, something went wrong: ~A~%" e)))))

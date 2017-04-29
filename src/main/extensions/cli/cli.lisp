@@ -6,7 +6,7 @@
   (list :name :load :type :command :args '(t) :func #'load-file)
   (list :name :help :type :command :args '((:token :optional)) :precedence 20 :func #'help)
   (list
-   :name :button :type :command :args '(:string (:optional :number))
+   :name :button :type :command :args '(:string (:number :optional))
    :precedence 20 :func #'clnl-model:execute-button)))
 
 (defun shut-down ()

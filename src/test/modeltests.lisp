@@ -123,6 +123,22 @@ end"
  "setup go go"
  "438848EF35C6B0D28D50961072C70FCC02BB4FD8")
 
+(defmodelfiletest "UI 0" "resources/UI-test.nlogo"
+ "go"
+ "793CA6F4AB144780D5139BC01B47BBFCE898576F")
+
+(defmodelfiletest "UI 1" "resources/UI-test.nlogo"
+ (":button \"setup\"" "crt 10")
+ "1825131B956968564A55F703E1031EB4A72DE35F")
+
+(defmodelfiletest "UI 2" "resources/UI-test.nlogo"
+ (":button \"setup\" :button \"go\"" "crt 10 go")
+ "686956AD49E1924F6429502FDF1B9C92DAE5E5F8")
+
+(defmodelfiletest "UI 3" "resources/UI-test.nlogo"
+ (":button \"setup\" :button \"go\" 1" "crt 10 go ask turtles [ rt 90 ] go")
+ "4E0128F172B4D0085186E49FDBD7014F6E365ED7")
+
 (defmodelfiletest "Wolf Sheep 1" "resources/models/Wolf Sheep Predation.nlogo"
  "setup go go go go go go go go go go go go go go"
  "9777CCF18935E52D8380C9C6DC02BFFBEE1F1149")

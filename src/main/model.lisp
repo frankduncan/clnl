@@ -2,6 +2,9 @@
 
 (defvar *separator* "@#$#@#$#@")
 
+(defvar *current-interface* nil)
+(defvar *current-callback* nil)
+
 (defstruct model
  code
  interface
@@ -15,6 +18,49 @@
  link-shapes
  model-settings
  delta-tick)
+
+(defun set-callback (callback)
+ "SET-CALLBACK CALLBACK => RESULT
+
+ARGUMENTS AND VALUES:
+
+  CALLBACK: a function that can take netlogo code
+  RESULT: undefined
+
+DESCRIPTION:
+
+  Sets the means by which the interface can call arbitrary netlogo code."
+ (setf *current-callback* callback))
+
+(defun set-current-interface (interface)
+ "SET-CURRENT-INTERFACE INTERFACE => RESULT
+
+ARGUMENTS AND VALUES:
+
+  INTERFACE: a list of widgets for display
+  RESULT: undefined
+
+DESCRIPTION:
+
+  Sets the currently running model to INTERFACE.
+
+  The widgets set here are comprised of the bare necessary
+  to run the engine with or without an actual visual component."
+ (setf *current-interface* interface))
+
+(defun interface (model)
+ "INTERFACE MODEL => INTERFACE
+
+ARGUMENTS AND VALUES:
+
+  MODEL: an object representing the model
+  INTERFACE: a list of widgets for display
+
+DESCRIPTION:
+
+  INTERFACE returns the widgets in MODEL, used for display, or
+  setting with SET-CURRENT-INTERFACE."
+ (model-interface model))
 
 (defun default-model ()
  "DEFAULT-MODEL => MODEL
@@ -80,11 +126,13 @@ DESCRIPTION:
      ,@(remove nil
         (mapcar
          (lambda (def)
-          (when (find (car def) (list :int :double :inverted-boolean :boolean :choice :string :option)) (second def)))
+          (when
+           (find (car def) (list :int :double :tnil-boolean :inverted-boolean :boolean :choice :string :option :code))
+           (second def)))
          definitions)))
     (push
      (list
-      (lambda (,lines)
+      (lambda (,lines) ; Validator
        (and
         ,@(remove nil
            (mapcar
@@ -97,10 +145,10 @@ DESCRIPTION:
                (:double `(ignore-errors (coerce (read-from-string ,line) 'double-float)))
                (:boolean `(or (string= "1" ,line) (string= "0" ,line)))
                (:inverted-boolean `(or (string= "0" ,line) (string= "1" ,line)))
+               (:tnil-boolean `(or (string= "T" ,line) (string= "NIL" ,line)))
                (:choice `(find ,line ',(mapcar #'car (third def)) :test #'string=)))))
-            definitions
-            (loop for i to (length definitions) collect i)))))
-      (lambda (,lines)
+            definitions (loop for i to (length definitions) collect i)))))
+      (lambda (,lines) ; Parser
        (,(read-from-string (format nil "make-~A" type))
         ,@(apply #'append
            (mapcar
@@ -113,12 +161,13 @@ DESCRIPTION:
                  (:double `(coerce (read-from-string ,line) 'double-float))
                  (:boolean `(string= "1" ,line))
                  (:inverted-boolean `(string= "0" ,line))
+                 (:tnil-boolean `(string= "NIL" ,line))
                  (:choice `(cadr (find ,line ',(third def) :key #'car :test #'string=)))
                  (:option `(when (string/= ,line ,(third def)) ,line))
+                 (:code `(unescape-code ,line))
                  (:string line))))
               (when val-getter (list (intern (symbol-name (cadr def)) :keyword) val-getter))))
-            definitions
-            (loop for i to (length definitions) collect i))))))
+            definitions (loop for i to (length definitions) collect i))))))
      *widget-parsers*))))
 
 (defwidget-definition view
@@ -177,6 +226,24 @@ DESCRIPTION:
  (:reserved)
  (:reserved))
 
+(defwidget-definition button
+ (:specified "BUTTON")
+ (:int left)
+ (:int top)
+ (:int right)
+ (:int bottom)
+ (:option display "NIL")
+ (:code code)
+ (:tnil-boolean forever)
+ (:reserved)
+ (:reserved)
+ (:string button-type)
+ (:reserved)
+ (:string action-key)
+ (:reserved)
+ (:reserved)
+ (:boolean go-time)) ; should it wait for ticks to be initialized
+
 (defun parse-interface (interface-as-strings)
  (let
   ((widgets-as-strings
@@ -216,8 +283,18 @@ DESCRIPTION:
   Because NAME is not guaranteed to be unique, IDX is available
   as a specifier.  The index is in the order that the buttons are
   loaded, and cannot be guaranteed to be stable from run to run."
- (declare (ignore name idx))
- nil)
+ (when *current-callback*
+  (let
+   ((button
+     (nth
+      (round idx)
+      (remove-if-not
+       (lambda (widget) (and (button-p widget) (string= (button-display-name widget) name)))
+       *current-interface*))))
+   (if
+    button
+    (funcall *current-callback* (button-code button))
+    (error "Couldn't find button with name ~A (idx: ~A)" name idx)))))
 
 ;; INFORMATION ABOUT MODEL
 
@@ -284,3 +361,26 @@ DESCRIPTION:
 
   Returns the code from the model."
  (model-code model))
+
+; This should get cached eventually, though maybe just cached via a display list is good enough
+(defun button-display-name (button)
+ (or
+  (button-display button)
+  (cl-ppcre:regex-replace-all "\\s+" (button-code button) " ")))
+
+(defun unescape-code (code)
+ (with-output-to-string (out)
+  (with-input-from-string (in code)
+   (loop
+    :for c := (read-char in nil)
+    :while c
+    :for aux := (when (eql #\\ c)
+                 (case (read-char in)
+                  (#\n #\Newline)
+                  (#\r #\Return)
+                  (#\t #\Tab)
+                  (#\\ #\\)
+                  (#\" #\")
+                  (t (error "Invalid escape sequence"))))
+    :do (write-char (or aux c) out)))))
+

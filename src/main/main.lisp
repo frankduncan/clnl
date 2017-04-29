@@ -14,17 +14,18 @@
 
 (defun p (result) result)
 
-(defun run ()
- "RUN => RESULT
+(defun run (&optional file)
+ "RUN &optional FILE => RESULT
 
 ARGUMENTS AND VALUES:
 
+  FILE: nlogo file with which to initialize
   RESULT: undefined, the system terminates at the end of the loop
 
 DESCRIPTION:
 
   RUN starts up the CLNL system."
- (boot)
+ (boot file)
  (clnl-interface:run))
 
 (defvar *callback* nil)
@@ -204,6 +205,10 @@ EXAMPLES:
         (lambda (proc) (create-proc-body proc prims))
         (clnl-code-parser:procedures code-ast))
       (clnl-random:set-seed ,seed)
+      (clnl-model:set-current-interface ',(clnl-model:interface model))
+      ,@(when netlogo-callback
+         `((clnl-model:set-callback
+            (lambda (,(intern "NETLOGO-CODE" *model-package*)) ,(netlogo-callback-body prims)))))
       ,(create-world-call model globals code-ast)
       ,@(when netlogo-callback
          `((funcall ,netlogo-callback
@@ -257,6 +262,8 @@ DESCRIPTION:
         (clnl-code-parser:procedures code-ast))
      (defun ,boot-fn ()
       (clnl-random:set-seed ,seed)
+      (clnl-model:set-current-interface ',(clnl-model:interface model))
+      (clnl-model:set-callback (symbol-function ',netlogo-callback-fn))
       ,(create-world-call model globals code-ast)
       ,@(when initialize-interface `((clnl-interface:initialize :dims ',(clnl-model:world-dimensions model)))))
      ,@(when netlogo-callback-fn
