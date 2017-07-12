@@ -80,6 +80,23 @@ NIL
 NIL
 1
 
+BUTTON
+78
+182
+160
+215
+forever
+go
+T
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
 @#$#@#$#@
 ## WHAT IS IT?
 

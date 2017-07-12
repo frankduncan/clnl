@@ -4,7 +4,7 @@
 (defvar *patch-list* nil)
 
 (defvar *glut-window-opened* nil)
-(defvar *dimensions* nil)
+(defvar *dimensions* nil) ; This is a useful placeholder for other view properties
 (defvar *window-width* 1024)
 (defvar *window-height* 768)
 
@@ -282,27 +282,35 @@
   (gl:viewport 0 0 *window-width* *window-height*)
 
   (gl:matrix-mode :projection)
-  (gl:with-pushed-matrix
-   (gl:load-identity)
-   (gl:ortho 0 *window-width* 0 *window-height* 0 5000)
-   (render-widgets)
+  (let*
+   ((left (getf *dimensions* :left))
+    (top (getf *dimensions* :top))
+    (view-x1 left)
+    (view-x2 (+ view-x1 width))
+    (view-y1 (- *window-height* height top))
+    (view-y2 (- *window-height* top)))
 
-   (gl:begin :lines)
-   (gl:vertex (- *window-width* width 10) (- *window-height* height 10))
-   (gl:vertex (- *window-width* width 10) (- *window-height* 9))
+   (gl:with-pushed-matrix
+    (gl:load-identity)
+    (gl:ortho 0 *window-width* 0 *window-height* 0 5000)
+    (render-widgets)
 
-   (gl:vertex (- *window-width* width 10) (- *window-height* 9))
-   (gl:vertex (- *window-width* 9) (- *window-height* 9))
+    (gl:begin :lines)
+    (gl:vertex view-x1 view-y1)
+    (gl:vertex view-x1 (+ view-y2 1))
 
-   (gl:vertex (- *window-width* 9) (- *window-height* 9))
-   (gl:vertex (- *window-width* 9) (- *window-height* height 10))
+    (gl:vertex view-x1 (+ view-y2 1))
+    (gl:vertex (+ view-x2 1) (+ view-y2 1))
 
-   (gl:vertex (- *window-width* 9) (- *window-height* height 10))
-   (gl:vertex (- *window-width* width 10) (- *window-height* height 10))
-   (gl:end))
+    (gl:vertex (+ view-x2 1) (+ view-y2 1))
+    (gl:vertex (+ view-x2 1) (- view-y1 1))
 
-  (gl:viewport (- *window-width* width 10) (- *window-height* height 10) width height)
-  (render-scene)))
+    (gl:vertex (+ view-x2 1) view-y1)
+    (gl:vertex (- view-x1 1) view-y1)
+    (gl:end))
+
+   (gl:viewport view-x1 view-y1 width height)
+   (render-scene))))
 
 (defun display ()
  (render)
@@ -414,10 +422,11 @@ You can enter in various netlogo commands below, or use :q to quit the program.
 See http://github.com/frankduncan/clnl for more information about CLNL and to
 keep apprised of any updates that may happen.")
 
-(defun initialize (&key dims buttons)
- "INITIALIZE &key DIMS BUTTONS => RESULT
+(defun initialize (&key dims view buttons)
+ "INITIALIZE &key DIMS VIEW BUTTONS => RESULT
 
   DIMS: (:xmin XMIN :xmax XMAX :ymin YMIN :ymax YMAX :patch-size PATCH-SIZE)
+  VIEW: (:left LEFT :top TOP)
   BUTTONS: BUTTON-DEF*
   BUTTON-DEF: (:left LEFT :top TOP :height HEIGHT :width WIDTH :display DISPLAY)
 
@@ -441,7 +450,7 @@ DESCRIPTION:
   the interface lives.  From here, one can go into headless or running
   mode, but for certain things this interface will still need to act,
   and also allows for bringing up and taking down of visual elements."
- (setf *dimensions* dims)
+ (setf *dimensions* (append dims view))
  (let
   ((known-button-names nil))
   (setf *widgets*

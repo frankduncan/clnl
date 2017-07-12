@@ -75,7 +75,7 @@ DESCRIPTION:
  (make-model
   :code ""
   :interface (list
-              (make-view :min-pxcor -5 :max-pxcor 5 :min-pycor -5 :max-pycor 5 :patch-size 13d0))))
+              (make-view :left 10 :top 10 :min-pxcor -5 :max-pxcor 5 :min-pycor -5 :max-pycor 5 :patch-size 13d0))))
 
 (defun read-from-nlogo (str)
  "READ-FROM-NLOGO STR => MODEL
@@ -380,6 +380,25 @@ DESCRIPTION:
        :height (- (button-bottom widget) (button-top widget))
        :display (button-display-name widget)))))
    (model-interface model))))
+
+(defun view (model)
+ "BUTTONS MODEL => VIEW-DEF
+
+  VIEW-DEF: (:left LEFT :top TOP)
+
+ARGUMENTS AND VALUES:
+
+  MODEL: A valid model
+  LEFT: An integer representing the left position
+  TOP: An integer representing the top position
+
+DESCRIPTION:
+
+  Returns the view definition that get declared in the view of the
+  MODEL.  This is used to initialize the interface."
+ (let
+  ((view (find-if #'view-p (model-interface model))))
+  (list :left (view-left view) :top (view-top view))))
 
 (defun code (model)
  "CODE MODEL => CODE

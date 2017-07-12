@@ -217,6 +217,7 @@ EXAMPLES:
       ,@(when initialize-interface
          `((clnl-interface:initialize
             :dims ',(clnl-model:world-dimensions model)
+            :view ',(clnl-model:view model)
             :buttons ',(clnl-model:buttons model)))))))))
 
 (setf (documentation 'model->single-form-lisp 'function)
@@ -271,6 +272,7 @@ DESCRIPTION:
       ,@(when initialize-interface
          `((clnl-interface:initialize
             :dims ',(clnl-model:world-dimensions model)
+            :view ',(clnl-model:view model)
             :buttons ',(clnl-model:buttons model)))))
      ,@(when netlogo-callback-fn
         `((defun ,netlogo-callback-fn (,(intern "NETLOGO-CODE" *model-package*))
