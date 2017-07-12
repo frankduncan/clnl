@@ -214,7 +214,10 @@ EXAMPLES:
          `((funcall ,netlogo-callback
             (lambda (,(intern "NETLOGO-CODE" *model-package*))
              ,(netlogo-callback-body prims)))))
-      ,@(when initialize-interface `((clnl-interface:initialize :dims ',(clnl-model:world-dimensions model)))))))))
+      ,@(when initialize-interface
+         `((clnl-interface:initialize
+            :dims ',(clnl-model:world-dimensions model)
+            :buttons ',(clnl-model:buttons model)))))))))
 
 (setf (documentation 'model->single-form-lisp 'function)
  "MODEL->SINGLE-FORM-LISP MODEL &key SEED INITIALIZE-INTERFACE NETLOGO-CALLBACK => FORM
@@ -265,7 +268,10 @@ DESCRIPTION:
       (clnl-model:set-current-interface ',(clnl-model:interface model))
       (clnl-model:set-callback (symbol-function ',netlogo-callback-fn))
       ,(create-world-call model globals code-ast)
-      ,@(when initialize-interface `((clnl-interface:initialize :dims ',(clnl-model:world-dimensions model)))))
+      ,@(when initialize-interface
+         `((clnl-interface:initialize
+            :dims ',(clnl-model:world-dimensions model)
+            :buttons ',(clnl-model:buttons model)))))
      ,@(when netlogo-callback-fn
         `((defun ,netlogo-callback-fn (,(intern "NETLOGO-CODE" *model-package*))
            ,(netlogo-callback-body prims))))))))

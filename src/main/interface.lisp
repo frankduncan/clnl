@@ -13,6 +13,8 @@
 (defvar *textbox* nil)
 (defvar *inputbox* nil)
 
+(defvar *widgets* nil) ; this is going to be pairs to save the original definition
+
 ; For now, shapes can live in here
 ; header is
 ; * name <like default>
@@ -269,7 +271,8 @@
 
 (defun render-widgets ()
  (clnl-gltk:render *textbox*)
- (clnl-gltk:render *inputbox*))
+ (clnl-gltk:render *inputbox*)
+ (mapcar #'clnl-gltk:render (mapcar #'cadr *widgets*)))
 
 (defun render ()
  (gl:clear :color-buffer-bit :depth-buffer-bit)
@@ -319,23 +322,43 @@
   (let
    ((box-width (truncate (- width 12) clnl-gltk:*font-width*)))
    (clnl-gltk:resize *textbox* box-width 12)
-   (clnl-gltk:resize *inputbox* box-width 1))))
+   (clnl-gltk:resize *inputbox* box-width 1))
+  (mapcar
+   (lambda (pair)
+    (clnl-gltk:reposition (cadr pair)
+     (getf (car pair) :left)
+     (- *window-height* (getf (car pair) :height) (getf (car pair) :top))))
+   *widgets*)))
 
 (defun execute (str)
- (handler-case
-  (with-output-to-string (*standard-output*)
-   (clnl:run-commands str))
-  (error (e) (format nil "Ok, something went wrong: ~A~%Try :help" e))))
+ (setf
+  (clnl-gltk:textbox-text *textbox*)
+  (format nil "> ~A~%~%~A" str
+   (handler-case
+    (with-output-to-string (*standard-output*)
+     (clnl:run-commands str))
+    (error (e) (format nil "Ok, something went wrong: ~A~%Try :help" e))))))
 
 (defun key-pressed (key x y)
  (declare (ignore x y))
  (if (eql key 13)
-  (let*
-   ((cmd (clnl-gltk:value *inputbox*))
-    (resp (execute cmd)))
-   (setf (clnl-gltk:textbox-text *textbox*) (format nil "> ~A~%~%~A" cmd resp))
+  (progn
+   (execute (clnl-gltk:value *inputbox*))
    (clnl-gltk:clear *inputbox*))
   (clnl-gltk:key-pressed *inputbox* key)))
+
+(defun mouse (button state x y)
+ (declare (ignore button))
+ (mapcar
+  (lambda (w)
+   (when (eql state :down) (clnl-gltk:mousedown w x (- *window-height* y)))
+   (when (eql state :up) (clnl-gltk:mouseup w x (- *window-height* y))))
+  (mapcar #'cadr *widgets*)))
+
+(defun motion (x y)
+ (mapcar
+  (lambda (w) (clnl-gltk:mousemove w x (- *window-height* y)))
+  (mapcar #'cadr *widgets*)))
 
 (cffi:defcallback display :void () (display))
 (cffi:defcallback idle :void () (idle))
@@ -343,6 +366,10 @@
 (cffi:defcallback reshape :void ((width :int) (height :int)) (reshape width height))
 (cffi:defcallback key-pressed :void ((key :uchar) (x :int) (y :int)) (key-pressed key x y))
 (cffi:defcallback special-key-pressed :void ((key glut:special-keys) (x :int) (y :int)) (key-pressed key x y))
+(cffi:defcallback mouse :void ((button cl-glut:mouse-button) (state cl-glut:mouse-button-state) (x :int) (y :int))
+ (mouse button state x y))
+
+(cffi:defcallback motion :void ((x :int) (y :int)) (motion x y))
 
 (defun set-turtle-lists ()
  (setf
@@ -387,10 +414,12 @@ You can enter in various netlogo commands below, or use :q to quit the program.
 See http://github.com/frankduncan/clnl for more information about CLNL and to
 keep apprised of any updates that may happen.")
 
-(defun initialize (&key dims)
- "INITIALIZE &key DIMS => RESULT
+(defun initialize (&key dims buttons)
+ "INITIALIZE &key DIMS BUTTONS => RESULT
 
   DIMS: (:xmin XMIN :xmax XMAX :ymin YMIN :ymax YMAX :patch-size PATCH-SIZE)
+  BUTTONS: BUTTON-DEF*
+  BUTTON-DEF: (:left LEFT :top TOP :height HEIGHT :width WIDTH :display DISPLAY)
 
 ARGUMENTS AND VALUES:
 
@@ -400,6 +429,11 @@ ARGUMENTS AND VALUES:
   YMIN: An integer representing the minimum patch coord in Y
   YMAX: An integer representing the maximum patch coord in Y
   PATCH-SIZE: A double representing the size of the patches in pixels
+  LEFT: An integer representing the left position
+  TOP: An integer representing the top position
+  HEIGHT: An integer representing height
+  WIDTH: An integer representing width
+  DISPLAY: A string representing display name
 
 DESCRIPTION:
 
@@ -407,7 +441,29 @@ DESCRIPTION:
   the interface lives.  From here, one can go into headless or running
   mode, but for certain things this interface will still need to act,
   and also allows for bringing up and taking down of visual elements."
- (setf *dimensions* dims))
+ (setf *dimensions* dims)
+ (let
+  ((known-button-names nil))
+  (setf *widgets*
+   (mapcar
+    (lambda (button-def)
+     (let
+      ((idx (length (remove (getf button-def :display) known-button-names :test-not #'equal))))
+      (push (getf button-def :display) known-button-names)
+      (list
+       button-def
+       (clnl-gltk:button
+        (getf button-def :left)
+        (- *window-height* (getf button-def :height) (getf button-def :top))
+        (getf button-def :width)
+        (getf button-def :height)
+        (getf button-def :display)
+        (lambda ()
+         (execute
+          (format nil ":button \"~A\"~A"
+           (getf button-def :display)
+           (if (zerop idx) "" (format nil " ~A" idx)))))))))
+    buttons))))
 
 (defun run ()
  "RUN => RESULT
@@ -438,6 +494,9 @@ DESCRIPTION:
   (cl-glut:close-func (cffi:get-callback 'close-func))
   (cl-glut:keyboard-func (cffi:get-callback 'key-pressed))
   (cl-glut:special-func (cffi:get-callback 'special-key-pressed))
+  (cl-glut:motion-func (cffi:get-callback 'motion)) ; while mouse is down
+  (cl-glut:passive-motion-func (cffi:get-callback 'motion)) ; while mouse is up
+  (cl-glut:mouse-func (cffi:get-callback 'mouse)) ; state is up/down, button is button
   (gl:depth-func :lequal)
   (gl:blend-func :src-alpha :one-minus-src-alpha)
   (gl:enable :blend)

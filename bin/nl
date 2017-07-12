@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if [ $1 ] ; then
+if [ "$1" ] ; then
   ( cat bin/run.lisp | sed -e '/clnl:run/d' && echo "(clnl:run \"$1\")" ) | sbcl --script
 else
   sbcl --script bin/run.lisp

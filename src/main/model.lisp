@@ -349,6 +349,38 @@ DESCRIPTION:
      (switch (list (intern (string-upcase (switch-varname widget)) :keyword) (switch-on widget)))))
    (model-interface model))))
 
+(defun buttons (model)
+ "BUTTONS MODEL => BUTTON-DEFS
+
+  BUTTON-DEFS: BUTTON-DEF*
+  BUTTON-DEF: (:left LEFT :top TOP :height HEIGHT :width WIDTH :display DISPLAY)
+
+ARGUMENTS AND VALUES:
+
+  MODEL: A valid model
+  LEFT: An integer representing the left position
+  TOP: An integer representing the top position
+  HEIGHT: An integer representing height
+  WIDTH: An integer representing width
+  DISPLAY: A string representing display name
+
+DESCRIPTION:
+
+  Returns button definitions that get declared in the buttons of the
+  MODEL.  This is used to initialize the interface."
+ (remove nil
+  (mapcar
+   (lambda (widget)
+    (typecase widget
+     (button
+      (list
+       :left (button-left widget)
+       :top (button-top widget)
+       :width (- (button-right widget) (button-left widget))
+       :height (- (button-bottom widget) (button-top widget))
+       :display (button-display-name widget)))))
+   (model-interface model))))
+
 (defun code (model)
  "CODE MODEL => CODE
 
