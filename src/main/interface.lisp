@@ -15,6 +15,29 @@
 
 (defvar *widgets* nil) ; this is going to be pairs to save the original definition
 
+; This is the thread that does the work of querying the currently running system to update
+; the interface state.  We keep it seperate from the main system display thread for two reasons:
+; 1) It should run even if there's no active display
+; 2) We want it to run slower than the current display thread
+(defvar *interface-thread* nil)
+
+(defgeneric update-widget (type def widget extra-info))
+(defmethod update-widget (type def widget extra-info))
+
+(defmethod update-widget ((type (eql :button)) button-def button idx)
+ (when (getf button-def :forever)
+  (clnl-gltk:toggle button (clnl-model:forever-button-on (getf button-def :display) idx))))
+
+(defun update-interface ()
+ (mapcar
+  (lambda (widget) (apply #'update-widget widget))
+  *widgets*))
+
+(defun boot-interface-thread ()
+ (when (not *interface-thread*)
+  (setf *interface-thread*
+   (sb-thread:make-thread (lambda () (loop (update-interface) (sleep .1))) :name "Interface Thread"))))
+
 ; For now, shapes can live in here
 ; header is
 ; * name <like default>
@@ -272,7 +295,7 @@
 (defun render-widgets ()
  (clnl-gltk:render *textbox*)
  (clnl-gltk:render *inputbox*)
- (mapcar #'clnl-gltk:render (mapcar #'cadr *widgets*)))
+ (mapcar #'clnl-gltk:render (mapcar #'third *widgets*)))
 
 (defun render ()
  (gl:clear :color-buffer-bit :depth-buffer-bit)
@@ -295,6 +318,7 @@
     (gl:ortho 0 *window-width* 0 *window-height* 0 5000)
     (render-widgets)
 
+    (gl:color 1 1 1)
     (gl:begin :lines)
     (gl:vertex view-x1 view-y1)
     (gl:vertex view-x1 (+ view-y2 1))
@@ -332,10 +356,10 @@
    (clnl-gltk:resize *textbox* box-width 12)
    (clnl-gltk:resize *inputbox* box-width 1))
   (mapcar
-   (lambda (pair)
-    (clnl-gltk:reposition (cadr pair)
-     (getf (car pair) :left)
-     (- *window-height* (getf (car pair) :height) (getf (car pair) :top))))
+   (lambda (widget)
+    (clnl-gltk:reposition (third widget)
+     (getf (second widget) :left)
+     (- *window-height* (getf (second widget) :height) (getf (second widget) :top))))
    *widgets*)))
 
 (defun execute (str)
@@ -361,12 +385,12 @@
   (lambda (w)
    (when (eql state :down) (clnl-gltk:mousedown w x (- *window-height* y)))
    (when (eql state :up) (clnl-gltk:mouseup w x (- *window-height* y))))
-  (mapcar #'cadr *widgets*)))
+  (mapcar #'third *widgets*)))
 
 (defun motion (x y)
  (mapcar
   (lambda (w) (clnl-gltk:mousemove w x (- *window-height* y)))
-  (mapcar #'cadr *widgets*)))
+  (mapcar #'third *widgets*)))
 
 (cffi:defcallback display :void () (display))
 (cffi:defcallback idle :void () (idle))
@@ -422,13 +446,40 @@ You can enter in various netlogo commands below, or use :q to quit the program.
 See http://github.com/frankduncan/clnl for more information about CLNL and to
 keep apprised of any updates that may happen.")
 
+(defun button-defs->buttons (button-defs)
+ (let
+  ((known-button-names nil))
+  (mapcar
+   (lambda (button-def)
+    (let*
+     ((idx (length (remove (getf button-def :display) known-button-names :test-not #'equal)))
+      (toggle-button nil)
+      (button
+       (clnl-gltk:button
+        (getf button-def :left)
+        (- *window-height* (getf button-def :height) (getf button-def :top))
+        (getf button-def :width)
+        (getf button-def :height)
+        (getf button-def :display)
+        (lambda ()
+         (when toggle-button (funcall toggle-button))
+         (execute
+          (format nil ":button \"~A\"~A"
+           (getf button-def :display)
+           (if (zerop idx) "" (format nil " ~A" idx)))))
+        :forever (getf button-def :forever))))
+     (push (getf button-def :display) known-button-names)
+     (when (getf button-def :forever) (setf toggle-button (lambda () (clnl-gltk:toggle button))))
+     (list :button button-def button idx)))
+   button-defs)))
+
 (defun initialize (&key dims view buttons)
  "INITIALIZE &key DIMS VIEW BUTTONS => RESULT
 
   DIMS: (:xmin XMIN :xmax XMAX :ymin YMIN :ymax YMAX :patch-size PATCH-SIZE)
   VIEW: (:left LEFT :top TOP)
   BUTTONS: BUTTON-DEF*
-  BUTTON-DEF: (:left LEFT :top TOP :height HEIGHT :width WIDTH :display DISPLAY)
+  BUTTON-DEF: (:left LEFT :top TOP :height HEIGHT :width WIDTH :forever FOREVER :display DISPLAY)
 
 ARGUMENTS AND VALUES:
 
@@ -442,6 +493,7 @@ ARGUMENTS AND VALUES:
   TOP: An integer representing the top position
   HEIGHT: An integer representing height
   WIDTH: An integer representing width
+  FOREVER: A boolean representing the forever status
   DISPLAY: A string representing display name
 
 DESCRIPTION:
@@ -450,29 +502,10 @@ DESCRIPTION:
   the interface lives.  From here, one can go into headless or running
   mode, but for certain things this interface will still need to act,
   and also allows for bringing up and taking down of visual elements."
+ (boot-interface-thread)
  (setf *dimensions* (append dims view))
- (let
-  ((known-button-names nil))
-  (setf *widgets*
-   (mapcar
-    (lambda (button-def)
-     (let
-      ((idx (length (remove (getf button-def :display) known-button-names :test-not #'equal))))
-      (push (getf button-def :display) known-button-names)
-      (list
-       button-def
-       (clnl-gltk:button
-        (getf button-def :left)
-        (- *window-height* (getf button-def :height) (getf button-def :top))
-        (getf button-def :width)
-        (getf button-def :height)
-        (getf button-def :display)
-        (lambda ()
-         (execute
-          (format nil ":button \"~A\"~A"
-           (getf button-def :display)
-           (if (zerop idx) "" (format nil " ~A" idx)))))))))
-    buttons))))
+ (setf *widgets*
+  (button-defs->buttons buttons)))
 
 (defun run ()
  "RUN => RESULT

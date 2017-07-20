@@ -87,7 +87,7 @@ components."))
  (:use :common-lisp)
  (:export
   #:execute-button #:default-model #:read-from-nlogo #:world-dimensions #:widget-globals #:code
-  #:buttons #:view #:interface #:set-current-interface #:set-callback)
+  #:buttons #:forever-button-on #:view #:interface #:set-current-interface #:set-callback)
  (:documentation
   "CLNL Model
 

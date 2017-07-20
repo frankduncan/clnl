@@ -5,6 +5,10 @@
 (defvar *current-interface* nil)
 (defvar *current-callback* nil)
 
+; At this time, this is the only stateful part of the model.  If more get added,
+; a more general concept can be introduced.
+(defvar *enabled-forever-buttons* nil)
+
 (defstruct model
  code
  interface
@@ -161,7 +165,7 @@ DESCRIPTION:
                  (:double `(coerce (read-from-string ,line) 'double-float))
                  (:boolean `(string= "1" ,line))
                  (:inverted-boolean `(string= "0" ,line))
-                 (:tnil-boolean `(string= "NIL" ,line))
+                 (:tnil-boolean `(string/= "NIL" ,line))
                  (:choice `(cadr (find ,line ',(third def) :key #'car :test #'string=)))
                  (:option `(when (string/= ,line ,(third def)) ,line))
                  (:code `(unescape-code ,line))
@@ -263,6 +267,13 @@ DESCRIPTION:
       (when parser (funcall (cadr parser) widget-as-strings))))
     widgets-as-strings))))
 
+(defun find-button (name idx)
+ (nth
+  idx
+  (remove-if-not
+   (lambda (widget) (and (button-p widget) (string= (button-display-name widget) name)))
+   *current-interface*)))
+
 ; With authoring, idx here needs to be looked at again.
 (defun execute-button (name &optional (idx 0))
  "EXECUTE-BUTTON NAME &optional IDX => RESULT
@@ -285,16 +296,42 @@ DESCRIPTION:
   loaded, and cannot be guaranteed to be stable from run to run."
  (when *current-callback*
   (let
-   ((button
-     (nth
-      (round idx)
-      (remove-if-not
-       (lambda (widget) (and (button-p widget) (string= (button-display-name widget) name)))
-       *current-interface*))))
-   (if
-    button
-    (funcall *current-callback* (button-code button))
-    (error "Couldn't find button with name ~A (idx: ~A)" name idx)))))
+   ((button (find-button name (round idx))))
+   (cond
+    ((not button) (error "Couldn't find button with name ~A (idx: ~A)" name idx))
+    ((and (button-forever button) (find button *enabled-forever-buttons* :test #'equal))
+     (setf *enabled-forever-buttons* (remove button *enabled-forever-buttons* :test #'equal)))
+    ((button-forever button)
+     (setf *enabled-forever-buttons* (cons button *enabled-forever-buttons*))
+     (sb-thread:make-thread
+      (lambda ()
+       (loop
+        :while (find button *enabled-forever-buttons* :test #'equal)
+        ; The sleep is necessary so that it gives other threads time
+        :do (progn (clnl:run-commands (button-code button)) (sleep .001))))
+      :name (format nil "Forever button: ~A" (button-display button))))
+    (t (funcall *current-callback* (button-code button)))))))
+
+(defun forever-button-on (name &optional (idx 0))
+ "FOREVER-BUTTON-ON NAME &optional IDX => ON
+
+ARGUMENTS AND VALUES:
+
+  NAME: the name of the button
+  IDX: the instance of the button, defaults to 0
+  ON: a boolean
+
+DESCRIPTION:
+
+  Returns whether the button identified by NAME and IDX is currently on.
+
+  NAME refers to the display name for the button, which is usually
+  set by the model, but sometimes defaults to the code inside.
+
+  Because NAME is not guaranteed to be unique, IDX is available
+  as a specifier.  The index is in the order that the buttons are
+  loaded, and cannot be guaranteed to be stable from run to run."
+ (and (find (find-button name (round idx)) *enabled-forever-buttons* :test #'equal) t))
 
 ;; INFORMATION ABOUT MODEL
 
@@ -353,7 +390,7 @@ DESCRIPTION:
  "BUTTONS MODEL => BUTTON-DEFS
 
   BUTTON-DEFS: BUTTON-DEF*
-  BUTTON-DEF: (:left LEFT :top TOP :height HEIGHT :width WIDTH :display DISPLAY)
+  BUTTON-DEF: (:left LEFT :top TOP :height HEIGHT :width WIDTH :forever FOREVER :display DISPLAY)
 
 ARGUMENTS AND VALUES:
 
@@ -362,6 +399,7 @@ ARGUMENTS AND VALUES:
   TOP: An integer representing the top position
   HEIGHT: An integer representing height
   WIDTH: An integer representing width
+  FOREVER: A boolean representing whether this button is a forever button
   DISPLAY: A string representing display name
 
 DESCRIPTION:
@@ -378,11 +416,12 @@ DESCRIPTION:
        :top (button-top widget)
        :width (- (button-right widget) (button-left widget))
        :height (- (button-bottom widget) (button-top widget))
+       :forever (button-forever widget)
        :display (button-display-name widget)))))
    (model-interface model))))
 
 (defun view (model)
- "BUTTONS MODEL => VIEW-DEF
+ "VIEW MODEL => VIEW-DEF
 
   VIEW-DEF: (:left LEFT :top TOP)
 

@@ -57,6 +57,8 @@ DESCRIPTION:
    (*package* *model-package*))
   (eval netlogoed-lisp)))
 
+(defvar *commands-mutex* (sb-thread:make-mutex))
+
 (defun run-commands (cmds)
  "RUN-COMMANDS CMDS => RESULT
 
@@ -69,8 +71,11 @@ DESCRIPTION:
 
   RUN-COMMANDS will take NetLogo commands, put them through the various
   stages need to turn them into Common Lisp code, and run it."
- (clnl-nvm:with-stop-handler
-  (funcall *callback* cmds)))
+
+ ; This mutex is a necessary because we haven't yet moved to a job thread
+ (sb-thread:with-mutex (*commands-mutex*)
+  (clnl-nvm:with-stop-handler
+   (funcall *callback* cmds))))
 
 (defun run-reporter (reporter)
  "RUN-REPORTER REPORTER => RESULT
