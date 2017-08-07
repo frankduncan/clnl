@@ -21,7 +21,7 @@ fi
 mkdir -p tmp/deps/
 
 ( cd tmp/deps &&
-  tar zxf ../../deps/common-lisp/clnl-gltk_0.1.tar.gz &&
+  tar zxf ../../deps/common-lisp/clnl-gltk_0.2.tar.gz &&
   tar zxf ../../deps/common-lisp/3b-cl-opengl-993d627.tar.gz &&
   tar zxf ../../deps/common-lisp/alexandria-b1c6ee0.tar.gz &&
   tar zxf ../../deps/common-lisp/babel_0.5.0.tar.gz &&

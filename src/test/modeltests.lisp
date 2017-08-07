@@ -139,6 +139,11 @@ end"
  (":button \"setup\" :button \"go\" 1" "crt 10 go ask turtles [ rt 90 ] go")
  "4E0128F172B4D0085186E49FDBD7014F6E365ED7")
 
+(defmodelfiletest "UI 4" "resources/UI-test.nlogo"
+ (":button \"stopping\"" "repeat 80 [ create-and-move ]")
+ "749DC971517EDE9020BF125D0F362A978980272F"
+ t)
+
 (defmodelfiletest "Wolf Sheep 1" "resources/models/Wolf Sheep Predation.nlogo"
  "setup go go go go go go go go go go go go go go"
  "9777CCF18935E52D8380C9C6DC02BFFBEE1F1149")

@@ -308,7 +308,12 @@ DESCRIPTION:
        (loop
         :while (find button *enabled-forever-buttons* :test #'equal)
         ; The sleep is necessary so that it gives other threads time
-        :do (progn (clnl:run-commands (button-code button)) (sleep .001))))
+        :do
+        (let
+         ((result (funcall *current-callback* (button-code button))))
+         (when (eql :stop result)
+          (setf *enabled-forever-buttons* (remove button *enabled-forever-buttons* :test #'equal)))
+         (sleep .001))))
       :name (format nil "Forever button: ~A" (button-display button))))
     (t (funcall *current-callback* (button-code button)))))))
 

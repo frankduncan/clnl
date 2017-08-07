@@ -169,7 +169,15 @@ GRAPHICS-WINDOW~%210~%10~%649~%470~%-1~%-1~%13.0~%1~%10~%1~%1~%1~%0~%1~%1~%1~%-1
 (defmacro defmodelreportertest (name model commands reporter value checksum)
  `(defmodeltest (format nil "Model Reporter - ~A" ,name) ,model ,commands ,reporter ,value ,checksum))
 
-(defmacro defmodelfiletest (name file commands checksum)
+(defun wait-for-forever ()
+ (loop
+  :while
+  (find-if
+   (lambda (name) (cl-ppcre:scan "Forever button:" name))
+   (mapcar #'sb-thread:thread-name (sb-thread:list-all-threads)))
+  :do (sleep .1)))
+
+(defmacro defmodelfiletest (name file commands checksum &optional wait-for-forever)
  `(defsimpletest
    ,(format nil "File Model - ~A" name)
    (lambda ()
@@ -181,6 +189,7 @@ GRAPHICS-WINDOW~%210~%10~%649~%470~%-1~%-1~%13.0~%1~%10~%1~%1~%1~%0~%1~%1~%1~%-1
        (declaim (sb-ext:muffle-conditions cl:warning))
        (eval (clnl:model->single-form-lisp model :netlogo-callback (lambda (f) (setf callback f))))
        (when ,(clnl-commands commands) (funcall callback ,(clnl-commands commands)))
+       ,(when wait-for-forever `(wait-for-forever))
        (checksum= ,checksum (checksum-world)))
       (let*
        ((pkg (make-package (gensym)))
@@ -195,6 +204,7 @@ GRAPHICS-WINDOW~%210~%10~%649~%470~%-1~%-1~%13.0~%1~%10~%1~%1~%1~%0~%1~%1~%1~%-1
        (funcall (symbol-function (intern "BOOT-ME" pkg)))
        (when ,(clnl-commands commands)
         (funcall (symbol-function (intern "NETLOGO-CALLBACK" pkg)) ,(clnl-commands commands)))
+       ,(when wait-for-forever `(wait-for-forever))
        (checksum= ,checksum (checksum-world))))))
    (lambda ()
     (let
@@ -205,6 +215,7 @@ GRAPHICS-WINDOW~%210~%10~%649~%470~%-1~%-1~%13.0~%1~%10~%1~%1~%1~%0~%1~%1~%1~%-1
        (with-open-file (str ,file) (clnl-model:read-from-nlogo str))
        :netlogo-callback (lambda (f) (setf callback f))))
      (when ,(clnl-commands commands) (funcall callback ,(clnl-commands commands)))
+     ,(when wait-for-forever `(wait-for-forever))
      (format nil "~A~A"
       (clnl-nvm:export-world)
       (checksum-world))))

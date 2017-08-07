@@ -1,6 +1,12 @@
 to go
   ask turtles [ fd 1 ]
 end
+
+to create-and-move
+  if 40 < count turtles [ stop ]
+  crt 1
+  ask turtles [ fd 1 ]
+end
 @#$#@#$#@
 GRAPHICS-WINDOW
 219
@@ -87,6 +93,23 @@ BUTTON
 215
 forever
 go
+T
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+66
+276
+161
+309
+stopping
+create-and-move
 T
 1
 T
